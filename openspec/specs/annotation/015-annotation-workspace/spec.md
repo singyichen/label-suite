@@ -880,6 +880,8 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 
   **V1 單次收尾**：每個 `reject` 爭議鍵最多一筆已確認 resolution；確認時驗唯一 reject 票、來源 digest、PL 即時權限與動作合法性，同交易寫歷程。相同處置重送可回既有結果，異內容或覆寫終局排除拒絕；`exclude_from_dataset` 僅排除輸出項目，不刪公開 `dataset_item` 或 assignment。
 
+  **v12.4.0 修訂（issue #1270，處置動作的鍵）**：四種處置（`adopt_annotator`／`adopt_reviewer`／`custom_answer`／`exclude_from_dataset`）的「確認處置」寫入 MUST 對應 `annotation.exception.resolve`（`admin/007-role-settings` 任務層鍵，種子 PL ✅／RV ❌／AN ❌），MUST NOT 借用 `annotation.workspace.review`、`task.detail.edit` 或 `task.lifecycle.manage`。「V1 單次收尾」段所稱「PL 即時權限」，指處置者在該任務有當前 active `project_leader` membership，且 `project_leader × annotation.exception.resolve` 格為允許；處置者身分 MUST 取自受驗證帳號，不得取自路由參數或預設常數。該鍵處於「已登錄、待啟用」狀態：啟用前以它做的授權判斷 MUST 依未知鍵拒絕；處置 MUST 維持既有的角色與資源閘門（唯一 reject 票、來源 digest、項目仍待處置、動作合法），MUST NOT 改為只憑矩陣格放行。上文原文逐字保留。
+
 #### Scenario: reject 只收尾一次
 
 - **GIVEN** 同一 run／assignment 的有效當事者與目前來源
@@ -944,6 +946,15 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 - **THEN** 該按鈕轉為可用，點擊後才依已選取之處置與已填理由執行對應資料寫入與歷程事件
 - **AND** 寫入之例外池紀錄的 `reason` 欄位非空字串——涵蓋 `adopt_annotator`／`adopt_reviewer` 兩者，修正其原「一鍵完成、`reason: ''`」之現行缺陷（issue #913）
 - **AND** 切換至另一個處置時，即使理由欄位仍留有前一個已選處置填入的文字，「確認處置」按鈕仍先回到停用狀態，須理由欄位再次觸發輸入事件才重新可用——避免某處置所填的理由被靜默沿用為另一處置的理由
+
+#### Scenario: 例外池處置的鍵與拒絕條件
+
+- **GIVEN** 某任務最終例外池有一筆待處置項目 E 與一筆已收尾項目 F，有 active `project_leader` P、active `reviewer` W、active `annotator` A，以及 membership 已停用的 `project_leader` Q
+- **WHEN** W、A、Q 各自確認處置 E，P 在 `annotation.exception.resolve` 啟用前確認處置 E，以及 P 對 F 以不同內容再次確認
+- **THEN** W、A、Q 的請求都拒絕，且不寫入定稿值或歷程事件
+- **AND** P 處置 E 只依既有的角色與資源閘門判斷，任何以該鍵作為必要條件的判斷依未知鍵拒絕
+- **AND** P 對 F 的異內容重送依「V1 單次收尾」拒絕，格為允許不足以放行
+- **AND** 寫入的處置者為 P 的受驗證帳號，不是路由參數或預設常數
 
 ### Requirement: FR-096 試標歷史回饋
 

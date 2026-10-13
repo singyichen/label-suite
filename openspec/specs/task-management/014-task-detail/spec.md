@@ -2,7 +2,7 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v12.0.4）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v12.1.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
 
 change `mvp-export-snapshot-isolation-correction`（issue #1160）補充 FR-010b／FR-010c 的跨 run 隔離語意，以及 FR-010i-1／FR-010i-2／FR-021 的請求接受時間與結果快照時間契約。
 
@@ -11,6 +11,8 @@ change `task-run-publication-integrity`（issue #1160）修訂 FR-010f／FR-010f
 change `database-final-audit`（issue #1160）新增 FR-010o-5／FR-025、AC-3.51～AC-3.52 與 SC-062～SC-063：試標回合的完整 IAA 結果與 `done` 同交易保存，任務狀態及隔離異動以 `audit_events` 單一事件來源追溯；正典版本為 v11.0.0，資料表仍為未部署候選。
 
 change `task-detail-overview-settings-split`（issue #1199）新增 FR-003、SC-019、FR-014i、FR-028、FR-026、FR-027，並修訂 FR-019 與 FR-006：任務詳情拆為共用標頭、概覽與設定分頁，分頁由五個改為六個；正典版本為 v12.0.0，正典驗收編號為 AC-3.53～AC-3.77。
+
+change `task-detail-lifecycle-roster-keys`（issue #1270）修訂 FR-024 與 FR-023：生命週期命令對應 `task.lifecycle.manage`，審核名冊寫入改用 `task.members.manage`，負責人裁定對應 `annotation.dispute.adjudicate`；兩個新鍵已登錄、待啟用，啟用前依未知鍵拒絕。正典版本為 v12.1.0，正典驗收編號為 AC-3.78～AC-3.79。
 
 ## Requirements
 
@@ -669,6 +671,8 @@ IAA 為非同步計算。任務依 FR-008a 進入 `waiting_iaa_confirmation` 時
 
 **成功標準 SC-051**：`arbiter_ids` 為空且存在爭議項的任務，`project_leader` 可逐項完成裁定並使該任務具備試標完成與結案資格，成功率 100%；裁定來源在畫面與匯出中皆可與仲裁者裁定區分；`arbiter_ids` 非空的任務中，此通道對 `project_leader` 的開放次數為 `0`。
 
+**v12.1.0 修訂（issue #1270，負責人裁定的鍵）**：本通道 MUST 對應 `annotation.dispute.adjudicate`（admin-007 任務層鍵，種子 PL ✅／RV ❌／AN ❌），不得借用 `annotation.workspace.review` 或 `task.lifecycle.manage`。該鍵處於「已登錄、待啟用」狀態：啟用前以它做的授權判斷 MUST 依未知鍵拒絕；本通道 MUST 維持第 (1) 點的觸發條件與既有角色閘門，MUST NOT 改為只憑矩陣格放行。啟用後，`arbiter_ids` 非空時即使格為 ✅ 也 MUST 拒絕。上文原文逐字保留。
+
 #### Scenario: 無仲裁者任務的爭議可由負責人裁定並解除卡死
 
 - **GIVEN** 一個 `arbiter_ids` 為空的任務，其某審核單位因審核員 `modify` 而推導為「爭議中」
@@ -691,6 +695,13 @@ IAA 為非同步計算。任務依 FR-008a 進入 `waiting_iaa_confirmation` 時
 - **THEN** 該項落入最終例外池並計入 `dry_run` 待處置項目數，該審核單位維持「爭議中」
 - **AND** 該任務在例外池收尾前不具備試標完成資格
 - **AND** `dry_run` 的收尾動作選項不包含 `custom_answer`
+
+#### Scenario: 負責人裁定通道的鍵與拒絕條件
+
+- **GIVEN** 一個 `arbiter_ids` 為空且有爭議項的任務，有 active `project_leader` P、active `reviewer` W，以及 membership 已停用的 `project_leader` Q
+- **WHEN** W 與 Q 嘗試直接呼叫負責人裁定 handler，P 在 `annotation.dispute.adjudicate` 啟用前裁定，以及該鍵啟用後 P 對另一個 `arbiter_ids` 非空的任務裁定
+- **THEN** W 與 Q 被拒；P 在啟用前依既有角色閘門與第 (1) 點判斷，任何以該鍵作為必要條件的判斷依未知鍵拒絕
+- **AND** `arbiter_ids` 非空的任務中，P 的裁定被拒，該審核單位維持「爭議中」
 
 ### Requirement: DRY_RUN_COMPLETION_RULE 試標完成規則涵蓋標註、必要審核與必要仲裁（BREAKING）
 
@@ -828,7 +839,16 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 
 正式服務端 MUST 依下列授權契約檢查每次請求。
 
-正式服務端須依 ADR-037 以當前 active membership 與已啟用矩陣格判斷：詳情讀取用 `task.detail.view`，Overview 的 `OVERVIEW_EDITABLE_FIELDS` 儲存用 `task.detail.edit`，成員操作用 `task.members.manage`，資料匯出用 `dataset.export`，並保留各自任務狀態、資料範圍、blind review 與答案隔離限制。reviewer 有 view 而無 edit；一人多角色時非 workspace 可用 active 角色權限聯集，狀態與移除只作用於選定 membership。發布、結案、仲裁與其他生命週期命令尚無完整 V1 專用鍵，不得借用上述鍵或只憑矩陣放行，須在 runtime 轉換前另行核准操作鍵、種子資料與安全測試。標記者不得透過匯出檔、條件快照或歷史列取得私有答案、測試集答案或未提交審核草稿；公開回應亦不得暴露受限物件參照。Prototype 的 URL `task_role` 僅保留檢視上下文，不可當作正式授權身分。
+正式服務端須依 ADR-037 以當前 active membership 與已啟用矩陣格判斷：詳情讀取用 `task.detail.view`，設定分頁的 `OVERVIEW_EDITABLE_FIELDS` 儲存用 `task.detail.edit`，成員操作用 `task.members.manage`，資料匯出用 `dataset.export`，並保留各自任務狀態、資料範圍、blind review 與答案隔離限制。reviewer 有 view 而無 edit；一人多角色時非 workspace 可用 active 角色權限聯集，狀態與移除只作用於選定 membership。發布、結案、仲裁與其他生命週期命令尚無完整 V1 專用鍵，不得借用上述鍵或只憑矩陣放行，須在 runtime 轉換前另行核准操作鍵、種子資料與安全測試。標記者不得透過匯出檔、條件快照或歷史列取得私有答案、測試集答案或未提交審核草稿；公開回應亦不得暴露受限物件參照。Prototype 的 URL `task_role` 僅保留檢視上下文，不可當作正式授權身分。
+
+**v12.1.0 修訂（issue #1270，生命週期與名冊的鍵）**：
+
+1. 發布、退回 draft、結案、重試 IAA、停用資料隔離 MUST 對應 `task.lifecycle.manage`（admin-007 任務層鍵，種子 PL ✅／RV ❌／AN ❌）。
+2. 設定分頁儲存時，`reviewer_ids`／`arbiter_ids` 的寫入 MUST 用 `task.members.manage`，不再用 `task.detail.edit`；其餘 `OVERVIEW_EDITABLE_FIELDS`，包含資料集重綁（FR-014b），仍用 `task.detail.edit`。同一次儲存同時含名冊與其他欄位時，兩個鍵都必須通過。
+3. `task.lifecycle.manage` 處於 admin-007 的「已登錄、待啟用」狀態：啟用前以它做的授權判斷 MUST 依未知鍵拒絕；生命週期命令 MUST 維持既有的角色、狀態與資源閘門，MUST NOT 改為只憑矩陣格放行。
+4. 仲裁寫入不屬生命週期命令，仍依 `annotation/015-annotation-workspace` FR-104 沿用 `annotation.workspace.review`；`arbiter_ids` 為空時的負責人裁定見 FR-023 v12.1.0 修訂。
+
+上文原文逐字保留；文中「發布、結案、仲裁與其他生命週期命令尚無完整 V1 專用鍵」一句，自本版起由第 1、4 點取代。
 
 #### Scenario: FR-024 主要驗收
 
@@ -841,6 +861,14 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 - **GIVEN** 標記者知道一筆歷史 ID，但沒有當前任務的匯出權限或資料範圍
 - **WHEN** 其讀取歷史列、快照或原檔
 - **THEN** 授權拒絕，回應不含私有答案、測試集答案、審核草稿或受限物件參照
+
+#### Scenario: 生命週期命令與名冊寫入使用各自的鍵
+
+- **GIVEN** 某任務的 active `project_leader` P 與 active `reviewer` W，且 `task.lifecycle.manage` 仍為「已登錄、待啟用」
+- **WHEN** W 發布任務或儲存 `reviewer_ids`，P 儲存 `arbiter_ids` 與資料集重綁，Super Admin 把 `project_leader × task.members.manage` 改為 ❌ 後 P 再次儲存 `reviewer_ids`
+- **THEN** W 的兩個請求都拒絕；P 的名冊寫入依 `task.members.manage`、資料集重綁依 `task.detail.edit` 與既有狀態規則判斷
+- **AND** 格改為 ❌ 後，P 的下一次名冊寫入拒絕，資料集重綁不受影響
+- **AND** 任何以 `task.lifecycle.manage` 作為必要條件的判斷依未知鍵拒絕；P 的發布只依既有的角色、狀態與資源閘門判斷
 
 ### Requirement: SC-052 授權契約
 
