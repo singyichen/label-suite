@@ -1150,6 +1150,7 @@
     .settings-layout { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px; align-items: start; }
     .settings-section-nav { display: flex; flex-direction: column; gap: var(--space-xs); overflow-x: auto; }
     .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 4px; background: transparent; color: var(--color-ink-muted); font: inherit; font-size: 14px; text-align: center; cursor: pointer; }
+    .settings-section-status { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     .settings-nav-item[aria-selected="true"] { background: var(--color-white); color: var(--color-ink); font-weight: 600; }
     .settings-section.panel { border: 1px solid var(--color-border); box-shadow: none; border-radius: var(--radius-lg); background: var(--color-white); margin-bottom: 0; }
     /* FR-026 (1) / design.md: section title, text-link edit, divided definition list. Scoped to the settings tab only. */
@@ -2284,6 +2285,7 @@
       tabWorkLog: '工時紀錄',
       tabMemberManagement: '成員管理',
       settingsSectionNavLabel: '設定區段',
+      settingsSectionSwitched: '已切換到{label}',
       settingsLeaveTitle: '放棄未儲存的變更？',
       settingsLeaveBody: '目前區段有尚未儲存的變更，離開後這些變更將會遺失。',
       settingsLeaveCancelBtn: '取消',
@@ -2829,6 +2831,7 @@
       tabWorkLog: 'Work log',
       tabMemberManagement: 'Member management',
       settingsSectionNavLabel: 'Settings sections',
+      settingsSectionSwitched: 'Switched to {label}',
       settingsLeaveTitle: 'Discard unsaved changes?',
       settingsLeaveBody: 'This section has unsaved changes that will be lost if you leave.',
       settingsLeaveCancelBtn: 'Cancel',
@@ -7519,6 +7522,12 @@ function getTaskTypeLabel() {
     });
   }
 
+  function announceSettingsSection(slug) {
+    var status = document.getElementById('settingsSectionStatus');
+    var tab = document.getElementById('settingsTab-' + slug);
+    if (status && tab) status.textContent = t('settingsSectionSwitched').replace('{label}', tab.textContent);
+  }
+
   function selectSettingsSection(slug) {
     if (slug === state.settingsSection) return true;
     var current = SETTINGS_SECTIONS.filter(function(section) { return section.slug === state.settingsSection; })[0];
@@ -7527,6 +7536,7 @@ function getTaskTypeLabel() {
       state.settingsSection = slug;
       syncUrlToViewState();
       renderSettingsSectionNav();
+      announceSettingsSection(slug);
     }
     if (current && isSettingsSectionDirty(current)) {
       openSettingsLeaveConfirm(function() {
@@ -11470,9 +11480,12 @@ function getTaskTypeLabel() {
 
     document.getElementById('settingsSectionNav').addEventListener('keydown', function(e) {
       var step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-      if (!step || e.altKey || e.ctrlKey || e.metaKey) return;
+      var isEdge = e.key === 'Home' || e.key === 'End';
+      if ((!step && !isEdge) || e.altKey || e.ctrlKey || e.metaKey) return;
       var index = SETTINGS_SECTIONS.findIndex(function(section) { return section.slug === state.settingsSection; });
-      var next = SETTINGS_SECTIONS[(index + step + SETTINGS_SECTIONS.length) % SETTINGS_SECTIONS.length];
+      var next = e.key === 'Home' ? SETTINGS_SECTIONS[0]
+        : e.key === 'End' ? SETTINGS_SECTIONS[SETTINGS_SECTIONS.length - 1]
+        : SETTINGS_SECTIONS[(index + step + SETTINGS_SECTIONS.length) % SETTINGS_SECTIONS.length];
       e.preventDefault();
       if (selectSettingsSection(next.slug)) document.getElementById('settingsTab-' + next.slug).focus();
     });
