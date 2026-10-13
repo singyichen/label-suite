@@ -1597,7 +1597,10 @@ function getDatasetPreviewText() {
       if (v === undefined || v === null) return null;
       if (typeof v === 'string') return v;
       /* Objects never stringify to "[object Object]"; only a confirmed dialogue yields text (#1340) */
-      if (typeof v === 'object') return dialogueJoinedText(v);
+      if (typeof v === 'object') {
+        var primitiveArray = Array.isArray(v) && v.every(function(e) { return e === null || typeof e !== 'object'; });
+        return primitiveArray ? String(v) : dialogueJoinedText(v);
+      }
       return String(v);
     }).filter(function(v) { return v !== null && v !== ''; });
     if (vals.length > 0) return vals.join('\n');

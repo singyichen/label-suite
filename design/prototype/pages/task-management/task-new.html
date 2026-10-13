@@ -1468,6 +1468,8 @@ function onChipSelectionChange() {
     }
     applyDefaultGuidelineFiles(state.taskType);
   }
+  /* Input type gates dialogue detection (single_item only), so re-run the preview render */
+  if (state.datasetFiles.length > 0) renderInlineDatasetPreview();
   renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
 }
 
