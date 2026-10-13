@@ -60,8 +60,8 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-detail.data.js`
 > **基底**：第一組分支（堆疊）。
 
-- [ ] 5.1 新增 `design/prototype/tests/task-management/issue-1338-list-title-detail.spec.ts` 的 Red：task-new 建立任務後於 task-detail 設定›基本資料編輯模式開啟，下拉為同一值。 [@senior-qa]
-- [ ] 5.2 （Green）修改 `design/prototype/pages/task-management/task-detail.data.js`：建立任務資料對應與可編輯欄位清單帶入 list_title_field。 [@senior-frontend]
+- [x] 5.1 新增 `design/prototype/tests/task-management/issue-1338-list-title-detail.spec.ts` 的 Red：task-new 建立任務後於 task-detail 設定›基本資料編輯模式開啟，下拉為同一值。 [@senior-qa]
+- [x] 5.2 （Green）修改 `design/prototype/pages/task-management/task-detail.data.js`：建立任務資料對應與可編輯欄位清單帶入 list_title_field。 [@senior-frontend]
 
 ## 6. 第二組 — task-detail 設定種子
 
@@ -70,18 +70,18 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-detail.config.js`
 > **相依**：群組 5。
 
-- [ ] 6.1 修改 `design/prototype/tests/task-management/issue-1338-list-title-detail.spec.ts`，補 Red：更換資料集後所選欄位失效時回退自動並提示，仍有效時保留。 [@senior-qa]
-- [ ] 6.2 （Green）修改 `design/prototype/pages/task-management/task-detail.config.js`：設定種子與資料集更換流程處理 list_title_field。 [@senior-frontend]
+- [x] 6.1 修改 `design/prototype/tests/task-management/issue-1338-list-title-detail.spec.ts`，補 Red：更換資料集後所選欄位失效時回退自動並提示，仍有效時保留。 [@senior-qa]
+- [x] 6.2 （Green）修改 `design/prototype/pages/task-management/task-detail.config.js`：設定種子與資料集更換流程處理 list_title_field。 [@senior-frontend]
 
 ## 7. 第二組 — task-detail 儲存
 
-**故事目標**（SC-002i）：task-detail 基本資料儲存後重新載入仍保留 list_title_field。
+**故事目標**（SC-002i）：task-detail 基本資料儲存後同一頁面工作階段內仍保留 list_title_field（原型 saveOverviewEdit 不寫回 localStorage，頁面重新載入的持久化不在原型範圍）。
 
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-detail.html`
 > **相依**：群組 6。
 
-- [ ] 7.1 修改 `design/prototype/tests/task-management/issue-1338-list-title-detail.spec.ts`，補 Red：編輯模式變更下拉並儲存，重新載入後保留。 [@senior-qa]
-- [ ] 7.2 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：狀態初始化、重置與儲存流程讀寫 list_title_field。 [@senior-frontend]
+- [x] 7.1 修改 `design/prototype/tests/task-management/issue-1338-list-title-detail.spec.ts`，補 Red：編輯模式變更下拉並儲存，同一頁面工作階段內保留（TASK_DATA.list_title_field 有值）。 [@senior-qa]
+- [x] 7.2 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：狀態初始化、重置與儲存流程讀寫 list_title_field。 [@senior-frontend]
 
 ## 8. 第二組 — 回歸、Source-Verify 與 archive
 
@@ -90,7 +90,9 @@
 > **產品檔案（0）**：只執行驗證與 specs／openspec 寫回。
 > **最終群組**：是。
 
-- [ ] 8.1 執行第二組回歸、獨立審查與 Source-Verify，衍生檢視每一則正典引用皆可 grep 定位。 [@main]
-- [ ] 8.2 執行 openspec archive，正典 013 寫回 8.3.2 至 8.4.0（MINOR）並新增 Changelog，同步衍生檢視 Purpose 版號；狀態檔列於 PR 合併後恢復。 [@main]
+- [x] 8.1 執行第二組回歸、獨立審查與 Source-Verify，衍生檢視每一則正典引用皆可 grep 定位。 [@main]
+- [x] 8.2 執行 openspec archive，正典 013 寫回 8.3.2 至 8.4.0（MINOR）並新增 Changelog，同步衍生檢視 Purpose 版號；狀態檔列於 PR 合併後恢復。 [@main]
 
 > **主 session 核實紀錄（第一組）**：Red `5bf452f6`（13 個案例，皆失敗於預期原因）、Green `5101887f`；審查（senior-code-reviewer）發現 H1（自動標題讀取角色為 Output 的 id，Data Fairness）與 M2（移除檔案後殘留所選欄位），Red `6fde5b69` 先行、Green `68500e94` 修正；範圍限定 Playwright 43 passed、typecheck 與 test:node（218 pass）通過。未處理、留待維護者裁定：M1（task-detail 內操作觸發未儲存標記但值不持久化，屬已知過渡缺口）；M3（`id` 角色為不使用時仍屬選項集合，FR／AC-1.9 文字未明示，建議第二組 archive 前於 delta 補一句）。群組 1～3 的 Red 因 QA 一次提交全部案例而合併為單一 Red commit。
+
+> **主 session 核實紀錄（第二組）**：Red `68ebe980`（10 個案例，皆失敗於預期原因：task-detail 未載入 `list_title_field`）、Green `90c4ecff`（僅 task-detail.data.js／task-detail.config.js／task-detail.html 共 7 行新增）；新規格 10 個案例全數通過，連同第一組規格與 7 份相關 task-detail 規格共 138 passed；typecheck 與 test:node（218 pass）通過。任務細節頁未假設資料集為 2 筆（grep `datasetRecords`、`slice(0, 2)` 僅命中 Step 1 預覽表格的 2 列切片）。7.1 的「重新載入後保留」改為同一頁面工作階段內保留：原型 `saveOverviewEdit` 不寫回 localStorage `labelsuite.createdTasks`，對任何 task-detail 欄位皆然，頁面重新載入的持久化屬後端範圍。
