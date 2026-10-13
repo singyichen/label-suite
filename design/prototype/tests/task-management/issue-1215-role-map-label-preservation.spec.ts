@@ -1,6 +1,6 @@
 /*
  * Traceability: specs/task-management/014-task-detail/spec.md
- *   FR-014a, FR-014g, FR-014l (issue #1215; guards 07b61ce6 from #1199 G2)
+ *   FR-014a, FR-014l (issue #1215; guards 07b61ce6 from #1199 G2)
  *
  * Regression: changing ONLY a field role in the basic-info edit form must not
  * rewrite the saved item-pair labels. saveOverviewEdit() runs renderSchemaFields()
@@ -19,6 +19,10 @@
 import { test, expect } from '../fixtures';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
+interface TaskDataWindow {
+  TASK_DATA: { itemPairLabels?: string[]; fieldRoleMap?: Record<string, string> };
+}
+
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T011';
 const PANEL_LOAD_TIMEOUT = 15000;
 /* Differ from the dataset-column-derived defaults (Premise / Hypothesis) */
@@ -34,8 +38,19 @@ async function seedCustomLabels(page: import('@playwright/test').Page) {
   await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
 }
 
+type Page = import('@playwright/test').Page;
+
+function titleRoleSelect(page: Page) {
+  return page.locator('#overviewEditForm').getByRole('combobox', { name: '角色：Title' });
+}
+
+function readTaskData(page: Page, key: keyof TaskDataWindow['TASK_DATA']) {
+  return page.evaluate((k) => (window as unknown as TaskDataWindow).TASK_DATA[k] ?? null, key);
+}
+
 async function expectLabelsInSettingsEdit(page: import('@playwright/test').Page, labels: string[]) {
   await openSettingsSection(page, 'labeling');
+  await expect(page.locator('#statusBadge')).toContainText('草稿', { timeout: PANEL_LOAD_TIMEOUT });
   await page.locator('#settingsEditBtn').click();
   await expect(page.getByTestId('item-pair-labels-card')).toBeVisible();
   await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue(labels[0]);
@@ -46,25 +61,22 @@ test.describe('Task detail: role-map-only edit keeps saved item-pair labels (#12
   test('changing only a field role in basic-info edit leaves custom labels unchanged', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await seedCustomLabels(page);
-    const savedBefore = await page.evaluate(() => JSON.stringify((window.TASK_DATA as any)?.itemPairLabels ?? null));
-    expect(JSON.parse(savedBefore)).toEqual(CUSTOM_LABELS);
+    expect(await readTaskData(page, 'itemPairLabels')).toEqual(CUSTOM_LABELS);
 
     /* Change ONLY the role of an unrelated metadata column: Input columns (and so the
        derived defaults) stay the same, but the role map key changes. */
     await openSettingsSection(page, 'basic');
     await page.locator('#overviewEditBtn').click();
-    const titleRole = page.getByRole('combobox', { name: '角色：Title' });
+    const titleRole = titleRoleSelect(page);
     await expect(titleRole).toHaveValue('');
     await titleRole.selectOption('evidence');
     await page.locator('#overviewSaveBtn').click();
     await expect(page.locator('#overviewEditForm')).toHaveClass(/hidden/);
 
     /* The role map really changed... */
-    const roleMap = await page.evaluate(() => (window.TASK_DATA as any)?.fieldRoleMap ?? {});
-    expect(roleMap).toMatchObject({ Title: 'evidence', Premise: 'input', Hypothesis: 'input' });
+    expect(await readTaskData(page, 'fieldRoleMap')).toMatchObject({ Title: 'evidence', Premise: 'input', Hypothesis: 'input' });
     /* ...and the saved labels did not */
-    const savedAfter = await page.evaluate(() => (window.TASK_DATA as any)?.itemPairLabels ?? null);
-    expect(savedAfter).toEqual(CUSTOM_LABELS);
+    expect(await readTaskData(page, 'itemPairLabels')).toEqual(CUSTOM_LABELS);
 
     /* Reopening the settings edit form shows the same labels */
     await expectLabelsInSettingsEdit(page, CUSTOM_LABELS);
@@ -76,14 +88,16 @@ test.describe('Task detail: role-map-only edit keeps saved item-pair labels (#12
 
     await openSettingsSection(page, 'basic');
     await page.locator('#overviewEditBtn').click();
-    await page.getByRole('combobox', { name: '角色：Title' }).selectOption('evidence');
+    await titleRoleSelect(page).selectOption('evidence');
     await page.locator('#overviewSaveBtn').click();
     await expect(page.locator('#overviewEditForm')).toHaveClass(/hidden/);
+    expect(await readTaskData(page, 'fieldRoleMap')).toMatchObject({ Title: 'evidence' });
 
     await page.locator('#overviewEditBtn').click();
-    await page.getByRole('combobox', { name: '角色：Title' }).selectOption('');
+    await titleRoleSelect(page).selectOption('');
     await page.locator('#overviewSaveBtn').click();
     await expect(page.locator('#overviewEditForm')).toHaveClass(/hidden/);
+    expect(((await readTaskData(page, 'fieldRoleMap')) as Record<string, string>).Title || '').toBe('');
 
     await expectLabelsInSettingsEdit(page, CUSTOM_LABELS);
   });
