@@ -13,7 +13,7 @@ issue #1337（複雜樣本顯示）的子單 C：對話型資料集的 Input 欄
 
 **是否需要存在（YAGNI 檢查）**：需要。013 FR-002c-2 規定 `single_item` 恰好 1 個 Input，物件陣列欄位必須能當這「1 個 Input」並被正確呈現；工作區端（子單 D）需要建立者已確認的對應，不能由前端各自猜測。
 
-**Data Fairness（NON-NEGOTIABLE）**：對應只在角色為 Input 的欄位內取子欄位；Step 2 預覽的 Input 文字來源不得退回角色為 Output 或 Evidence 的欄位。本變更不新增任何以欄名字面決定 Output 的推測；子欄位名稱線索只用於預填 Input 內部的對應，且一律由建立者確認或更改。
+**Data Fairness（NON-NEGOTIABLE）**：對應只在角色為 Input 的欄位內取子欄位；Step 2 預覽的文字來源在無 Input 欄位時不得退回任何非 Input 欄位。本變更不新增任何以欄名字面決定 Output 的推測；子欄位名稱線索只用於預填 Input 內部的對應，且一律由建立者確認或更改。
 
 **Generalization-First（NON-NEGOTIABLE）**：偵測依資料形狀（物件陣列且每筆有字串子欄位）而非任務名稱或欄名硬編；子欄位名稱線索僅是預填值，非判定條件。
 

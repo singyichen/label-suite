@@ -34,12 +34,12 @@
 
 ## 3. Step 2 預覽與文字來源（AC-1.12）
 
-**故事目標**（SC-002j，AC-1.12）：Step 2 預覽以對話串呈現；Input 文字來源不輸出 `[object Object]`、不退回 Output／Evidence 欄位，字串 Input 行為不變。
+**故事目標**（SC-002j，AC-1.12）：Step 2 預覽以對話串呈現；Input 文字來源不輸出 `[object Object]`、無 Input 欄位時不退回任何非 Input 欄位，字串 Input 行為不變。
 
 > **產品檔案（0 新增）**：沿用 `task-config.engine.js`。
 > **相依**：群組 2。
 
-- [x] 3.1 修改 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts`，補 Red：Step 2 預覽每則一列含編號、發言者、文字；未確認時物件 Input 以 JSON 呈現；全頁無 `[object Object]`；無 Input 欄位時退回來源不選 Output／Evidence 欄位；字串 Input 的預覽文字與既有行為相同。 [@senior-qa]
+- [x] 3.1 修改 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts`，補 Red：Step 2 預覽每則一列含編號、發言者、文字；未確認時物件 Input 以 JSON 呈現；全頁無 `[object Object]`；無 Input 欄位時不退回任何非 Input 欄位；字串 Input 的預覽文字與既有行為相同。 [@senior-qa]
 - [x] 3.2 （Green）修改 `design/prototype/pages/task-management/task-config.engine.js`：`getDatasetPreviewText()` 物件安全與退回排除、通用輸入文字區塊的對話串渲染（design.md D4）。 [@senior-frontend]
 
 ## 4. task-new 持久化（SC-002j）

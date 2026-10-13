@@ -27,7 +27,7 @@
 
 ### D4 Step 2 預覽與文字來源
 
-- `getDatasetPreviewText()`：Input 欄位值為字串時行為與現狀逐位元組相同（標記工作區 span 偏移依賴此值）；數字、布林維持原 `String(v)`。值為物件陣列且已確認 `dialogueFields.text` 時，取各元素的 `text` 子欄位字串以 `'\n'` 串接；其他物件／陣列物件一律略過（不呈現 `[object Object]`）。無 Input 欄位時的「最長字串欄位」退回保留（標記工作區將物件 Input 角色移除後仰賴此退回），但候選排除角色為 Output 或 Evidence 的欄位。
+- `getDatasetPreviewText()`：Input 欄位值為字串時行為與現狀逐位元組相同（標記工作區 span 偏移依賴此值）；數字、布林維持原 `String(v)`。值為物件陣列且已確認 `dialogueFields.text` 時，取各元素的 `text` 子欄位字串以 `'\n'` 串接；其他物件／陣列物件一律略過（不呈現 `[object Object]`）。無 Input 欄位時不再退回「最長字串欄位」（角色為「不使用」或未指定的欄位亦可能含答案，Data Fairness），一律回傳 null，由呼叫端使用既有占位文字。
 - 通用輸入文字區塊（FR-003g-3 的 `single_item`）：值為物件陣列且已確認 `dialogue_fields` 時，改渲染對話串；值為其他物件／物件陣列時顯示 `JSON.stringify`（截斷 300 字，與 Evidence 卡既有作法一致）。
 - 對話串每則一列：發言編號（未選用 `index + 1`）、發言者（未選則略）、文字；最多顯示前 20 則並提示其餘數量。共用渲染函式放引擎，子單 D 的工作區重用同一函式。
 

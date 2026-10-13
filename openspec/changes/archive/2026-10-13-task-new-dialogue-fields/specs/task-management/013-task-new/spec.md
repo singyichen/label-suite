@@ -10,7 +10,7 @@
 
 Input 角色欄位在資料列來源的前幾筆紀錄中為非空的物件陣列，且存在至少一個在所有元素中皆為字串的子欄位時，系統 MUST 於欄位預覽下方提議以「對話串」呈現並顯示確認區：**文字欄位**（必選）、**發言者欄位**（可選）、**發言編號欄位**（可選，未選時用陣列序號，自 1 起算）。候選由偵測結果預填，建立者 MUST 能更改任一對應，或取消提議；偵測不到時系統 MUST NOT 提議，Step 2 預覽退回原始 JSON 呈現。子欄位名稱線索只決定預填值，不決定是否提議，且僅作用於角色已是 Input 的欄位。任一已確認的子欄位於欄位角色變更、資料列來源切換或重新上傳後不再合法時，系統 MUST 重新偵測；建立者取消提議後不得自動再預填。確認結果存為任務設定鍵 `dialogue_fields`（`{ text, speaker, utt_id }`，後兩者可為 `null`；未採用對話串時整體為 `null`），建立任務 payload MUST 帶此鍵。本條僅適用 `single_item` 輸入類型。
 
-Step 2 標記預覽 MUST 在 Input 為物件陣列且已確認 `dialogue_fields` 時，以對話串呈現，每則一列，含發言編號、發言者（若有）與文字。Input 文字來源 MUST NOT 對物件取字串（不得出現 `[object Object]`）；字串 Input 的文字內容 MUST 與既有行為逐字相同；無 Input 欄位時的退回來源 MUST NOT 選用角色為 Output 或 Evidence 的欄位。
+Step 2 標記預覽 MUST 在 Input 為物件陣列且已確認 `dialogue_fields` 時，以對話串呈現，每則一列，含發言編號、發言者（若有）與文字。Input 文字來源 MUST NOT 對物件取字串（不得出現 `[object Object]`）；字串 Input 的文字內容 MUST 與既有行為逐字相同；無 Input 欄位時 MUST NOT 退回任何非 Input 欄位作為文字來源（預覽文字來源為空，沿用既有占位文字）。
 
 #### Scenario: AC-1.10 偵測到物件陣列 Input 時提議對話串並預填
 
@@ -30,7 +30,7 @@ Step 2 標記預覽 MUST 在 Input 為物件陣列且已確認 `dialogue_fields`
 - **GIVEN** Input 為已確認對話串對應的物件陣列欄位，另有一個角色為 Output 的字串欄位
 - **WHEN** 使用者進入 Step 2
 - **THEN** 標記預覽以每則一列呈現發言編號、發言者與文字，不出現 `[object Object]`
-- **AND** 預覽文字來源不含 Output 欄位內容；未確認對話串時 Input 物件以 JSON 呈現
+- **AND** 預覽文字來源不含 Output 欄位內容，且無 Input 欄位時不退回任何非 Input 欄位；未確認對話串時 Input 物件以 JSON 呈現
 
 #### Scenario: SC-002j 對話串設定隨建立任務 payload 帶出
 
