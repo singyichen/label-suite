@@ -10,20 +10,20 @@
 
 **故事目標**：SC-015 — 頁籤寬度隨內容伸縮、字級與圖示縮小、關閉鈕只在作用中與 hover／focus 時可見（issue 驗收項 6～8）。
 
-- [ ] 1.1 Red：改寫 `design/prototype/tests/shared/workspace-tabs-visual.spec.ts` 第一個 describe 的「every open tab has equal computed width」案例（本次刻意推翻的固定寬度契約）為：每顆頁籤 computed width 落在 104px～220px 內、短標題窄於長標題、長標題 .workspace-tab-label 仍 ellipsis；先提交，再執行並記錄預期失敗 [@senior-qa]
-- [ ] 1.2 Red：新增 `design/prototype/tests/shared/workspace-tabs-sizing.spec.ts`：TAB_CAP（8）個頁籤同排且各自寬度不小於 min、.workspace-tab 12px／500、.workspace-tab-icon 14px、關閉鈕 16px、非作用中關閉鈕 visibility: hidden 而 hover 與 :focus-within 時 visible、作用中永遠可見、.workspace-tab-bar 維持 gap: 0／padding: 0／1px 右分隔線；先提交，再執行並記錄預期失敗 [@senior-qa]
-- [ ] 1.3 調整共用 helper `design/prototype/tests/shared/_workspace-tabs-helpers.ts`：新增點擊關閉鈕前先 hover 該頁籤的輔助函式，供既有規格使用 [@senior-qa]
-- [ ] 1.4 調整既有規格 `design/prototype/tests/shared/workspace-tabs-a11y.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
-- [ ] 1.5 調整既有規格 `design/prototype/tests/shared/workspace-tabs-active-visible.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
-- [ ] 1.6 調整既有規格 `design/prototype/tests/shared/workspace-tabs-close-badge.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
-- [ ] 1.7 調整既有規格 `design/prototype/tests/shared/workspace-tabs-error-panes.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
-- [ ] 1.8 調整既有規格 `design/prototype/tests/shared/workspace-tabs-overview-reopen-close-all.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
-- [ ] 1.9 調整既有規格 `design/prototype/tests/shared/workspace-tabs-unsaved.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
-- [ ] 1.10 於 `design/prototype/tests/inventory.csv` 為新規格補列，LF only [@senior-qa]
-- [ ] 1.11 Green：修改 `design/prototype/assets/tokens.css`，以 --workspace-tab-min-width: 104px 與 --workspace-tab-max-width: 220px 取代 --workspace-tab-width，同步改寫註解（兩主題共用） [@senior-frontend]
-- [ ] 1.12 Green：修改 `design/prototype/pages/shared/sidebar.css` §Workspace Tabs：.workspace-tab 12px／500、內距 6×10、gap 6px、flex: 1 1 0 搭配 min／max 寬度 token；.workspace-tab-icon 14px；.workspace-tab-close 16px 並以 visibility 控制只在 .active、:hover、:focus-within 時可見；不得動 .workspace-tab-bar 的 gap／padding／右分隔線；不得改寫 committed 的測試契約 [@senior-frontend]
-- [ ] 1.13 更新 `design/system/MASTER.md` §Workspace Tabs：Tab width、Page-kind icon 兩列改寫，新增關閉鈕顯示與字級內距列，Changelog 加一列 [@senior-frontend]
-- [ ] 1.14 執行 code/test gate：於 `design/prototype/` 執行 typecheck、test:node，以及帶 `PW_PORT=8980` 的受影響 Playwright 規格（新規格與全部 `workspace-tabs-*.spec.ts` 及引用頁籤／側欄的規格），並執行 `scripts/check-sdd.sh`、`scripts/inventory-tests.sh`、`node scripts/gen-screen-inventory.mjs --check`，皆預期 exit 0 [@main]
+- [x] 1.1 Red：改寫 `design/prototype/tests/shared/workspace-tabs-visual.spec.ts` 第一個 describe 的「every open tab has equal computed width」案例（本次刻意推翻的固定寬度契約）為：每顆頁籤 computed width 落在 104px～220px 內、短標題窄於長標題、長標題 .workspace-tab-label 仍 ellipsis；先提交，再執行並記錄預期失敗 [@senior-qa]
+- [x] 1.2 Red：新增 `design/prototype/tests/shared/workspace-tabs-sizing.spec.ts`：TAB_CAP（8）個頁籤同排且各自寬度不小於 min、.workspace-tab 12px／500、.workspace-tab-icon 14px、關閉鈕 16px、非作用中關閉鈕 visibility: hidden 而 hover 與 :focus-within 時 visible、作用中永遠可見、.workspace-tab-bar 維持 gap: 0／padding: 0／1px 右分隔線；先提交，再執行並記錄預期失敗 [@senior-qa]
+- [x] 1.3 調整共用 helper `design/prototype/tests/shared/_workspace-tabs-helpers.ts`：新增點擊關閉鈕前先 hover 該頁籤的輔助函式，供既有規格使用 [@senior-qa]
+- [x] 1.4 調整既有規格 `design/prototype/tests/shared/workspace-tabs-a11y.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
+- [x] 1.5 調整既有規格 `design/prototype/tests/shared/workspace-tabs-active-visible.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
+- [x] 1.6 調整既有規格 `design/prototype/tests/shared/workspace-tabs-close-badge.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
+- [x] 1.7 調整既有規格 `design/prototype/tests/shared/workspace-tabs-error-panes.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
+- [x] 1.8 調整既有規格 `design/prototype/tests/shared/workspace-tabs-overview-reopen-close-all.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
+- [x] 1.9 調整既有規格 `design/prototype/tests/shared/workspace-tabs-unsaved.spec.ts`：非作用中頁籤的關閉鈕改為 visibility: hidden 後，點擊前先 hover 該頁籤；實測仍通過則為 no-op 並於 evidence 註明，不放寬任何斷言 [@senior-qa]
+- [x] 1.10 於 `design/prototype/tests/inventory.csv` 為新規格補列，LF only [@senior-qa]
+- [x] 1.11 Green：修改 `design/prototype/assets/tokens.css`，以 --workspace-tab-min-width: 104px 與 --workspace-tab-max-width: 220px 取代 --workspace-tab-width，同步改寫註解（兩主題共用） [@senior-frontend]
+- [x] 1.12 Green：修改 `design/prototype/pages/shared/sidebar.css` §Workspace Tabs：.workspace-tab 12px／500、內距 6×10、gap 6px、flex: 1 1 0 搭配 min／max 寬度 token；.workspace-tab-icon 14px；.workspace-tab-close 16px 並以 visibility 控制只在 .active、:hover、:focus-within 時可見；不得動 .workspace-tab-bar 的 gap／padding／右分隔線；不得改寫 committed 的測試契約 [@senior-frontend]
+- [x] 1.13 更新 `design/system/MASTER.md` §Workspace Tabs：Tab width、Page-kind icon 兩列改寫，新增關閉鈕顯示與字級內距列，Changelog 加一列 [@senior-frontend]
+- [x] 1.14 執行 code/test gate：於 `design/prototype/` 執行 typecheck、test:node，以及帶 `PW_PORT=8980` 的受影響 Playwright 規格（新規格與全部 `workspace-tabs-*.spec.ts` 及引用頁籤／側欄的規格），並執行 `scripts/check-sdd.sh`、`scripts/inventory-tests.sh`、`node scripts/gen-screen-inventory.mjs --check`，皆預期 exit 0 [@main]
 
 ## 2. PR-1280-G2-TITLE-COMPOSITION — 標題組成與正典回寫
 
