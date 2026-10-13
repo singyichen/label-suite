@@ -1546,21 +1546,30 @@ function dialogueJoinedText(v) {
   return texts.length > 0 ? texts.join('\n') : null;
 }
 
-/* Reusable dialogue thread renderer (currently used only by the task-new preview;
-   annotation workspace adoption belongs to #1341):
-   one row per turn, first 20 turns then a "more" hint. cfg = { text, speaker, utt_id } */
-function renderDialogueThread(container, turns, cfg) {
+/* A turn's id: the cfg.utt_id sub-field value (original type kept), else array position + 1 */
+function dialogueUttIdOf(turn, i, cfg) {
+  return cfg.utt_id && turn && turn[cfg.utt_id] !== undefined && turn[cfg.utt_id] !== null
+    ? turn[cfg.utt_id] : i + 1;
+}
+
+/* Reusable dialogue thread renderer (task-new preview and the annotation workspace):
+   one row per turn. cfg = { text, speaker, utt_id }.
+   Default: first 20 turns then a "more" hint. opts (all optional, #1341):
+   noLimit (every turn), idPrefix (text before the turn id), fillText(txEl, text, uttId, i)
+   (replaces the plain text content, e.g. to draw highlights) */
+function renderDialogueThread(container, turns, cfg, opts) {
   var MAX_TURNS = 20;
-  turns.slice(0, MAX_TURNS).forEach(function(turn, i) {
+  opts = opts || {};
+  (opts.noLimit ? turns : turns.slice(0, MAX_TURNS)).forEach(function(turn, i) {
     var row = document.createElement('div');
     row.setAttribute('data-testid', 'dialogue-thread-row');
     row.style.cssText = 'display:flex;gap:8px;align-items:baseline;margin-bottom:4px';
-    var idVal = cfg.utt_id && turn && turn[cfg.utt_id] !== undefined && turn[cfg.utt_id] !== null
-      ? String(turn[cfg.utt_id]) : String(i + 1);
+    var uttId = dialogueUttIdOf(turn, i, cfg);
+    row.setAttribute('data-utt-id', String(uttId));
     var idEl = document.createElement('span');
     idEl.setAttribute('data-testid', 'dialogue-utt-id');
     idEl.style.cssText = 'color:var(--text-secondary,#6b7280);flex:none';
-    idEl.textContent = idVal;
+    idEl.textContent = (opts.idPrefix || '') + String(uttId);
     row.appendChild(idEl);
     if (cfg.speaker) {
       var spEl = document.createElement('span');
@@ -1571,11 +1580,13 @@ function renderDialogueThread(container, turns, cfg) {
     }
     var txEl = document.createElement('span');
     txEl.setAttribute('data-testid', 'dialogue-text');
-    txEl.textContent = turn && typeof turn[cfg.text] === 'string' ? turn[cfg.text] : '';
+    var turnText = turn && typeof turn[cfg.text] === 'string' ? turn[cfg.text] : '';
+    if (opts.fillText) opts.fillText(txEl, turnText, uttId, i);
+    else txEl.textContent = turnText;
     row.appendChild(txEl);
     container.appendChild(row);
   });
-  if (turns.length > MAX_TURNS) {
+  if (!opts.noLimit && turns.length > MAX_TURNS) {
     var more = document.createElement('div');
     more.style.cssText = 'color:var(--text-secondary,#6b7280)';
     more.textContent = t('dialogueMoreTurns').replace('{n}', turns.length - MAX_TURNS);
@@ -1914,7 +1925,9 @@ function initPreviewState() {
         subjStart: null, subjEnd: null, objStart: null, objEnd: null
       };
     });
-  } else if (tripShape === 'absa') {
+  } else if (tripShape === 'absa' && !getObjectArrayInput()) {
+    /* Flat-string ABSA rows carry no utt_id, so on a dialogue (object-array) Input they
+       cannot anchor to a turn and would surface the output column's text (#1341 AC-2.35). */
     state.previewTriples = [];
     trips.forEach(function(trip) {
       var tgt = trip.target_text || '?', asp = trip.aspect_text || '', opn = trip.opinion_text || '';
@@ -1928,6 +1941,7 @@ function initPreviewState() {
   state.relDraft = { e1: null, rel: null, e2: null };
   state.relSel = null;
   state.relMsg = '';
+  state.dialogueMsg = '';
   if (state.previewState.entity_recognition) state.previewState.entity_recognition.pendingSelection = null;
   state.previewInited = true;
 }
@@ -1941,12 +1955,26 @@ function getPreviewTypeColorMap() {
   return { map: map, order: order };
 }
 
-/* Format a span slot ({text,start,end}) as "詞 (start,end)" for display and triple storage. */
+/* Format a span slot ({text,start,end[,utt_id]}) as "詞 (start,end)", or "詞 (#utt_id:start,end)"
+   when the span lives inside a dialogue turn, for display and triple storage. */
 function fmtRelSpan(slot) {
   if (!slot) return '';
   var s = slot.text || '?';
-  if (slot.start != null && slot.end != null) s += ' (' + slot.start + ',' + slot.end + ')';
+  if (slot.start != null && slot.end != null) {
+    s += ' (' + (slot.utt_id != null ? '#' + slot.utt_id + ':' : '') + slot.start + ',' + slot.end + ')';
+  }
   return s;
+}
+
+/* Copy of a span ({text,start,end[,utt_id]}) that carries utt_id only when the source has one */
+function spanSlot(src) {
+  var slot = { text: src.text, start: src.start, end: src.end };
+  if (src.utt_id != null) slot.utt_id = src.utt_id;
+  return slot;
+}
+
+function sameUttId(a, b) {
+  return String(a.utt_id == null ? '' : a.utt_id) === String(b.utt_id == null ? '' : b.utt_id);
 }
 
 /* Sequential relation builder: E1/Arg1 → Relation → E2/Arg2 → Undo → Add.
@@ -1995,9 +2023,10 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
        position when available) — mirrors the reference system's entity check. */
     if (!state.relSel) return null;
     var sel = state.relSel;
-    var byPos = state.previewEntities.filter(function(e) { return e.text === sel.text && e.start === sel.start; });
-    var m = byPos.length ? byPos[0] : state.previewEntities.filter(function(e) { return e.text === sel.text; })[0];
-    return m ? { text: m.text, start: m.start, end: m.end } : null;
+    var sameUtt = state.previewEntities.filter(function(e) { return sameUttId(e, sel); });
+    var byPos = sameUtt.filter(function(e) { return e.text === sel.text && e.start === sel.start; });
+    var m = byPos.length ? byPos[0] : sameUtt.filter(function(e) { return e.text === sel.text; })[0];
+    return m ? spanSlot(m) : null;
   }
   function stepBtn(label, enabled, onClick) {
     var b = document.createElement('button');
@@ -2023,7 +2052,7 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
   }));
   rbRow.appendChild(stepBtn('Relation', !!d.e1 && !d.rel, function() {
     if (!state.relSel) { state.relMsg = msgWord; refresh(); return; }
-    d.rel = { text: state.relSel.text, start: state.relSel.start, end: state.relSel.end };
+    d.rel = spanSlot(state.relSel);
     state.relSel = null; state.relMsg = ''; refresh();
   }));
   rbRow.appendChild(stepBtn('E2/Arg2', !!d.rel && !d.e2, function() {
@@ -2037,11 +2066,14 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
     state.relMsg = ''; refresh();
   }));
   rbRow.appendChild(stepBtn(state.lang === 'zh' ? '新增' : 'Add', !!(d.e1 && d.rel && d.e2), function() {
-    state.previewTriples.push({
+    var newTriple = {
       subj: fmtRelSpan(d.e1), rel: fmtRelSpan(d.rel), obj: fmtRelSpan(d.e2), relType: null,
       subjStart: d.e1.start != null ? d.e1.start : null, subjEnd: d.e1.end != null ? d.e1.end : null,
       objStart: d.e2.start != null ? d.e2.start : null, objEnd: d.e2.end != null ? d.e2.end : null
-    });
+    };
+    if (d.e1.utt_id != null) newTriple.subjUttId = d.e1.utt_id;
+    if (d.e2.utt_id != null) newTriple.objUttId = d.e2.utt_id;
+    state.previewTriples.push(newTriple);
     state.relDraft = { e1: null, rel: null, e2: null };
     state.relSel = null; state.relMsg = ''; refresh();
   }));
@@ -2087,7 +2119,7 @@ function buildEntityListRow(ent, color, opts) {
   if (ent.start != null && ent.end != null) {
     var posEl = document.createElement('span');
     posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
-    posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
+    posEl.textContent = '(' + (ent.utt_id != null ? '#' + ent.utt_id + ': ' : '') + ent.start + ', ' + ent.end + ')';
     row.appendChild(posEl);
   }
   if (opts && opts.onDelete) {
@@ -2206,6 +2238,121 @@ function resolveSelectionOffset(sel, selText, containerEl, realText) {
   return -1;
 }
 
+function isObjectArrayValue(v) {
+  return Array.isArray(v) && v.length > 0 && v.every(function(e) {
+    return e !== null && typeof e === 'object' && !Array.isArray(e);
+  });
+}
+
+/* First Input-role column's first-row value when it is an object array, else null (#1341 D2) */
+function getObjectArrayInput() {
+  var raw = state.datasetRawFirstRow;
+  var cols = raw ? getFieldsByRole('input') : [];
+  return cols.length > 0 && isObjectArrayValue(raw[cols[0]]) ? raw[cols[0]] : null;
+}
+
+/* Draw one utterance, wrapping marked entities and the pending relation selection.
+   Spans are half-open [start,end) inside the utterance (#1341 D3). */
+function fillDialogueUtterance(txEl, text, uttId) {
+  var colorMap = getPreviewTypeColorMap().map;
+  var rs = state.relSel && state.relSel.utt_id != null && sameUttId(state.relSel, { utt_id: uttId }) ? state.relSel : null;
+  function appendPlain(from, to) {
+    if (to <= from) return;
+    if (!rs || rs.end <= from || rs.start >= to) { txEl.appendChild(document.createTextNode(text.substring(from, to))); return; }
+    var ss = Math.max(rs.start, from), se = Math.min(rs.end, to);
+    if (ss > from) txEl.appendChild(document.createTextNode(text.substring(from, ss)));
+    var hl = document.createElement('span'); hl.className = 'rel-sel-highlight';
+    hl.textContent = text.substring(ss, se); txEl.appendChild(hl);
+    if (se < to) txEl.appendChild(document.createTextNode(text.substring(se, to)));
+  }
+  var pos = 0;
+  state.previewEntities.filter(function(e) {
+    return e.start != null && e.utt_id != null && sameUttId(e, { utt_id: uttId });
+  }).sort(function(a, b) { return a.start - b.start; }).forEach(function(ent) {
+    if (ent.start < pos) return;
+    appendPlain(pos, ent.start);
+    var span = document.createElement('span');
+    span.className = 'absa-span-highlight';
+    if (rs && rs.start <= ent.start && rs.end >= ent.end) span.classList.add('rel-sel-highlight');
+    var c = colorMap[ent.type] || '#6366F1';
+    span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+    span.title = ent.type + ' (#' + ent.utt_id + ':' + ent.start + ',' + ent.end + ')';
+    span.appendChild(document.createTextNode(text.substring(ent.start, ent.end)));
+    txEl.appendChild(span);
+    pos = ent.end;
+  });
+  appendPlain(pos, text.length);
+}
+
+/* Integrated-preview body for an object-array Input (#1341 D2): a dialogue thread when
+   dialogue_fields names a text sub-field, else the Input value as collapsible raw JSON.
+   Selection is per utterance; a selection that is not wholly inside one utterance's text
+   is rejected with a hint (D4). */
+function renderDialogueInput(textEl, turns, allowEntityEditing, refresh) {
+  var cfg = state.dialogueFields;
+  if (!cfg || !cfg.text) {
+    var det = document.createElement('details');
+    det.open = true;
+    var sum = document.createElement('summary');
+    sum.textContent = t('previewRawJsonSummary');
+    det.appendChild(sum);
+    var pre = document.createElement('pre');
+    pre.style.cssText = 'margin:8px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:0.8rem;white-space:pre-wrap;word-break:break-word';
+    pre.textContent = JSON.stringify(turns, null, 2);
+    det.appendChild(pre);
+    textEl.appendChild(det);
+    return;
+  }
+  renderDialogueThread(textEl, turns, cfg, {
+    noLimit: true,
+    idPrefix: '#',
+    fillText: function(txEl, text, uttId, i) {
+      txEl.setAttribute('data-turn-index', String(i));
+      txEl.style.whiteSpace = 'pre-wrap';
+      fillDialogueUtterance(txEl, text, uttId);
+    }
+  });
+  textEl.addEventListener('mouseup', function() {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+    var range = sel.getRangeAt(0);
+    if (!textEl.contains(range.startContainer) && !textEl.contains(range.endContainer)) return;
+    var raw = range.toString();
+    var selText = raw.trim();
+    if (!selText) return;
+    function turnTextOf(node) {
+      var el = node.nodeType === 1 ? node : node.parentElement;
+      return el ? el.closest('[data-testid="dialogue-text"]') : null;
+    }
+    var txEl = turnTextOf(range.startContainer);
+    if (!txEl || txEl !== turnTextOf(range.endContainer) || !textEl.contains(txEl)) {
+      state.dialogueMsg = t('dialogueCrossUttHint');
+      sel.removeAllRanges();
+      refresh();
+      return;
+    }
+    var i = Number(txEl.getAttribute('data-turn-index'));
+    var utterance = typeof turns[i][cfg.text] === 'string' ? turns[i][cfg.text] : '';
+    var pre = document.createRange();
+    pre.selectNodeContents(txEl);
+    pre.setEnd(range.startContainer, range.startOffset);
+    var start = pre.toString().length + (raw.length - raw.replace(/^\s+/, '').length);
+    if (utterance.substring(start, start + selText.length) !== selText) start = utterance.indexOf(selText);
+    if (start < 0) return;
+    var slot = { text: selText, utt_id: dialogueUttIdOf(turns[i], i, cfg), start: start, end: start + selText.length };
+    state.dialogueMsg = '';
+    if (allowEntityEditing && state.activeEntityType) {
+      slot.type = state.activeEntityType;
+      state.previewEntities.push(slot);
+    } else {
+      state.relSel = slot;
+      state.relMsg = '';
+    }
+    sel.removeAllRanges();
+    refresh();
+  });
+}
+
 function renderAbsaUnifiedPreview(previewContainer) {
   /* allow_bypass turned off while bypassed: clear the flag AND re-init the
      preview BEFORE rendering, so this pass already shows the restored state */
@@ -2217,6 +2364,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   });
   if (!state.previewInited) initPreviewState();
   var realText = getDatasetPreviewText();
+  var objInput = getObjectArrayInput();
   var tc = getPreviewTypeColorMap();
   var typeColorMap = tc.map, typeOrder = tc.order;
   var relCfg = state.outputConfigs['relation_identification'] || {};
@@ -2252,7 +2400,9 @@ function renderAbsaUnifiedPreview(previewContainer) {
     hl.textContent = text.substring(ss, se); parent.appendChild(hl);
     if (se < text.length) parent.appendChild(document.createTextNode(text.substring(se)));
   }
-  if (realText && state.previewEntities.length > 0) {
+  if (objInput) {
+    renderDialogueInput(textEl, objInput, allowEntityEditing, function() { renderAbsaUnifiedPreview_refresh(previewContainer); });
+  } else if (realText && state.previewEntities.length > 0) {
     var sorted = state.previewEntities.slice().filter(function(e) { return e.start != null; }).sort(function(a, b) { return a.start - b.start; });
     var charPos = 0;
     sorted.forEach(function(ent) {
@@ -2278,6 +2428,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   /* Text selection handler: with an entity type armed → add entity;
      otherwise → capture the selection for the sequential relation flow */
   textEl.addEventListener('mouseup', function() {
+    if (objInput) return; /* dialogue / raw-JSON input selects per utterance (renderDialogueInput) */
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
     var selText = sel.toString().trim();
@@ -2298,6 +2449,15 @@ function renderAbsaUnifiedPreview(previewContainer) {
   });
   previewContainer.appendChild(textEl);
 
+  if (objInput && state.dialogueMsg) {
+    var uttHint = document.createElement('div');
+    uttHint.setAttribute('data-testid', 'dialogue-cross-utt-hint');
+    uttHint.setAttribute('role', 'alert');
+    uttHint.style.cssText = 'font-size:0.75rem;color:var(--color-error);margin-top:6px;';
+    uttHint.textContent = state.dialogueMsg;
+    previewContainer.appendChild(uttHint);
+  }
+
   if (allowEntityEditing) {
     /* ── Entity Type selector (interactive) ── */
     var etTitle = document.createElement('div');
@@ -2316,12 +2476,9 @@ function renderAbsaUnifiedPreview(previewContainer) {
       chip.textContent = typeName;
       chip.addEventListener('click', function() {
         if (state.relSel) {
-          state.previewEntities.push({
-            text: state.relSel.text,
-            type: typeName,
-            start: state.relSel.start,
-            end: state.relSel.end
-          });
+          var chipEnt = spanSlot(state.relSel);
+          chipEnt.type = typeName;
+          state.previewEntities.push(chipEnt);
           state.relSel = null;
           state.relMsg = '';
           state.activeEntityType = typeName;
