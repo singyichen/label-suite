@@ -1855,7 +1855,36 @@
       gap: 16px;
       flex-wrap: wrap;
     }
-    .exec-stop-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
+    .exec-stop-main { display: flex; flex-direction: column; gap: 8px; min-width: 120px; flex: 1; }
+    /* issue #1348 (Plan A): vertical execution action column; scoped to #publishActionRow so global .btn / .status-hint stay untouched */
+    #publishActionRow { display: flex; flex-direction: column; align-items: stretch; gap: 8px; max-width: 420px; }
+    #publishActionRow .exec-action-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    #publishActionRow .btn:disabled {
+      opacity: 1;
+      color: var(--color-text-soft);
+      background: var(--color-slate-50);
+      border: 1px dashed var(--color-border);
+      cursor: not-allowed;
+    }
+    #publishActionRow .exec-action-reasons {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--color-text-soft);
+      font-variant-numeric: tabular-nums;
+    }
+    #publishActionRow .exec-action-reasons-title { margin: 0 0 4px; font-weight: 600; color: var(--color-ink); }
+    #publishActionRow .exec-action-reasons-title:not(:first-child) { margin-top: 8px; }
+    #publishActionRow .exec-action-reasons ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+    #publishActionRow .exec-action-reasons li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    #publishActionRow .exec-action-reasons li::before { content: "\2717"; color: var(--color-error); font-weight: 700; }
+    #publishActionRow .exec-action-note,
+    #publishActionRow .exec-action-readonly-note,
+    #publishActionRow .exec-action-done { margin: 0; font-size: 13px; color: var(--color-text-soft); text-align: right; }
+    #publishActionRow .exec-action-done { text-align: left; padding: 10px 12px; border: 1px solid var(--color-success-border); border-radius: var(--radius-md); background: var(--color-success-bg); color: var(--color-success); }
+    #publishActionRow .exec-action-done::before { content: "\2713 "; font-weight: 700; }
     .exec-stop-pills { display: flex; flex-wrap: wrap; gap: 8px; }
     .exec-stop-actions { display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; }
     .stop-pill {
@@ -2056,6 +2085,15 @@
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
+    }
+
+    @media (max-width: 640px) {
+      .exec-stop-row { flex-direction: column; align-items: stretch; }
+      .exec-stop-actions { width: 100%; }
+      #publishActionRow { max-width: none; width: 100%; }
+      #publishActionRow .exec-action-buttons { flex-wrap: nowrap; }
+      #publishActionRow .exec-action-buttons .btn,
+      #publishActionRow .exec-action-buttons .btn-disabled-tip { flex: 1 1 0; min-width: 0; }
     }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
@@ -2424,6 +2462,15 @@
       publishOfficialRun: '開始正式標記',
       publishComplete: '標記完成',
       noPublishAction: '此狀態不提供發布操作。',
+      noPublishActionDone: '任務已完成，無待執行動作',
+      readonlySuffix: '（唯讀）',
+      execReasonsDraftTitle: '發布前需要處理',
+      execReasonsCompleteTitle: '以下完成後才能標記完成',
+      execReasonsBothTitle: '兩個動作都需要',
+      execReasonsOfficialTitle: '「開始正式標記」另外需要',
+      execReasonsOfficialOnlyTitle: '「開始正式標記」需要',
+      iaaComputationPendingReason: 'IAA 計算中，完成後才能繼續',
+      publishUndeterminedNote: 'R{round} 的 IAA 無法判定是否達標，可直接開始正式標記，或再試標一回合',
       reviewerHint: '僅 project leader 可操作',
       dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
@@ -2972,6 +3019,15 @@
       publishOfficialRun: 'Start official run',
       publishComplete: 'Mark complete',
       noPublishAction: 'No publish action is available in this status.',
+      noPublishActionDone: 'Task completed; no pending action',
+      readonlySuffix: ' (Read-only)',
+      execReasonsDraftTitle: 'To handle before publishing',
+      execReasonsCompleteTitle: 'Finish these before marking complete',
+      execReasonsBothTitle: 'Needed for both actions',
+      execReasonsOfficialTitle: '"Start official run" also needs',
+      execReasonsOfficialOnlyTitle: '"Start official run" needs',
+      iaaComputationPendingReason: 'IAA computation is in progress; you can continue once it finishes',
+      publishUndeterminedNote: 'R{round} IAA cannot determine whether the target is met. You can start the official run directly, or add another trial round',
       reviewerHint: 'Only project leader can perform this action',
       dryRunDisabled: 'Add trial round (Read-only)',
       officialRunDisabled: 'Start official run (Read-only)',
@@ -5695,7 +5751,7 @@ function interpolate(template, payload) {
   }
 
   function poolReasonHtml(key) {
-    return '<span class="status-hint" id="publishPoolReason">' + t(key) + '</span>';
+    return '<li id="publishPoolReason">' + t(key) + '</li>';
   }
 
   function hasPassedTrialRound() {
@@ -6244,6 +6300,19 @@ function interpolate(template, payload) {
     warning.classList.toggle('hidden', !shouldShow);
   }
 
+  /* issue #1348 (Plan A): the execution control cell is a vertical column --
+     .exec-action-buttons on top, then one light "still missing" block whose items
+     belong to the button(s) above. Each reason is rendered exactly once. */
+  function execReasonsGroupHtml(title, itemsHtml, listId) {
+    return '<p class="exec-action-reasons-title">' + title + '</p>' +
+      '<ul' + (listId ? ' id="' + listId + '"' : '') + '>' + itemsHtml + '</ul>';
+  }
+
+  function execColumnHtml(buttonsHtml, noteHtml, reasonsHtml) {
+    return '<div class="exec-action-buttons">' + buttonsHtml + '</div>' + noteHtml +
+      (reasonsHtml ? '<div class="exec-action-reasons">' + reasonsHtml + '</div>' : '');
+  }
+
   function renderPublishActions() {
     var actionRow = document.getElementById('publishActionRow');
     if (!actionRow) return;
@@ -6251,8 +6320,18 @@ function interpolate(template, payload) {
     var nextRound = getTrialRounds().length + 1;
 
     if (state.taskRole === 'reviewer') {
-      actionRow.innerHTML = '<span class="btn-disabled-tip" title="' + t('reviewerHint') + '"><button class="btn btn-primary" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button></span>';
-      return;
+      /* issue #1348 D4: the label follows the state like project_leader's; the title tooltip and a visible note keep it read-only (FR-027(6)). */
+      var reviewerKey = TASK_DATA.status === 'completed' ? null : {
+        waiting_iaa_confirmation: 'publishOfficialRun',
+        official_run_in_progress: 'publishComplete'
+      }[TASK_DATA.status] || 'publishDryRun';
+      if (reviewerKey) {
+        var reviewerLabel = t(reviewerKey) + ((reviewerKey === 'publishDryRun') ? ' R' + nextRound : '') + t('readonlySuffix');
+        actionRow.innerHTML = execColumnHtml(
+          '<span class="btn-disabled-tip" title="' + t('reviewerHint') + '"><button class="btn btn-primary" type="button" disabled title="' + t('reviewerHint') + '">' + reviewerLabel + '</button></span>',
+          '<p class="exec-action-readonly-note">' + t('reviewerHint') + '</p>', '');
+        return;
+      }
     }
 
     if (TASK_DATA.status === 'draft') {
@@ -6261,23 +6340,23 @@ function interpolate(template, payload) {
       var draftGaps = draftPoolKey ? getMembershipGapMessages() : [];
       var draftDescribedBy = 'publishPoolReason' + (draftGaps.length ? ' publishMemberGapReason' : '');
       var draftGapHtml = draftGaps.length
-        ? '<span class="status-hint" id="publishMemberGapReason">' + t('toastPublishBlockedMembers') + draftGaps.join(t('memberGapJoiner')) + '</span>'
+        ? '<li id="publishMemberGapReason">' + t('toastPublishBlockedMembers') + draftGaps.join(t('memberGapJoiner')) + '</li>'
         : '';
       actionRow.innerHTML = draftPoolKey
-        ? '<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled aria-describedby="' + draftDescribedBy + '">' + t('publishDryRun') + ' R1</button>' + poolReasonHtml(draftPoolKey) + draftGapHtml
-        : '<button class="btn btn-primary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
+        ? execColumnHtml('<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled aria-describedby="' + draftDescribedBy + '">' + t('publishDryRun') + ' R1</button>', '',
+            execReasonsGroupHtml(t('execReasonsDraftTitle'), poolReasonHtml(draftPoolKey) + draftGapHtml))
+        : execColumnHtml('<button class="btn btn-primary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>', '', '');
       return;
     }
 
     if (TASK_DATA.status === 'dry_run_in_progress') {
-      /* FR-013(1) / FR-008a: one visible reason per unmet condition; the fallback keeps the legacy hint. */
+      /* FR-013(1) / FR-008a: dryRunNextRoundReason is the list heading; one visible item per unmet condition. */
       var trialReasons = getDryRunCompletionBlockerMessages();
-      var trialHtml = '<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled' + (trialReasons.length ? ' aria-describedby="publishDryRunReasons"' : '') + '>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
-        '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>' +
-        (trialReasons.length
-          ? '<ul class="status-hint" id="publishDryRunReasons">' + trialReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
-          : '');
-      actionRow.innerHTML = trialHtml;
+      actionRow.innerHTML = execColumnHtml(
+        '<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled' + (trialReasons.length ? ' aria-describedby="publishDryRunReasons"' : '') + '>' + t('publishDryRun') + ' R' + nextRound + '</button>', '',
+        trialReasons.length
+          ? execReasonsGroupHtml(t('dryRunNextRoundReason'), trialReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join(''), 'publishDryRunReasons')
+          : '<p class="exec-action-reasons-title">' + t('dryRunNextRoundReason') + '</p>');
       return;
     }
 
@@ -6285,28 +6364,34 @@ function interpolate(template, payload) {
       /* issue #783 (FR-010o-4(5)/(6)): neither the "start official run" nor
          the "add next trial round" transition may proceed while the latest
          round's IAA computation has not finished -- disable both with a
-         visible reason, same "disabled + visible reason" pattern as the
-         dry_run_in_progress branch above (issue #791 D4). The retry control
-         (FR-010o-4(3)) is project_leader-only; the reviewer branch above
-         already returns before this point, so state.taskRole here is
-         always 'project_leader'. */
-      var computationStatus = getRoundComputationStatus(getCurrentTrialRound());
+         visible reason (issue #791 D4). The retry control (FR-010o-4(3)) is
+         project_leader-only; the reviewer branch above returns before this
+         point for these statuses. */
+      var currentRound = getCurrentTrialRound();
+      var computationStatus = getRoundComputationStatus(currentRound);
       /* FR-022: the pool reason is its own item, never merged into the IAA reason. */
       var officialPoolKey = getPublishPoolBlockKey('official');
-      var officialPoolAttr = officialPoolKey ? ' aria-describedby="publishPoolReason"' : '';
-      var officialPoolHint = officialPoolKey ? poolReasonHtml(officialPoolKey) : '';
+      var poolItemHtml = officialPoolKey ? poolReasonHtml(officialPoolKey) : '';
       if (computationStatus !== 'done') {
         var isPending = computationStatus === 'pending';
-        actionRow.innerHTML =
-          '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled' + officialPoolAttr + '>' + t('publishOfficialRun') + '</button>' +
-          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingOfficialReason' : 'iaaComputationFailedReason') + '</span>' + officialPoolHint +
-          '<button class="btn btn-secondary" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
-          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingDryRunReason' : 'iaaComputationFailedReason') + '</span>' +
-          (isPending ? '' : '<button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>');
+        var iaaItemHtml = '<li id="publishIaaReason">' + t(isPending ? 'iaaComputationPendingReason' : 'iaaComputationFailedReason') +
+          (isPending ? '' : ' <button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>') + '</li>';
+        actionRow.innerHTML = execColumnHtml(
+          '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled aria-describedby="publishIaaReason' + (officialPoolKey ? ' publishPoolReason' : '') + '">' + t('publishOfficialRun') + '</button>' +
+          '<button class="btn btn-secondary" type="button" id="publishDryRunBtn" disabled aria-describedby="publishIaaReason">' + t('publishDryRun') + ' R' + nextRound + '</button>', '',
+          execReasonsGroupHtml(t('execReasonsBothTitle'), iaaItemHtml) +
+          (officialPoolKey ? execReasonsGroupHtml(t('execReasonsOfficialTitle'), poolItemHtml) : ''));
         return;
       }
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + (officialPoolKey ? ' disabled' : '') + officialPoolAttr + '>' + t('publishOfficialRun') + '</button>' + officialPoolHint +
-        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
+      /* issue #1348 D3: IAA computed but the verdict is "cannot determine" -- both buttons stay enabled, so say what pressing them means. */
+      var undeterminedHtml = currentRound && currentRound.result === 'in_progress'
+        ? '<p class="exec-action-note" id="publishUndeterminedNote">' + interpolate(t('publishUndeterminedNote'), { round: currentRound.round }) + '</p>'
+        : '';
+      actionRow.innerHTML = execColumnHtml(
+        '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + (officialPoolKey ? ' disabled aria-describedby="publishPoolReason"' : '') + '>' + t('publishOfficialRun') + '</button>' +
+        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>',
+        undeterminedHtml,
+        officialPoolKey ? execReasonsGroupHtml(t('execReasonsOfficialOnlyTitle'), poolItemHtml) : '');
       return;
     }
 
@@ -6314,13 +6399,15 @@ function interpolate(template, payload) {
       /* FR-008b / AC-3.9 / SC-037: native disabled + one visible reason per unmet condition. */
       var completeReasons = getTaskCompletionBlockerMessages();
       actionRow.innerHTML = completeReasons.length
-        ? '<button class="btn btn-primary" type="button" id="publishCompleteBtn" disabled aria-describedby="publishCompleteReasons">' + t('publishComplete') + '</button>' +
-          '<ul class="status-hint" id="publishCompleteReasons">' + completeReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
-        : '<button class="btn btn-primary" type="button" id="publishCompleteBtn">' + t('publishComplete') + '</button>';
+        ? execColumnHtml('<button class="btn btn-primary" type="button" id="publishCompleteBtn" disabled aria-describedby="publishCompleteReasons">' + t('publishComplete') + '</button>', '',
+            execReasonsGroupHtml(t('execReasonsCompleteTitle'), completeReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join(''), 'publishCompleteReasons'))
+        : execColumnHtml('<button class="btn btn-primary" type="button" id="publishCompleteBtn">' + t('publishComplete') + '</button>', '', '');
       return;
     }
 
-    actionRow.innerHTML = '<span class="status-hint">' + t('noPublishAction') + '</span>';
+    actionRow.innerHTML = TASK_DATA.status === 'completed'
+      ? '<p class="exec-action-done">' + t('noPublishActionDone') + '</p>'
+      : '<span class="status-hint">' + t('noPublishAction') + '</span>';
   }
 
   function renderIsolationState() {
