@@ -2249,7 +2249,7 @@
     );
     if (events.length === 0) {
       var empty = document.createElement('p');
-      empty.className = 'history-empty';
+      empty.className = 'empty-state empty-state-compact';
       empty.textContent = t('wsHistoryEmpty');
       container.appendChild(empty);
       return;

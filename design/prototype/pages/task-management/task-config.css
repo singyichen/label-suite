@@ -231,7 +231,6 @@
     .taxonomy-option-checkbox { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 14px; width: 14px; height: 14px; border: 1.5px solid var(--color-border); border-radius: 3px; background: var(--color-white); color: transparent; }
     .taxonomy-preview-option[aria-checked="true"] .taxonomy-option-checkbox { border-color: var(--color-primary); background: var(--color-primary); color: white; }
     .taxonomy-preview-option[aria-disabled="true"] { opacity: .48; cursor: not-allowed; }
-    .taxonomy-selector-empty { padding: 16px 8px; color: var(--color-text-soft); font-size: 12px; text-align: center; }
 
     /* ── Danger button (destructive-modal confirm, per MASTER.md §Buttons) ── */
     .btn-danger { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms; }
@@ -421,10 +420,10 @@
     .annotation-preview-divider { height: 1px; background: var(--color-border); }
     .annotation-preview-task-title { font-size: 14px; font-weight: 700; color: var(--color-ink); }
     .annotation-preview-options { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .annotation-preview-options > .empty-state { flex: 1 1 100%; }
     .annotation-preview-option { display: inline-flex; align-items: center; gap: 8px; min-height: 24px; font-size: 14px; color: var(--color-ink); white-space: nowrap; }
     .annotation-preview-option input { margin: 0; }
     .annotation-preview-color { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.12); flex-shrink: 0; }
-    .annotation-preview-empty { font-size: 13px; color: var(--color-text-soft); }
     .annotation-preview-pair { display: flex; flex-direction: column; gap: 8px; }
     .annotation-preview-pair-label { font-size: 11px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
     .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
