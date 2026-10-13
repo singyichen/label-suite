@@ -239,3 +239,6 @@ Label Suite is unpublished research software. No permission is granted to
 copy, modify, publish, distribute, deploy, or create derivative works without
 prior written authorization from the copyright holder. See [LICENSE](LICENSE)
 for the complete notice and [CITATION.cff](CITATION.cff) for citation metadata.
+
+This repository is unpublished thesis research and does not currently accept
+external pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md).
