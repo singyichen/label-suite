@@ -12,6 +12,9 @@
  * labels either way); that line is guarded by the dataset-replacement test in
  * task-detail-task-profiles.spec.ts.
  *
+ * Reload persistence is out of scope: the prototype keeps TASK_DATA in memory
+ * only, so persisting saved labels across reload is a backend contract.
+ *
  * Save path hit: saveOverviewEdit (basic-info section). The role-map select only
  * exists in the basic-info dataset preview, so saveSettingsEdit is not reached by a
  * role-map change; it is exercised here only to seed the custom labels.
@@ -100,14 +103,5 @@ test.describe('Task detail: role-map-only edit keeps saved item-pair labels (#12
     expect(((await readTaskData(page, 'fieldRoleMap')) as Record<string, string>).Title || '').toBe('');
 
     await expectLabelsInSettingsEdit(page, CUSTOM_LABELS);
-  });
-
-  test('reload re-seeds the prototype in-memory task data (derived defaults, not custom labels)', async ({ page }) => {
-    /* The prototype keeps TASK_DATA in memory only: reload proves the page re-seeds
-       cleanly from the static seed, it cannot prove persistence of the custom labels. */
-    await page.goto(TASK_DETAIL_URL);
-    await seedCustomLabels(page);
-    await page.reload();
-    await expectLabelsInSettingsEdit(page, ['Premise', 'Hypothesis']);
   });
 });
