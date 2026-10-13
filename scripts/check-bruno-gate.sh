@@ -59,11 +59,11 @@ if [[ -n "$route_files" && -n "$bru_files" ]]; then
         done <<< "$bru_files"
 
         if [[ "$matching_bru" -eq 0 && -n "$feature" ]]; then
-            echo "FR-131 gate: route changed in module '$module/$feature' but no matching backend/bruno/$module/$feature/ update found"
+            echo "FR-131 gate: route changed in module '$module/$feature' but no matching $bru_dir/$feature/ update found"
             exit 1
         fi
         if [[ "$matching_bru" -eq 0 ]]; then
-            echo "FR-131 gate: route changed in module '$module' but no matching backend/bruno/$module/ update found"
+            echo "FR-131 gate: route changed in module '$module' but no matching $bru_dir/ update found"
             exit 1
         fi
     done < <(printf '%s\n' "$route_files")
