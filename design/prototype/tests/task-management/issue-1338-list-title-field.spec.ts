@@ -303,3 +303,63 @@ test.describe('Issue #1338 — list title persistence (SC-002i)', () => {
     expect(task!.list_title_field).toBeNull();
   });
 });
+
+/* ── Review findings: id/Output leak (H1) and reset on file removal (M2) ── */
+
+test.describe('Issue #1338 — review findings', () => {
+  test('auto title never exposes an id column assigned Output; items fall back to row numbers (Data Fairness)', async ({
+    page,
+  }) => {
+    await setupTask(
+      page,
+      [
+        { id: 'ID-AAA', text: 'first sample' },
+        { id: 'ID-BBB', text: 'second sample' },
+        { id: 'ID-CCC', text: 'third sample' },
+      ],
+      'issue-1338-id-output.json',
+    );
+    await setFieldRole(page, 'text', 'input');
+    await setFieldRole(page, 'id', 'output');
+
+    expect(await selectedLabel(page)).toBe(AUTO_LABEL_ZH);
+    expect(await optionLabels(page)).not.toContain('id');
+    const preview = page.getByTestId('list-title-preview');
+    await expect(preview).toBeVisible();
+    for (const leaked of ['ID-AAA', 'ID-BBB', 'ID-CCC']) {
+      await expect(preview).not.toContainText(leaked);
+    }
+    const items = page.getByTestId('list-title-preview-item');
+    await expect(items).toHaveCount(3);
+    await expect(items.nth(0)).toContainText('1');
+    await expect(items.nth(2)).toContainText('3');
+  });
+
+  test('removing all uploaded files and re-uploading resets the list title to auto', async ({
+    page,
+  }) => {
+    const rows = [
+      { id: 'r1', text: 'alpha first', gold_label: 'POS' },
+      { id: 'r2', text: 'beta second', gold_label: 'NEG' },
+    ];
+    await setupTask(page, rows, 'issue-1338-reset.json');
+    await setFieldRole(page, 'text', 'input');
+    await setFieldRole(page, 'gold_label', 'output');
+    await select(page).selectOption('text');
+    expect(await select(page).inputValue()).toBe('text');
+
+    await page.locator('#datasetFileList .upload-file-remove').first().click();
+    await expect(page.locator('#datasetFileList .upload-file-name')).toHaveCount(0);
+
+    await page.locator('#datasetFileInput').setInputFiles({
+      name: 'issue-1338-reset-again.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(rows)),
+    });
+    await expect(page.locator('.inline-dataset-preview-wrap')).toBeVisible();
+    await setFieldRole(page, 'text', 'input');
+
+    expect(await selectedLabel(page)).toBe(AUTO_LABEL_ZH);
+    expect(await page.evaluate(() => (window as WizardWindow).state.listTitleField ?? null)).toBeNull();
+  });
+});
