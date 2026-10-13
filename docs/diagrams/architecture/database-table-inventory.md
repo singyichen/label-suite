@@ -69,7 +69,7 @@ Label Suite 的對應做法：
 | `account_email_change_request` | 實體草案 | `id` PK；`user_id → users` | 帳號／管理 §3.5 |
 | `account_notification_preference` | 實體草案 | `(user_id, event_key)` PK；`user_id → users` | 帳號／管理 §3.6 |
 | `audit_events` | 實體草案 | `id` PK；人員事件的 `actor_user_id → users`、系統事件 actor 為 null；`task_id` 可空，非空時真實 FK → `task.id`；多型 target 由服務驗證 | 帳號／管理 §3.7；Accepted ADR-032、014 FR-025，D-4 已裁決；仍未部署 |
-| `admin_role_permission` | 實體草案 | `(role_type, role_key, permission_key)` 非空複合 PK；V1 僅 42 列適用格 | 帳號／管理 §3.8／§4.7；Accepted ADR-037；尚未資料庫遷移 |
+| `admin_role_permission` | 實體草案 | `(role_type, role_key, permission_key)` 非空複合 PK；V1 目標種子 56 列適用格（5 個鍵已登錄、待啟用） | 帳號／管理 §3.8／§4.7；Accepted ADR-037；尚未資料庫遷移 |
 | `admin_role_permission_version` | 實體草案 | `id = 1` 的候選單列版本，缺列拒絕 | 帳號／管理 §3.9／§4.7；Accepted ADR-037；尚未資料庫遷移 |
 | `shared_idempotency_record` | 實體草案 | `id` PK；`actor_user_id → users`；`UNIQUE (scope, actor_user_id, idempotency_key)`；結果以 `result_resource_type`／`result_resource_id` 指向資源，不加多型 FK | 帳號／管理 §3.10／§4.7A；013 FR-006d、AC-4.4、AC-4.6；D-14 衍生設計決策（依 issue #1216／#1219 裁決）；`shared` 模組前綴；尚未資料庫遷移 |
 
@@ -183,7 +183,7 @@ erDiagram
 | 優先 | 問題 | 為何阻擋 | 來源 |
 |---|---|---|---|
 | 已裁決／實作前待驗 | 通用稽核表形 | D-4 採 `audit_events`，所有事件至少留一個日曆年；`task_id` 已列可空真實 FK 候選，狀態與隔離時間線由兩種 typed action 投影。刪除與匿名化政策、建表順序及 SQLite／PostgreSQL 驗證仍待獨立實作；不得從候選表推定已落地 | Accepted ADR-032、014 FR-025、帳號／管理 §3.7／§4.6、任務／執行 §3.1 |
-| 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；42 列初始格、固定格、CAS 與稽核目標依 ADR-037；執行階段與資料庫遷移另案實作 | Accepted ADR-037、admin-007 v1.2.0、帳號／管理 §4.7 |
+| 已裁決 | 角色權限矩陣如何參與授權 | 兩張表保留為未部署候選；56 列初始格（issue #1270 的 5 個鍵已登錄、待啟用）、固定格、CAS 與稽核目標依 ADR-037；執行階段與資料庫遷移另案實作 | Accepted ADR-037、admin-007 v1.3.0、帳號／管理 §4.7 |
 | 候選已定／實作前待驗 | 標記與審核的執行身分及黏著推導 | 014 v9.0.0／015 v12.1.0 已定 `run_id × assignment_id` 審核單位，試標 `run_id × dataset_item_id`、正式標記 `run_id × assignment_id` 推導黏著；不得建立 `ReviewAssignment` 表或將 #1165 三欄舊邏輯參照轉成 FK。八張標記／審核候選表、2 個單欄 FK 及 20 組複合 FK 已列字典；仍待資料庫遷移、爭議鍵編碼與雙庫實測 | 014／015 關鍵實體、015 FR-049／FR-051／FR-093 |
 | 候選已定／實作前待驗 | 資料項目、隱藏答案與來源沿革的五表邊界 | dataset-021 與字典已定逐檔分類、公開／私有分表及完整版本；清單編碼、任務／執行綁定與雙資料庫實測仍待後續工作；保留政策見 ADR-038／§5.2，週期與上限 待定（#1244） | dataset-021 FR-001～FR-011、[資料集字典](./dataset-db-schema.md)；主憲法 III／XIV／XVI |
 | 候選已定／實作前待驗 | MVP 試標完成證據 | `task_trial_iaa_result` 已有一回合一列的六欄候選；`done` 與完整結果同交易，兩個離開試標的閘門均查結果。演算法、registry、交易與兩庫實測仍屬後續實作 | 014 FR-010o-5、任務／執行字典 §3.8／Q-06～08 |

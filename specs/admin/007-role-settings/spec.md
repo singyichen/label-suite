@@ -1,7 +1,7 @@
 ---
 功能分支: feat/admin/007-role-settings
 建立日期: 2026-04-16
-版本: 1.2.1
+版本: 1.3.0
 狀態: Draft
 ---
 
@@ -205,6 +205,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 2. **Given** 未登入，**When** 開啟 `user-management.html` 或 `role-settings.html`，**Then** 系統導向 `/login`。
 3. **Given** `super_admin`，**When** 點擊「角色設定」tab，**Then** 顯示可編輯權限矩陣。
 4. **AC-3.4**：**Given** 一個 `user` 直接呼叫 admin API，或任一當前角色所需的已啟用權限格缺列，**When** 服務端判斷授權，**Then** 前者無法越過 Super Admin 硬邊界、後者一律拒絕；不得因 JWT 舊 role、前端按鈕或錯層格而放行。
+5. **AC-3.5**（v1.3.0 新增，issue #1270）：**Given** `task.lifecycle.manage`、`task.delete`、`annotation.exception.resolve`、`annotation.dispute.adjudicate`、`admin.platform_overview.view` 五個鍵已登錄但待啟用，矩陣儲存 56 列，**When** 非專案負責人、membership 已停用或邀請中的專案負責人、狀態或資源條件不符的請求，或任何以這五個鍵作為必要條件的授權判斷到達服務端，**Then** 一律拒絕；Super Admin 的全平台統計依固定格與 `super_admin` 硬邊界判斷，刪除 draft 任務依 `task-management/010-task-list` FR-010e 的平台層窄規則判斷，沒有 membership 時不取得任何任務層鍵；`reviewer_ids`／`arbiter_ids` 寫入改依 `task.members.manage`（FR-011）。
 
 **行為規則**：
 
@@ -240,9 +241,13 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 | task-management | `task.create` | 建立新任務 |
 | task-management | `task.detail.view` | 檢視任務詳情 |
 | task-management | `task.detail.edit` | 編輯任務詳情中允許修改的內容；仍受任務狀態與欄位規則限制 |
-| task-management | `task.members.manage` | 管理任務成員與任務角色 |
+| task-management | `task.members.manage` | 管理任務成員與任務角色，含審核名冊（`reviewer_ids`／`arbiter_ids`） |
+| task-management | `task.lifecycle.manage` | 發布、退回 draft、結案、重試 IAA、停用資料隔離（v1.3.0 新增，已登錄、待啟用） |
+| task-management | `task.delete` | 刪除 draft 任務（v1.3.0 新增，已登錄、待啟用） |
 | annotation | `annotation.workspace.annotate` | 以 annotator 模式執行標記 |
 | annotation | `annotation.workspace.review` | 以 reviewer 模式執行審核 |
+| annotation | `annotation.exception.resolve` | 最終例外池四種處置（v1.3.0 新增，已登錄、待啟用） |
+| annotation | `annotation.dispute.adjudicate` | `arbiter_ids` 為空時由專案負責人裁定爭議（v1.3.0 新增，已登錄、待啟用） |
 | dataset | `dataset.stats.view` | 檢視資料集統計 |
 | dataset | `dataset.quality.view` | 檢視資料品質頁 |
 | dataset | `dataset.export` | 下載/匯出資料結果 |
@@ -250,6 +255,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 | admin | `admin.user_management.manage` | 新增/編輯/停用使用者、指派 system role |
 | admin | `admin.role_settings.view` | 進入角色權限設定頁 |
 | admin | `admin.role_settings.manage` | 編輯並儲存角色權限矩陣 |
+| admin | `admin.platform_overview.view` | 檢視全平台統計（v1.3.0 新增，已登錄、待啟用） |
 
 ### 角色 × 權限預設矩陣（V1）
 
@@ -265,8 +271,12 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 | `task.detail.view` | ⛔（需 task role） | ⛔（需 task role） |
 | `task.detail.edit` | ⛔（需 task role） | ⛔（需 task role） |
 | `task.members.manage` | ⛔（需 task role） | ⛔（需 task role） |
+| `task.lifecycle.manage` | ⛔（需 task role） | ⛔（需 task role） |
+| `task.delete` | ⛔（需 task role） | ⛔（需 task role） |
 | `annotation.workspace.annotate` | ⛔（需 task role） | ⛔（需 task role） |
 | `annotation.workspace.review` | ⛔（需 task role） | ⛔（需 task role） |
+| `annotation.exception.resolve` | ⛔（需 task role） | ⛔（需 task role） |
+| `annotation.dispute.adjudicate` | ⛔（需 task role） | ⛔（需 task role） |
 | `dataset.stats.view` | ⛔（需 task role） | ⛔（需 task role） |
 | `dataset.quality.view` | ⛔（需 task role） | ⛔（需 task role） |
 | `dataset.export` | ⛔（需 task role） | ⛔（需 task role） |
@@ -274,6 +284,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 | `admin.user_management.manage` | ❌ | ✅ |
 | `admin.role_settings.view` | ❌ | ✅ |
 | `admin.role_settings.manage` | ❌ | ✅ |
+| `admin.platform_overview.view` | ❌ | ✅ |
 
 #### 任務角色（任務層級）
 
@@ -282,8 +293,12 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 | `task.detail.view` | ✅ | ✅ | ❌ |
 | `task.detail.edit` | ✅ | ❌ | ❌ |
 | `task.members.manage` | ✅ | ❌ | ❌ |
+| `task.lifecycle.manage` | ✅ | ❌ | ❌ |
+| `task.delete` | ✅ | ❌ | ❌ |
 | `annotation.workspace.annotate` | ❌ | ❌ | ✅ |
 | `annotation.workspace.review` | ❌ | ✅ | ❌ |
+| `annotation.exception.resolve` | ✅ | ❌ | ❌ |
+| `annotation.dispute.adjudicate` | ✅ | ❌ | ❌ |
 | `dataset.stats.view` | ✅ | ✅ | ❌ |
 | `dataset.quality.view` | ✅ | ✅ | ❌ |
 | `dataset.export` | ✅ | ❌ | ❌ |
@@ -294,9 +309,11 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 - system role 與 task role 為雙層模型，不可互相推導或繼承。
 - 同一使用者可在同一任務同時具多個 task role；membership 的邏輯唯一鍵為 `(task_id,user_id,task_role)`。非 workspace 任務頁面可取該任務 active membership 的允許權限聯集，但每個操作仍需滿足本身的資源條件。
 - 進入 annotation workspace 時必須選定 active task role；標記或審核寫入只依該 active role 的當前 active membership 與對應格判斷，不因其他 task role 聯集而放寬；URL 的 role／人員參數不能建立身分或指派。
-- V1 有 9 個平台鍵 × 2 個 system role、8 個任務鍵 × 3 個 task role，合計 **42 列適用格**；表格中的 ⛔ 是錯層、不儲存資料列。`allowed` 維持 boolean，唯讀由 `task.detail.view=true` 且 `task.detail.edit=false` 表達。
+- V1 有 10 個平台鍵 × 2 個 system role、12 個任務鍵 × 3 個 task role，合計 **56 列適用格**（v1.3.0 起；v1.2.x 為 9 × 2 ＋ 8 × 3 ＝ 42 列）；表格中的 ⛔ 是錯層、不儲存資料列。`allowed` 維持 boolean，唯讀由 `task.detail.view=true` 且 `task.detail.edit=false` 表達。
 - `super_admin` 存取 admin 頁與管理命令仍須當前 `super_admin` 角色及對應 `admin.*` 格，`user` 的格不得提升為管理員。`super_admin × admin.*` 固定啟用、`user × admin.*` 固定關閉，兩種 system role 的 `dashboard.view` 固定啟用。
 - 新鍵的可配置適用格預設 `false`，且未經審查完成層級、操作映射、完整種子資料與安全測試前不得啟用；新 `admin.*` 鍵啟用時，其固定格原子建立為超管 `true`、一般使用者 `false`。缺列或未知鍵一律拒絕。任務刪除及部分生命週期命令尚無 V1 專用鍵，不可借用其他鍵；轉為矩陣授權前必須另行核准增鍵。
+- （v1.3.0，issue #1270）`task.lifecycle.manage`、`task.delete`、`annotation.exception.resolve`、`annotation.dispute.adjudicate`、`admin.platform_overview.view` 已登錄並完成層級、操作對應與完整種子三項審查，狀態為「已登錄、待啟用」：安全測試要等正式後端實作並有 runtime 證據後，由另一個經審查的變更確認；在那之前，以這五個鍵做的授權判斷依未知鍵拒絕，對應操作維持既有的角色與資源閘門，不得改為只憑矩陣格放行。上一條「任務刪除及部分生命週期命令尚無 V1 專用鍵」自本版起改讀為「已登錄、待啟用」。`admin.platform_overview.view` 依新 `admin.*` 鍵程序原子建立固定格（`super_admin` ✅、`user` ❌）。Super Admin 刪除 draft 任務走 `task-management/010-task-list` FR-010e 的平台層窄規則，不經由任務層格。上一條「新鍵的可配置適用格預設 `false`」適用於審查未載明種子的格；本版四個任務層鍵的種子已由維護者裁定載明為 `project_leader` ✅、`reviewer` ❌、`annotator` ❌。
+- （v1.3.0，issue #1270）審核名冊（`reviewer_ids`／`arbiter_ids`）的寫入用 `task.members.manage`；資料集重綁仍用 `task.detail.edit`。
 
 ### 功能需求
 
@@ -318,7 +335,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 - **FR-008b**：系統初次建立的超級管理員（seeder 建置帳號）永遠不可被移除（刪除/停用/降級）。
 - **FR-009**：頁面必須支援 `RWD_VIEWPORTS`；在 `<= MOBILE_BP` 時需依角色類型或模組分段呈現，使用者可完整檢視與編輯矩陣，且主要操作不依賴橫向捲動。
 - **FR-010**：角色權限矩陣儲存且實際有變更後，系統必須與矩陣及版本更新同交易寫入 ADR-032 共用 `audit_events` 的 `role_permissions.changed` 事件（`target_type=role_permission_matrix`、穩定 `target_id=1`），保存操作者、時間、版本前後值及伺服器依已儲存列計算的變更前後格子 diff；不得直接信任前端提交的 diff，審計紀錄至少保留 1 個曆年。無變更也須先檢查預期版本；版本列不存在則拒絕，無變更不遞增版本或產生事件。
-- **FR-011**：矩陣儲存必須拒絕非白名單鍵、錯層、多列、缺列及違反固定格的內容；每個已啟用鍵須有全部適用角色列，⛔ 錯層格不儲存。新增鍵遵守授權判斷規則的預設拒絕與固定格啟用程序。
+- **FR-011**：矩陣儲存必須拒絕非白名單鍵、錯層、多列、缺列及違反固定格的內容；每個已啟用鍵須有全部適用角色列，⛔ 錯層格不儲存。新增鍵遵守授權判斷規則的預設拒絕與固定格啟用程序。（**v1.3.0 修訂**，對應 AC-3.5，issue #1270）白名單新增 `task.lifecycle.manage`、`task.delete`、`annotation.exception.resolve`、`annotation.dispute.adjudicate`（任務層，種子 PL ✅／RV ❌／AN ❌，可配置）與 `admin.platform_overview.view`（平台層，`super_admin` ✅／`user` ❌，固定格），矩陣必須儲存 56 列適用格；五個鍵為「已登錄、待啟用」，啟用前以它們做的授權判斷必須依未知鍵拒絕，對應操作維持既有閘門，不得只憑矩陣格放行，矩陣儲存仍必須收下其全部適用列。審核名冊寫入改用 `task.members.manage`，資料集重綁仍用 `task.detail.edit`。上文原文逐字保留。
 - **FR-010a**：`/role-settings` 頁面必須提供「操作紀錄」入口按鈕；點擊後開啟右側抽屜，列出所有歷史變更紀錄（時間、操作者、diff）；抽屜可隨時關閉，不影響矩陣編輯狀態。
 
 ### 使用者流程與導頁
@@ -392,7 +409,7 @@ flowchart LR
 - **SC-008**：系統初次建立的超級管理員（seeder 建置帳號）無法被刪除、停用或降級。
 - **SC-009**：`permission_key` 白名單與角色矩陣可完整載入、儲存、重整後一致，且白名單外 key 會被拒絕。
 - **SC-010**：每次有實際格子變更的儲存均可在共用稽核事件查得操作者、時間、版本與由伺服器計算的 diff；失敗或無變更的儲存不產生該事件。至少 1 個曆年內的紀錄可供追蹤；`/role-settings` 頁面的「操作紀錄」抽屜可正確列出歷史紀錄，每筆包含時間、操作者、diff。
-- **SC-011**：V1 只儲存 42 列適用 boolean 格；reviewer 可以檢視任務詳情但不能取得編輯權。未知鍵、缺列、錯層與失效 membership 均拒絕；固定 admin／dashboard 格不能被改變，一般使用者即使提交 admin 格也不能進入管理頁。
+- **SC-011**：V1 只儲存 42 列適用 boolean 格；reviewer 可以檢視任務詳情但不能取得編輯權。未知鍵、缺列、錯層與失效 membership 均拒絕；固定 admin／dashboard 格不能被改變，一般使用者即使提交 admin 格也不能進入管理頁。（**v1.3.0 修訂**，issue #1270）適用格數改為 56 列（10 個平台鍵 × 2、12 個任務鍵 × 3），固定格增加 `admin.platform_overview.view` 兩格；五個「已登錄、待啟用」的鍵在啟用前，授權判斷結果與未知鍵相同。上文原文逐字保留。
 
 ---
 
@@ -430,6 +447,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.0 | 2026-10-13 | **權限矩陣擴為 56 格：五個新鍵已登錄待啟用、名冊改歸成員管理鍵**（issue #1270，OpenSpec change `admin-permission-matrix-56-cells`，MINOR）：維護者裁定五個新鍵全部採用、預設停用。白名單新增 `task.lifecycle.manage`、`task.delete`、`annotation.exception.resolve`、`annotation.dispute.adjudicate`（任務層，PL ✅／RV ❌／AN ❌）與 `admin.platform_overview.view`（平台層固定格，SA ✅／user ❌），適用格 42 → 56；五鍵完成層級、操作對應與種子審查，狀態為「已登錄、待啟用」，安全測試待正式後端實作後另案確認，啟用前依未知鍵拒絕。審核名冊（`reviewer_ids`／`arbiter_ids`）寫入改歸 `task.members.manage`，資料集重綁留在 `task.detail.edit`。FR-011／SC-011 補修訂段（原文逐字保留），新增 AC-3.5；prototype `role-settings.html` 同步 22 鍵／56 格。 |
 | 1.2.1 | 2026-10-12 | Issue #1264：Prototype Traceability 對齊現況——`role-settings.html` 已同步 v1.2.0 矩陣（17 鍵／42 格、FR-008a 固定格不可勾、SA 帳號／任務清單四格可配置、無變更存檔不升版不寫稽核、讀回未知鍵或違反固定格內容時整份拒絕），Covered FR/SC 補列 FR-011／SC-011。條文未增減，純 PATCH。 |
 | 1.2.0 | 2026-10-06 | Issue #1160 D-9～D-13：Accepted ADR-037 確立矩陣是授權必要輸入；新增 `task.detail.edit`、42 列適用格、固定 admin／dashboard 格、新鍵預設拒絕與完整啟用程序；明定一人多 task role、workspace active role、CAS 空變更及穩定稽核目標，新增 FR-011／AC-3.4／SC-011 與功能目標。此版只更新規劃契約，未建立 runtime。 |
 | 1.1.14 | 2026-10-06 | Issue #1160 D-4：FR-010／SC-010 對齊 ADR-032 共用 `role_permissions.changed` 事件、伺服器計算 diff 與至少一個曆年保存；D-9 授權語意另行裁決。 |

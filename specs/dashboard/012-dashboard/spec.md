@@ -1,7 +1,7 @@
 ---
 功能分支: fix/1003-demo-reviewer-entry
 建立日期: 2026-04-05
-版本: 2.14.0
+版本: 2.14.1
 狀態: In Progress
 ---
 
@@ -365,6 +365,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-008**：Super Admin Dashboard 必須包含：平台使用者統計、任務概況、最近提醒、任務列表。
 - **FR-008A**：Super Admin Dashboard 的「平台使用者統計」必須包含 4 張指標卡：總用戶（人）、專案負責人（人）、標記員（人）、審核員（人）；各卡標籤顯示於數值上方。
 - **FR-008B**：Super Admin Dashboard 的「任務概況」必須包含 4 張指標卡：總任務（個）、進行中（個）、等待 IAA 確認（個）、速度異常（個）；各卡標籤顯示於數值上方。
+  - （v2.14.1 釐清，issue #1270）FR-008A 與 FR-008B 的全平台統計對應 admin-007 v1.3.0 的平台層鍵 `admin.platform_overview.view`（`super_admin` ✅／`user` ❌ 固定格），狀態為「已登錄、待啟用」：啟用前以它做的授權判斷依未知鍵拒絕，統計仍只依當前 `super_admin` 硬邊界提供。FR-008E／FR-008F 的全平台任務範圍仍依 `task.list.view`，不受此鍵影響。
 - **FR-008C**：Super Admin Dashboard 的「最近提醒」必須以清單呈現，且每項包含提醒標題與提醒內容；清單為空時必須顯示 i18n 文字佔位（如「目前沒有提醒」），不得呈現空白區塊。
 - **FR-008D**：Super Admin Dashboard 的「任務列表」必須顯示「查看全部」按鈕，且每列包含名稱、摘要、一至多個輸出類型 tag、Annotation Stage／Status badge 與 progress bar。
 - **FR-008E**：Super Admin Dashboard 點擊「查看全部」時，系統必須導向 `/task-list`，並以 `super_admin` 權限顯示全平台任務。
@@ -554,6 +555,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.14.1 | 2026-10-13 | Issue #1270：FR-008B 後補釐清——FR-008A／FR-008B 全平台統計對應 admin-007 v1.3.0 已登錄、待啟用的 `admin.platform_overview.view`；啟用前依未知鍵拒絕，現行 `super_admin` 硬邊界不變；FR-008E／FR-008F 範圍仍依 `task.list.view`。條文未增減，純 PATCH。 |
 | 2.14.0 | 2026-10-12 | **Super Admin 全平台任務範圍改由當前身分決定**（issue #1269，OpenSpec change `dashboard-admin-platform-scope-source`，MINOR）：FR-008E／FR-008F 各補一段修訂——全平台範圍由伺服器依當前 DB system role `super_admin` 加平台層 `task.list.view` 格決定；網址 `task_role=super_admin` 只是 prototype 檢視上下文，MUST NOT 授予範圍，非超管帶此參數只得到自身 membership 範圍（ADR-037）。使用者故事 2 驗收情境新增第 4 項（檔內驗收情境不賦 AC 編號）。兩條 FR 原文、導向目的地與「待 IAA 確認」篩選不變；prototype 不改（`task-list.html` 已依 issue #1266 fail closed）。**未新增或移除任何 FR／AC／SC 編號**。 |
 | 2.13.0 | 2026-09-27 | **審核流程示範任務入口身分分流**（issue #1003，OpenSpec change `fix-1003-demo-reviewer-entry`；**未新增或移除任何 FR／AC／SC 編號**）：issue #956（PR #999）把工作區左欄收斂為「annotation-015 FR-093 被指派單位 ∪ 同檔 FR-060 可仲裁之爭議單位」後，T014–T016 原本統一以 `reviewer_chen` 進入的示範入口（FR-011D），使 `reviewer_chen` 在 T014／T015 的 FR-093 指派單位數恆為 0，除爭議單位外的一切狀態（待審、已定稿）皆不可達；issue #1000 的永久黏著放寬（annotation-015 v7.5.0）雖使可見數各 +1，經現場重新量測仍不足以恢復主線可達性（propose 前實測：T014 15 單位中僅 4 個可見、T015 4 單位中僅 2 個可見，且皆缺待審狀態）。**變更內容**：**修訂 FR-011D**——示範入口身分不再三個任務統一指向 `reviewer_chen`：**T014 改為 `reviewer_li`**（實測被指派 6 個單位，待審 3／爭議 2／定稿 1，三態齊全）、**T015 改為 `reviewer_wang`**（實測被指派 2 個單位，待審 1／定稿 1，乾淨主線）、**T016 維持 `reviewer_chen`**（唯一可仲裁者，仲裁與最終例外示範本體不變）；經實測排除以 `reviewer_wang` 作為 T014 入口的候選——其於 T014 之 FR-093 指派單位全數已定稿，`findNextActionableReviewUnit()` 恆回傳 `null`，快速審核會直接落到空狀態。**未變更、亦未放寬** annotation-015 FR-060（仲裁者排除於 FR-093 新指派池外）與 FR-093 之工作區左欄／導覽指派過濾（issue #956/#1000 收斂邏輯）本身，也未變更任一示範任務的 `reviewerIds`／`arbiterIds` 名冊結構。**原型**：`dashboard.assignments.js`（1 個生產檔）T014／T015 的 `reviewWorkItem()` 呼叫之 `reviewerId` 引數字面值變更，並同步改寫上方過期註解。**既有測試修正**：`dashboard-card-a11y.spec.ts`（1 案，位移）、`dashboard-review-flow-demo.spec.ts`（2 案，位移）、`dashboard-quick-review-next-actionable.spec.ts`（2 案：1 位移＋1 前提消失——原「保留仲裁者略過待審、落到爭議」示範案例的前提隨 T014 換身分而消失，改寫為「已受派審核員的快速審核優先落在自己待審單位」之正向斷言，該一般性規則本身仍由同檔案 T016／`reviewer_chen` 案例逐字保留覆蓋，未刪除亦未弱化）。**新增測試**：`dashboard/issue-1003-demo-reviewer-entry.spec.ts`（T014／T015 示範可走性 2 案＋FR-060／FR-093 不變量 2 案）。**獨立審查**：`senior-code-reviewer` 逐項核實 (1) `reviewAssignmentRoster()`／`filterUnitsToAssigned()` 零改動且 #956／#1000 契約測試全過、(2) 獨立重新量測 T014/`reviewer_li`與T015/`reviewer_wang`之指派單位狀態分佈與 proposal.md 論證一致、(3) 既有測試修正之斷言數量零淨減少（`grep -c "expect("` before/after 32/32、25/25、29/29）、(4) `task-detail.data.js` 名冊結構 diff 為空，四項全數 PASS。**分級理由**：修訂既有 FR-011D 之具體指派值與理由句，未新增或移除任何 FR／AC／SC 編號——MINOR。 |
 | 2.12.0 | 2026-09-18 | **同步 annotation-015 v6.6.0：審核流程示範任務收斂為 T014–T016**（issue #815，OpenSpec change `retire-stale-review-demo-fixtures`；**未新增或移除任何 FR／SC 編號**）：平手示範任務 T017 之種子形狀只能由已廢止之多數決規則產生，已自 prototype 與 `docs/product/example-data/` 移除。**變更內容**：**FR-011D**、**FR-011E** 之示範任務範圍 T014–T017 → T014–T016（FR-011D「四種模型」同步改寫）；**SC-024** 快速操作數 17 → 16、範圍 T001–T016；同一事實之功能目標、已釐清事項、下游表 010 列、**SC-019**、**SC-020**、**SC-023** 之基線筆數 17 → 16 一併同步，避免條文自相矛盾。**逐字保留不改寫**：FR-011E 之 v2.6.0 修訂註記（「不再以示範任務清單（T014–T017）界定」為當時沿革）與本 Changelog 舊列。**刻意排除**：FR-011E 內 T016 之 `approved`／`modified` 計數例示為 issue #596（v5.0.0）遺留之語彙殘留，與本變更之 T017 移除無關，不在本版處理。**分級理由**：驗收基線筆數與快速操作數改變——MINOR（對齊 v2.1.0 擴充基線之分級先例）。 |

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.3.0
+版本: 2.3.1
 狀態: In Progress
 ---
 
@@ -260,7 +260,7 @@ sequenceDiagram
 - **FR-010b**：點擊 `刪除` 時，系統必須執行軟刪除（設定 `deleted_at` 與刪除操作者），且不得物理刪除資料。
 - **FR-010c**：軟刪除任務不得出現在預設 `/task-list` 結果中。
 - **FR-010d**：刪除確認流程必須使用 task-management 共用 modal 樣式，不得使用瀏覽器原生 `confirm`。
-- **FR-010e**：刪除任務僅允許該任務 active `project_leader` 或當前 `super_admin`，且仍受 draft 狀態與原有資源限制；其他角色不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示無權限提示。V1 矩陣尚無 `task.delete` 專用鍵，實作不得借用 `task.detail.edit` 或 `task.members.manage`，亦不得宣稱 42 列 V1 種子已覆蓋刪除；轉換此命令的矩陣授權前需依 ADR-037 核准增鍵、完整種子與安全測試。
+- **FR-010e**：刪除任務僅允許該任務 active `project_leader` 或當前 `super_admin`，且仍受 draft 狀態與原有資源限制；其他角色不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示無權限提示。V1 矩陣尚無 `task.delete` 專用鍵，實作不得借用 `task.detail.edit` 或 `task.members.manage`，亦不得宣稱 42 列 V1 種子已覆蓋刪除；轉換此命令的矩陣授權前需依 ADR-037 核准增鍵、完整種子與安全測試。（v2.3.1 釐清，issue #1270）`task.delete` 已依 admin-007 v1.3.0 登錄為任務層鍵（種子 PL ✅／RV ❌／AN ❌），狀態為「已登錄、待啟用」：啟用前以它做的授權判斷依未知鍵拒絕，刪除仍依上述 active `project_leader`、draft 狀態與資源限制判斷；`super_admin` 的刪除路徑不經任務層格，依平台硬邊界判斷。上文「42 列 V1 種子」自 admin-007 v1.3.0 起改讀為 56 列。
 - **FR-010f**：刪除任務僅允許 `status = draft`；非 `draft` 任務不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示狀態不允許刪除的提示。
 - **FR-011**：任務列表必須將每筆任務的 `outputs[].type` 逐項呈現為唯讀 tag；複合任務顯示多個 tag，且不得硬編固定組合名稱或渲染分支。
 - **FR-011a**：輸出類型 tag 必須依 `OUTPUT_TYPE_REGISTRY` 顯示 zh/en 文案，並以可見文字與可存取名稱傳達類型，不得只依賴顏色。
@@ -350,7 +350,7 @@ flowchart LR
 | 008 | Shared Sidebar Navbar | L0 導覽、active 狀態與 RWD 導覽規範 |
 | 012 | Dashboard | 從 dashboard 進入 task-management 的入口語意 |
 | 013 | New Task | `OUTPUT_TYPE_REGISTRY`、8 個 `OUTPUT_TYPE_KEYS` 與 `outputs[]` producer contract |
-| admin-007／ADR-037 | Permission Matrix Authorization | `task.list.view` 與未涵蓋的 task.delete 增鍵程序 |
+| admin-007／ADR-037 | Permission Matrix Authorization | `task.list.view` 與 `task.delete`（v1.3.0 已登錄、待啟用）的啟用程序 |
 
 ### 下游（依賴本規格的規格）
 
@@ -421,6 +421,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.1 | 2026-10-13 | Issue #1270：FR-010e 補釐清句——`task.delete` 已於 admin-007 v1.3.0 登錄（已登錄、待啟用），啟用前依未知鍵拒絕，刪除既有閘門與 `super_admin` 路徑不變；「42 列」改讀為 56 列；依賴表同步。條文未增減，純 PATCH。 |
 | 2.3.0 | 2026-10-06 | Issue #1160 D-9：依 ADR-037 加入 `task.list.view` 矩陣條件，保留 membership／全平台資料範圍；明列任務刪除尚無 V1 專用鍵，不能借用其他鍵，新增 SC-016。規劃契約尚未實作 runtime。 |
 | 2.2.0 | 2026-09-18 | Issue #815（OpenSpec change `retire-stale-review-demo-fixtures`，上游 015 v6.6.0 之下游同步）：平手示範任務 T017 之種子形狀只能由已廢止之多數決規則產生，其 fixture `review-flow-official-tie.json` 已自 `docs/product/example-data/` 與 prototype 移除。示例基線表移除該列，基線筆數 17 → 16（功能目標、SC-010、SC-015 同步），`single_label` 命中數 6 → 5，其餘輸出類型命中數不變；審核流程示範 seed 範圍改為 T014–T016。未新增或移除 FR／AC；v2.1.0 列所述「擴充至 17 筆」為當時沿革，不改寫。**分級理由**：驗收基線之筆數與命中數改變——MINOR（對齊 v2.1.0 擴充基線之分級先例）。 |
 | 2.1.2 | 2026-09-08 | Issue #721：釐清 FR-005a 涵蓋範圍——無權限提示的觸發時機不限於 `/task-list` 內點擊任務列的攔截，亦涵蓋 `/task-detail` 因角色檢查導回 `/task-list` 的情境（原本 `?unauthorized=` 導頁參數從未被讀取，使用者無從得知返回原因）；未新增或移除 FR/AC，僅釐清既有 FR-005a 的適用範圍。 |
