@@ -3760,7 +3760,7 @@
        Mirrors task-new.html's own `state` fields; consumed by
        task-config.engine.js / .data.js / .yaml.js / .dataset.js and
        task-detail.config.js. Seeded per-task by ensureTaskConfigSeeded(). */
-    datasetFiles: [], fieldRoleMap: {},
+    datasetFiles: [], fieldRoleMap: {}, listTitleField: null,
     datasetParsedColumns: [], datasetParsedRows: [], datasetRawFirstRow: {}, datasetColumnUniqueValues: {},
     _datasetRoots: [],
     _datasetVersion: 0,
@@ -4817,6 +4817,7 @@ function interpolate(template, payload) {
       TASK_DATA.fieldRoleMap = Object.assign({}, profile.fieldRoleMap || {});
       TASK_DATA.datasetFileName = profile.datasetFileName || TASK_DATA.datasetSourceZh;
       TASK_DATA.datasetRecords = cloneData(profile.datasetRecords || []);
+      TASK_DATA.list_title_field = profile.list_title_field ?? null;
       /* issue #1120 (FR-010f-3, maintainer ruling 2026-10-05): a profile's
          datasetTotal covers the whole dataset including trial-history
          samples that are not in datasetRecords (the official records stay
@@ -6534,6 +6535,7 @@ function getTaskTypeLabel() {
       return { type: outKey, config: state.outputConfigs[outKey] || {} };
     });
     TASK_DATA.fieldRoleMap = Object.assign({}, state.fieldRoleMap);
+    TASK_DATA.list_title_field = state.listTitleField ?? null;
     /* A replaced dataset only bumps _datasetVersion; the pair-label reset lives in
        renderSchemaFields, so run it before reading labels to avoid persisting stale ones */
     renderSchemaFields();
