@@ -251,21 +251,27 @@ Each lead must follow SDD as written in CLAUDE.md:
 The lead calls the companion script directly from its own shell, never through the `codex:codex-rescue` agent: that agent is a forwarder whose cwd is pinned to the repository root and which does not pass `--cwd`, so dispatching through it makes Codex edit the shared `main` checkout instead of the worktree.
 
 ```bash
+# Shell state does not survive between Bash tool calls: repeat this assignment at the top of EVERY call
+# that uses it (launch, status, result, resume, review), or write the resolved absolute path inline.
 COMPANION=~/.claude/plugins/cache/openai-codex/codex/<version>/scripts/codex-companion.mjs   # see Permission pre-flight
 node "$COMPANION" task --write --background --cwd "<absolute worktree path>" --prompt-file "<scratchpad>/green-${N}-prompt.md" --json
 #   → {"jobId": "task-…", …}
-node "$COMPANION" status <jobId> --wait --timeout-ms 1500000 --poll-interval-ms 10000 --cwd "<absolute worktree path>" --json   # run_in_background
+
+# separate Bash call, run_in_background — re-assign COMPANION first
+node "$COMPANION" status <jobId> --wait --timeout-ms 1500000 --poll-interval-ms 10000 --cwd "<absolute worktree path>" --json
+
+# separate Bash call — re-assign COMPANION first
 node "$COMPANION" result <jobId> --cwd "<absolute worktree path>"
 ```
 
 When the job completes:
 
-1. `git status --short` must list exactly the files Codex reported as touched and nothing else. Any file outside the prompt's `<action_safety>` list is reverted with `git checkout -- <path>` before anything else happens.
+1. Every path in `git status --short` must be in the prompt's `<action_safety>` allowlist; any path outside it is reverted with `git checkout -- <path>` before anything else happens. Then compare `git status --short` with the files Codex reported as touched. On the first turn the two sets match exactly; on a `--resume-last` turn the report lists only that turn's edits while the worktree still holds the earlier turn's uncommitted ones, so the check there is "reported ⊆ status ⊆ allowlist", never equality — comparing for equality on a resumed turn fails a correct run.
 2. `git diff HEAD --stat -- <red test file>` must be empty. Codex never edits the Red contract.
 3. The lead reruns every gate outside the sandbox — the Red test, `bash -n`/`ruff`/`mypy`/`tsc` as applicable, `scripts/check-sdd.sh`, and anything that needs a server — and reads the full diff. Codex's own "passed" lines are a hint, not evidence.
 4. The lead commits with an English Conventional Commit message that names Codex and the thread id in the body.
 
-On a red gate, send only the failing output back on the same thread: `node "$COMPANION" task --write --resume-last --cwd "<worktree>" --prompt-file "<scratchpad>/green-${N}-fix-prompt.md"`. At most **two** such rounds; on the third failure the lead hands Green to the Claude specialist for that path, and records the hand-over in the checkpoint comment. When a review finding needs a new Red case first, `senior-qa` adds it and commits before the resume call, exactly as in the first round.
+On a red gate, send only the failing output back on the same thread: `node "$COMPANION" task --write --resume-last --cwd "<worktree>" --prompt-file "<scratchpad>/green-${N}-fix-prompt.md"` (re-assign `COMPANION` in that call). At most **two** such rounds; on the third failure the lead hands Green to the Claude specialist for that path, and records the hand-over in the checkpoint comment. When a review finding needs a new Red case first, `senior-qa` adds it and commits before the resume call, exactly as in the first round.
 
 Codex reports it cannot act on — a mismatch it noticed outside its allowed files, a doubt about a config row — are decided by the lead and recorded in the checkpoint comment; they are never bounced back to Codex automatically.
 
@@ -300,7 +306,7 @@ Only the prototype group is conditional there (`when design/prototype/** changed
 
 Paste each command and its result into the PR Test Plan. A red gate is never skipped or worked around. Fix it, then re-run.
 
-**Independent review, no self-assessment — dispatched in parallel with the gates above, not after them.** For a claude-only issue the lead starts a fresh `senior-code-reviewer` that did not write the code; for a codex-eligible issue it runs Codex's built-in reviewer against the committed branch, `node "$COMPANION" review --base "${BASE}" --scope branch --wait --cwd "<worktree>"` as a background command. Either starts at the same time as the gates, so neither sits idle waiting on the other. The implementing agent never reviews its own work, and the lead never substitutes its own reading for the review. The lead verifies each finding against the repository before acting on it: a finding that is in scope and Critical/High goes back to the implementer (for Codex, a `task --resume-last` round, preceded by a `senior-qa` Red case when the fix needs one); an in-scope Medium/Low is listed in the PR body as non-blocking; a finding that is real but outside the issue's scope becomes its own issue per `.claude/rules/issue-reporting.md`, named in the PR body. Record the verdict and each disposition in the checkpoint comment. In the #1262 pilot Codex's review found three High defects — one a pre-existing mapping bug that no Claude layer had caught — so a clean Codex Green is not grounds to skip the review.
+**Independent review, no self-assessment — dispatched in parallel with the gates above, not after them.** For a claude-only issue the lead starts a fresh `senior-code-reviewer` that did not write the code; for a codex-eligible issue it runs Codex's built-in reviewer against the committed branch, `node "$COMPANION" review --base "origin/${BASE}" --scope branch --wait --cwd "<worktree>"` as a background command (re-assign `COMPANION` in that call). The base is the **remote** ref: `git fetch origin main` does not move the local `main` branch, and a stale local `main` makes the reviewer read every commit it is behind — 51 commits and 69 files instead of 2 when this was first drafted — so the review is no longer scoped to the change. For a stacked PR, `origin/<previous branch>` works once that branch is pushed. Either starts at the same time as the gates, so neither sits idle waiting on the other. The implementing agent never reviews its own work, and the lead never substitutes its own reading for the review. The lead verifies each finding against the repository before acting on it: a finding that is in scope and Critical/High goes back to the implementer (for Codex, a `task --resume-last` round, preceded by a `senior-qa` Red case when the fix needs one); an in-scope Medium/Low is listed in the PR body as non-blocking; a finding that is real but outside the issue's scope becomes its own issue per `.claude/rules/issue-reporting.md`, named in the PR body. Record the verdict and each disposition in the checkpoint comment. In the #1262 pilot Codex's review found three High defects — one a pre-existing mapping bug that no Claude layer had caught — so a clean Codex Green is not grounds to skip the review.
 
 Then open the PR. Write the body to a file first and pass `--body-file`: a long `--body` heredoc is rejected as a compound command in some permission modes.
 
