@@ -347,6 +347,11 @@
        but is desaturated and stays more prominent than unselected ones. */
     .ws-finalized-notice {
       display: flex; align-items: flex-start; gap: 10px;
+      border-color: var(--color-info-border);
+      background: var(--color-info-bg);
+      color: var(--color-info);
+    }
+    .ws-finalized-notice[data-lock-reason="under_review"] {
       border-color: var(--color-warning-border);
       background: var(--color-warning-bg);
       color: var(--color-warning);

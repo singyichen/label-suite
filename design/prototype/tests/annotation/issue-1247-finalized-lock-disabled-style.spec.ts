@@ -105,7 +105,7 @@ test.describe('issue #1247 -- finalized lock visual disabled styling', () => {
     expect(selectedStyle.opacity).toBeGreaterThan(unselectedStyle.opacity);
   });
 
-  test('notice has a lock svg, two-line copy, and warning tokens', async ({ page }) => {
+  test('notice has a lock svg, two-line copy, and info tokens', async ({ page }) => {
     await openFinalizedSample(page, 'official_run', 'test_annotator_1247c');
     const notice = page.getByTestId('ws-annotator-finalized-notice');
     await expect(notice).toBeVisible();
@@ -120,7 +120,9 @@ test.describe('issue #1247 -- finalized lock visual disabled styling', () => {
     const descBox = await desc.boundingBox();
     expect(titleBox && descBox && descBox.y).toBeGreaterThan(titleBox!.y);
 
-    const { border, bg, warningBorder, warningBg, infoBg } = await page.evaluate(() => {
+    // Spec 015 v12.5.0 (AC-2.27 correction): the finalized notice uses the
+    // informational colour --color-info*, no longer the warning tokens.
+    const { border, bg, infoBorder, infoBg, warningBg } = await page.evaluate(() => {
       const resolve = (token: string, prop: 'color' | 'backgroundColor') => {
         const probe = document.createElement('div');
         probe.style.cssText = `${prop === 'color' ? 'color' : 'background-color'}:var(${token})`;
@@ -134,14 +136,14 @@ test.describe('issue #1247 -- finalized lock visual disabled styling', () => {
       return {
         border: cs.borderTopColor,
         bg: cs.backgroundColor,
-        warningBorder: resolve('--color-warning-border', 'color'),
+        infoBorder: resolve('--color-info-border', 'color'),
         warningBg: resolve('--color-warning-bg', 'backgroundColor'),
         infoBg: resolve('--color-info-bg', 'backgroundColor'),
       };
     });
-    expect(border).toBe(warningBorder);
-    expect(bg).toBe(warningBg);
-    expect(bg).not.toBe(infoBg);
+    expect(border).toBe(infoBorder);
+    expect(bg).toBe(infoBg);
+    expect(bg).not.toBe(warningBg);
   });
 
   test('autosave status bar shows a lock svg instead of the green dot, text unchanged', async ({ page }) => {
@@ -174,21 +176,17 @@ test.describe('issue #1247 -- finalized lock visual disabled styling', () => {
     });
   }
 
-  test('negative: dry_run finalized sample has no lock styling', async ({ page }) => {
+  /* Spec 015 v12.5.0 (issue #1328 / #1330): the finalized terminal lock is
+   * official_run only. A dry_run unit with reviewer submissions is locked as
+   * V1 under_review instead (covered by issue-1330), never with finalized
+   * information styling or copy. */
+  test('negative: dry_run finalized-equivalent sample shows no finalized lock presentation', async ({ page }) => {
     await openFinalizedSample(page, 'dry_run', 'test_annotator_1247f');
-    await expect(page.getByTestId('ws-annotator-finalized-notice')).toHaveCount(0);
-
-    for (const testId of ['ws-save-btn', 'ws-submit-btn']) {
-      const btn = page.getByTestId(testId);
-      await expect(btn).toBeEnabled();
-      const { cursor, opacity } = await styleOf(btn);
-      expect(cursor, `${testId} cursor`).not.toBe('not-allowed');
-      expect(opacity, `${testId} opacity`).toBe(1);
-    }
-    const chip = page.locator('#annotationPreview').getByTestId('ws-single-label-chip-positive');
-    await expect(chip).toBeEnabled();
-    const { cursor, opacity } = await styleOf(chip);
-    expect(cursor).not.toBe('not-allowed');
-    expect(opacity).toBe(1);
+    await expect(page.locator('[data-lock-reason="finalized"]')).toHaveCount(0);
+    const notice = page.getByTestId('ws-annotator-finalized-notice');
+    await expect(notice).toHaveCount(1);
+    await expect(notice).toHaveAttribute('data-lock-reason', 'under_review');
+    await expect(notice).not.toContainText(FINALIZED_NOTICE_TITLE);
+    await expect(page.getByTestId('ws-autosave-status')).not.toContainText(AUTOSAVE_FINALIZED_TEXT);
   });
 });

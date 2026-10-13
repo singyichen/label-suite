@@ -2373,10 +2373,27 @@
    * resolveTaskProfile(taskId).outputs, the same source the workspace host
    * itself uses to build the task's output type list. */
   function isAnnotatorWriteLocked(taskId, runType, sampleId, identity) {
-    if (runType !== 'official_run') return false;
+    return getAnnotatorLockReason(taskId, runType, sampleId, identity) !== null;
+  }
+
+  /* FR-101 / AC-2.27 / AC-2.30 (issue #1330): the single judgment behind every
+   * annotator lock. 'finalized' = the official_run terminal lock (derived by
+   * getReviewUnitStatus, takes precedence); 'under_review' = the V1
+   * source-integrity lock -- a real annotator submission plus any formal
+   * reviewer submission, in dry_run and official_run alike. An FR-044a
+   * demo-row unit has no real annotator submission, so it reads null. */
+  function getAnnotatorLockReason(taskId, runType, sampleId, identity) {
     var profile = resolveTaskProfile(taskId);
     var outKeys = (profile && profile.outputs || []).map(function (o) { return o.type; });
-    return getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) === REVIEW_UNIT_STATUS.FINALIZED;
+    if (runType === 'official_run' &&
+        getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) === REVIEW_UNIT_STATUS.FINALIZED) {
+      return 'finalized';
+    }
+    if (getSubmission(taskId, 'annotator', runType, sampleId, identity) &&
+        readReviewerSubmissions(taskId, runType, sampleId, identity).length) {
+      return 'under_review';
+    }
+    return null;
   }
 
   /* issue #824 (FR-093 本版修訂 1): the key a sticky lookup is built on.
@@ -4053,6 +4070,7 @@
     REVIEW_ASSIGNMENT_GRANULARITY: REVIEW_ASSIGNMENT_GRANULARITY,
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
+    getAnnotatorLockReason: getAnnotatorLockReason,
     getReviewUnitLane: getReviewUnitLane,
     getReviewAssignments: getReviewAssignments,
     getStickyReviewers: getStickyReviewers,
