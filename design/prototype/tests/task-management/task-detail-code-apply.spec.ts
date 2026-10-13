@@ -61,12 +61,14 @@ test.describe('task-detail Code 套用 (FR-026 (3))', () => {
 
   test('套用 does not write persisted settings: cancelling edit restores the old summary (passes on current code)', async ({ page }) => {
     await openLabelingEdit(page);
-    page.on('dialog', (dialog) => dialog.accept());
     await editCodeLabel(page, 'excellent');
     await codePanel(page).getByRole('button', { name: /^(套用|儲存)$/ }).click();
     await expect(page.locator('#annotationPreview')).toContainText('excellent');
 
     await page.locator('#settingsCancelBtn').click();
+    // FR-026 (2): the discard confirmation is the in-page modal, not window.confirm.
+    await expect(page.locator('#settingsLeaveModal')).toBeVisible();
+    await page.locator('#settingsLeaveConfirmBtn').click();
 
     await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
     await expect(page.locator('#settingsConfigView')).toContainText('positive, neutral, negative');

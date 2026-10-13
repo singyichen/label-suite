@@ -311,8 +311,8 @@ test.describe('Issue #1338 — saving basic info writes list_title_field (7.1)',
     await openBasicEdit(page, 'T9390');
 
     await select(page).selectOption('text');
-    page.once('dialog', (d) => d.accept());
     await page.locator('#overviewCancelBtn').click();
+    await page.locator('#settingsLeaveConfirmBtn').click();
     await expect(page.locator('#overviewEditForm')).toHaveClass(/hidden/);
 
     expect(await readTaskData(page, 'list_title_field')).toBe('note');
