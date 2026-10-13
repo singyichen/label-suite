@@ -116,9 +116,9 @@ Leads may talk to each other directly. The rules below are not style preferences
 
 ## Permission pre-flight
 
-Before dispatching the first wave, confirm `.claude/settings.json` allows every `gh` mutation this flow issues unattended — at minimum `gh issue edit` (labels), `gh issue comment`, `gh pr create`, `gh pr merge`, and `gh api -X DELETE` (branch cleanup) — and the Codex companion call, `Bash(node *codex-companion.mjs *)`. A missing allow rule stalls the whole flow at the first blocked call with nobody watching: the first real run stopped dead on `gh issue edit --add-label` in step 5. Run `/fewer-permission-prompts` once per machine, or add the rule directly.
+Before dispatching the first wave, confirm `.claude/settings.json` allows every `gh` mutation this flow issues unattended — at minimum `gh issue edit` (labels), `gh issue comment`, `gh pr create`, `gh pr merge`, and `gh api -X DELETE` (branch cleanup) — and the Codex companion call, `Bash(scripts/codex-companion.sh *)`. Never widen that rule to `node *codex-companion.mjs *`: its wildcards also admit `node -e …` or any same-named script, which is arbitrary code execution without a prompt (#1314). A missing allow rule stalls the whole flow at the first blocked call with nobody watching: the first real run stopped dead on `gh issue edit --add-label` in step 5. Run `/fewer-permission-prompts` once per machine, or add the rule directly.
 
-Also confirm Codex itself is ready once per machine: `node <companion> setup --json` must report `"ready": true` with `loggedIn: true`. The companion script lives at `~/.claude/plugins/cache/openai-codex/codex/<version>/scripts/codex-companion.mjs`; resolve `<version>` from `~/.claude/plugins/installed_plugins.json` (`installPath`) rather than hard-coding it, since a plugin update moves it. `${CLAUDE_PLUGIN_ROOT}` exists only inside the plugin's own commands and agents, never in a lead's shell.
+Also confirm Codex itself is ready once per machine: `scripts/codex-companion.sh setup --json` must report `"ready": true` with `loggedIn: true`. The companion script itself lives at `~/.claude/plugins/cache/openai-codex/codex/<version>/scripts/codex-companion.mjs`, and a plugin update moves it; the wrapper resolves `installPath` from `~/.claude/plugins/installed_plugins.json` on every call, so no prompt or shell variable ever names the version. `${CLAUDE_PLUGIN_ROOT}` exists only inside the plugin's own commands and agents, never in a lead's shell.
 
 ## Step 1 — Scan
 
@@ -251,17 +251,15 @@ Each lead must follow SDD as written in CLAUDE.md:
 The lead calls the companion script directly from its own shell, never through the `codex:codex-rescue` agent: that agent is a forwarder whose cwd is pinned to the repository root and which does not pass `--cwd`, so dispatching through it makes Codex edit the shared `main` checkout instead of the worktree.
 
 ```bash
-# Shell state does not survive between Bash tool calls: repeat this assignment at the top of EVERY call
-# that uses it (launch, status, result, resume, review), or write the resolved absolute path inline.
-COMPANION=~/.claude/plugins/cache/openai-codex/codex/<version>/scripts/codex-companion.mjs   # see Permission pre-flight
-node "$COMPANION" task --write --background --cwd "<absolute worktree path>" --prompt-file "<scratchpad>/green-${N}-prompt.md" --json
+# scripts/codex-companion.sh resolves the versioned companion path itself — see Permission pre-flight
+scripts/codex-companion.sh task --write --background --cwd "<absolute worktree path>" --prompt-file "<scratchpad>/green-${N}-prompt.md" --json
 #   → {"jobId": "task-…", …}
 
-# separate Bash call, run_in_background — re-assign COMPANION first
-node "$COMPANION" status <jobId> --wait --timeout-ms 1500000 --poll-interval-ms 10000 --cwd "<absolute worktree path>" --json
+# separate Bash call, run_in_background
+scripts/codex-companion.sh status <jobId> --wait --timeout-ms 1500000 --poll-interval-ms 10000 --cwd "<absolute worktree path>" --json
 
-# separate Bash call — re-assign COMPANION first
-node "$COMPANION" result <jobId> --cwd "<absolute worktree path>"
+# separate Bash call
+scripts/codex-companion.sh result <jobId> --cwd "<absolute worktree path>"
 ```
 
 When the job completes:
@@ -271,7 +269,7 @@ When the job completes:
 3. The lead reruns every gate outside the sandbox — the Red test, `bash -n`/`ruff`/`mypy`/`tsc` as applicable, `scripts/check-sdd.sh`, and anything that needs a server — and reads the full diff. Codex's own "passed" lines are a hint, not evidence.
 4. The lead commits with an English Conventional Commit message that names Codex and the thread id in the body.
 
-On a red gate, send only the failing output back on the same thread: `node "$COMPANION" task --write --resume-last --cwd "<worktree>" --prompt-file "<scratchpad>/green-${N}-fix-prompt.md"` (re-assign `COMPANION` in that call). At most **two** such rounds; on the third failure the lead hands Green to the Claude specialist for that path, and records the hand-over in the checkpoint comment. When a review finding needs a new Red case first, `senior-qa` adds it and commits before the resume call, exactly as in the first round.
+On a red gate, send only the failing output back on the same thread: `scripts/codex-companion.sh task --write --resume-last --cwd "<worktree>" --prompt-file "<scratchpad>/green-${N}-fix-prompt.md"`. At most **two** such rounds; on the third failure the lead hands Green to the Claude specialist for that path, and records the hand-over in the checkpoint comment. When a review finding needs a new Red case first, `senior-qa` adds it and commits before the resume call, exactly as in the first round.
 
 Codex reports it cannot act on — a mismatch it noticed outside its allowed files, a doubt about a config row — are decided by the lead and recorded in the checkpoint comment; they are never bounced back to Codex automatically.
 
@@ -306,7 +304,7 @@ Only the prototype group is conditional there (`when design/prototype/** changed
 
 Paste each command and its result into the PR Test Plan. A red gate is never skipped or worked around. Fix it, then re-run.
 
-**Independent review, no self-assessment — dispatched in parallel with the gates above, not after them.** For a claude-only issue the lead starts a fresh `senior-code-reviewer` that did not write the code; for a codex-eligible issue it runs Codex's built-in reviewer against the committed branch, `node "$COMPANION" review --base "origin/${BASE}" --scope branch --wait --cwd "<worktree>"` as a background command (re-assign `COMPANION` in that call). The base is the **remote** ref: `git fetch origin main` does not move the local `main` branch, and a stale local `main` makes the reviewer read every commit it is behind — 51 commits and 69 files instead of 2 when this was first drafted — so the review is no longer scoped to the change. For a stacked PR, `origin/<previous branch>` works once that branch is pushed. Either starts at the same time as the gates, so neither sits idle waiting on the other. The implementing agent never reviews its own work, and the lead never substitutes its own reading for the review. The lead verifies each finding against the repository before acting on it: a finding that is in scope and Critical/High goes back to the implementer (for Codex, a `task --resume-last` round, preceded by a `senior-qa` Red case when the fix needs one); an in-scope Medium/Low is listed in the PR body as non-blocking; a finding that is real but outside the issue's scope becomes its own issue per `.claude/rules/issue-reporting.md`, named in the PR body. Record the verdict and each disposition in the checkpoint comment. In the #1262 pilot Codex's review found three High defects — one a pre-existing mapping bug that no Claude layer had caught — so a clean Codex Green is not grounds to skip the review.
+**Independent review, no self-assessment — dispatched in parallel with the gates above, not after them.** For a claude-only issue the lead starts a fresh `senior-code-reviewer` that did not write the code; for a codex-eligible issue it runs Codex's built-in reviewer against the committed branch, `scripts/codex-companion.sh review --base "origin/${BASE}" --scope branch --wait --cwd "<worktree>"` as a background command. The base is the **remote** ref: `git fetch origin main` does not move the local `main` branch, and a stale local `main` makes the reviewer read every commit it is behind — 51 commits and 69 files instead of 2 when this was first drafted — so the review is no longer scoped to the change. For a stacked PR, `origin/<previous branch>` works once that branch is pushed. Either starts at the same time as the gates, so neither sits idle waiting on the other. The implementing agent never reviews its own work, and the lead never substitutes its own reading for the review. The lead verifies each finding against the repository before acting on it: a finding that is in scope and Critical/High goes back to the implementer (for Codex, a `task --resume-last` round, preceded by a `senior-qa` Red case when the fix needs one); an in-scope Medium/Low is listed in the PR body as non-blocking; a finding that is real but outside the issue's scope becomes its own issue per `.claude/rules/issue-reporting.md`, named in the PR body. Record the verdict and each disposition in the checkpoint comment. In the #1262 pilot Codex's review found three High defects — one a pre-existing mapping bug that no Claude layer had caught — so a clean Codex Green is not grounds to skip the review.
 
 Then open the PR. Write the body to a file first and pass `--body-file`: a long `--body` heredoc is rejected as a compound command in some permission modes.
 
@@ -361,7 +359,7 @@ Merge is the main session's job alone. Applying `agent-ready` is the maintainer'
 
 **Stacked PRs merge one at a time, in stack order.** `gh pr merge` merges into whatever base is currently set — after PR N merges, retarget PR N+1 with `gh pr edit <N+1> --base main` *before* merging it, then re-check all four conditions above: the edit makes GitHub recompute `mergeable`/`mergeStateStatus`, so a check taken before the edit does not count. Skipping the retarget is a silent failure that still reports success: if PR N+1's base still points at PR N's branch, merging it lands the change on that branch instead of `main`, yet `gh pr view` still reports `MERGED`, `Closes #N` still closes the issue, and the four conditions can all have passed before the retarget. Confirm `main` actually contains the change afterward, e.g. `git log origin/main --oneline | grep <pr>`.
 
-On a red gate: fix and push, at most **twice**. If it is still red, hand the failure to Codex for one read-only diagnosis pass — `node "$COMPANION" task --cwd "<worktree>" --prompt-file <file>` without `--write`, never the `codex:codex-rescue` agent, whose pinned cwd would diagnose the wrong checkout — CLAUDE.md escalates at three failed attempts on the same problem. If that does not resolve it, post a checkpoint comment containing the **exact** error output, swap `agent-running` for `blocked`, and send a `PushNotification`.
+On a red gate: fix and push, at most **twice**. If it is still red, hand the failure to Codex for one read-only diagnosis pass — `scripts/codex-companion.sh task --cwd "<worktree>" --prompt-file <file>` without `--write`, never the `codex:codex-rescue` agent, whose pinned cwd would diagnose the wrong checkout — CLAUDE.md escalates at three failed attempts on the same problem. If that does not resolve it, post a checkpoint comment containing the **exact** error output, swap `agent-running` for `blocked`, and send a `PushNotification`.
 
 ## Step 8 — Checkpoint comments
 
@@ -484,7 +482,7 @@ One deviation is from CLAUDE.md itself and is therefore **not** this skill's to 
 | Codex cannot `git commit` inside the companion sandbox: `.git` is read-only under `workspace-write`, so the commit fails with `.git/index.lock: Operation not permitted` (probed 2026-10-12) | Codex writes files only; the lead commits after the `git status` / `touchedFiles` comparison |
 | The Codex sandbox has no network: `curl 127.0.0.1:<port>` and `curl example.com` both fail (exit 7 / 6), so Playwright, a dev server, PostgreSQL/Redis-backed pytest, and `gh` are unreachable from inside it | The prompt's `<verification_loop>` lists offline commands only; the lead reruns every gate outside the sandbox |
 | Dispatching Codex through the `codex:codex-rescue` agent runs it at the repository root — the agent's cwd is pinned there and it does not forward `--cwd` — so Codex edits the shared `main` checkout | The lead calls the companion script itself with `--cwd <absolute worktree path>` |
-| The companion script's path carries the plugin version (`…/codex/1.0.6/scripts/codex-companion.mjs`) and `${CLAUDE_PLUGIN_ROOT}` is unset in a lead's shell | Resolve `installPath` from `~/.claude/plugins/installed_plugins.json` at pre-flight; never hard-code the version in a prompt |
+| The companion script's path carries the plugin version (`…/codex/1.0.6/scripts/codex-companion.mjs`) and `${CLAUDE_PLUGIN_ROOT}` is unset in a lead's shell | Call `scripts/codex-companion.sh`, which resolves `installPath` from `~/.claude/plugins/installed_plugins.json` on each run; never hard-code the version in a prompt |
 | The main session verified Red with `cd <worktree> && …` and the harness pinned its cwd inside the worktree for the rest of the run (#1262 pilot) | Main-session inspection uses `git -C <worktree>` or a subshell `( cd <worktree> && … )`, never a bare `cd` |
 | `gh pr checks --watch` exited 0 while `Prototype — Playwright Tests` was still `IN_PROGRESS` (#1287, 12 minutes after push) | Treat the watch as a wake-up only; the step 7 `gh run list` count of unfinished runs for the head SHA plus the two unconditional jobs decide |
 | GitHub returned 502/504 on `gh issue edit`, `gh issue comment`, and `gh issue view` during the pilot; a checkpoint comment that failed to post leaves the issue with no resume contract | Retry the call; never record a checkpoint as posted until the command printed the comment URL |
