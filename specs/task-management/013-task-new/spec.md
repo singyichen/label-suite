@@ -1,5 +1,5 @@
 ---
-功能分支: feat/task-new-step1-field-role-hints
+功能分支: feat/1338-list-title-field
 建立日期: 2026-04-20
 版本: 8.3.2
 狀態: Draft
