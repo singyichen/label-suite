@@ -1546,7 +1546,8 @@ function dialogueJoinedText(v) {
   return texts.length > 0 ? texts.join('\n') : null;
 }
 
-/* Reusable dialogue thread renderer (also used by the annotation workspace, #1340):
+/* Reusable dialogue thread renderer (currently used only by the task-new preview;
+   annotation workspace adoption belongs to #1341):
    one row per turn, first 20 turns then a "more" hint. cfg = { text, speaker, utt_id } */
 function renderDialogueThread(container, turns, cfg) {
   var MAX_TURNS = 20;
@@ -1606,19 +1607,7 @@ function getDatasetPreviewText() {
     if (vals.length > 0) return vals.join('\n');
     return null;
   }
-  var bestCol = null;
-  var bestLen = 0;
-  for (var i = 0; i < state.datasetParsedColumns.length; i++) {
-    var col = state.datasetParsedColumns[i];
-    var v = raw[col];
-    var fbRole = state.fieldRoleMap[col];
-    if (fbRole === 'output' || fbRole === 'evidence') continue;
-    if (typeof v === 'string' && v.length > bestLen) {
-      bestCol = col;
-      bestLen = v.length;
-    }
-  }
-  if (bestCol && bestLen > 5) return raw[bestCol];
+  /* No Input column: no non-Input column may be a text source (Data Fairness) */
   return null;
 }
 
