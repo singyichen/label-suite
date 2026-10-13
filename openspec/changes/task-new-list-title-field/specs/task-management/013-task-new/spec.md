@@ -12,7 +12,7 @@
 
 表格下方 MUST 顯示「標記清單預覽」，列出所選資料列來源前 3 筆紀錄的標題；所選為「自動」時的標題摘要規則不在本條範圍。預覽 MUST 於下拉選擇、欄位角色指定與資料列來源切換後即時更新，不需使用者點擊其他按鈕。
 
-所選欄位若因角色改為「不使用」或 Output、或不在新資料列來源的欄位中而不再屬於選項集合，系統 MUST 將 `list_title_field` 回退為 `null`（自動），並顯示說明原因的提示。建立任務 payload MUST 帶 `list_title_field`（自動時為 `null`）。task-detail 設定›基本資料編輯模式依 FR-014k（specs/task-management/014-task-detail/spec.md） 與本條同構。
+非 `id` 欄位於角色改為「不使用」或 Output 時，或任何所選欄位不在新資料列來源的欄位中時，視為不再屬於選項集合；`id` 欄位例外，僅在角色改為 Output 或不在新資料列來源時才視為不再屬於選項集合（角色為「不使用」時仍可選）。所選欄位不再屬於選項集合時，系統 MUST 將 `list_title_field` 回退為 `null`（自動），並顯示說明原因的提示。建立任務 payload MUST 帶 `list_title_field`（自動時為 `null`）。task-detail 設定›基本資料編輯模式依 FR-014k（specs/task-management/014-task-detail/spec.md） 與本條同構。
 
 #### Scenario: AC-1.8 下拉選項不含 Output 欄位且預覽即時更新
 
@@ -24,7 +24,7 @@
 #### Scenario: AC-1.9 所選欄位失效時回退自動並提示
 
 - **GIVEN** 「清單標題」已選擇某 Input 欄位
-- **WHEN** 使用者將該欄位角色改為「不使用」或 Output
+- **WHEN** 使用者將該欄位角色改為「不使用」或 Output（若所選為 `id`，僅改為 Output 才適用；`id` 改為「不使用」時維持原選擇）
 - **THEN** 「清單標題」回到「自動（依資料形狀）」並顯示說明原因的提示
 - **AND** 預覽改以「自動」呈現
 
