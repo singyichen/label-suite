@@ -1,3 +1,4 @@
+@import url("./empty-state.css");
 /* Shared sidebar styles for prototype pages */
 .navbar {
   width: 240px;
@@ -729,6 +730,7 @@ html[data-theme="dark"] .shortcut-help-dialog {
   max-height: 320px;
   overflow-y: auto;
 }
+.notif-list > .empty-state-compact { margin: 12px; }
 
 .notif-item {
   display: flex;
@@ -796,13 +798,6 @@ html[data-theme="dark"] .shortcut-help-dialog {
   border-radius: 50%;
   background: var(--color-primary);
   margin-top: 5px;
-}
-
-.notif-empty {
-  padding: 32px 16px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--color-ink-muted, #94A3B8);
 }
 
 .mobile-notification-bell-btn {

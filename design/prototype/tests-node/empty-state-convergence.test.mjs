@@ -46,6 +46,29 @@ const LEGACY = [
 const legacyRe = (name) => new RegExp(`(?<![\\w-])${name}(?![\\w-])`);
 const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
 
+// Class-context token extraction for files where a bare word search would
+// match prose/identifiers (e.g. "empty" in JS). Collects tokens from
+// class="..." / class=\"...\" attributes, className = '...', setAttribute
+// ('class', '...'), classList.add/remove/toggle('...'), and CSS selectors
+// (whole .css files, or <style> blocks of .html files).
+function classTokens(rel) {
+  const text = read(rel);
+  const out = new Set();
+  const addList = (str) => str.split(/\s+/).filter(Boolean).forEach((t) => out.add(t));
+  for (const m of text.matchAll(/\bclass\s*=\s*\\?["']([^"'\\]*)/g)) addList(m[1]);
+  for (const m of text.matchAll(/\bclassName\s*=\s*['"]([^'"]*)['"]/g)) addList(m[1]);
+  for (const m of text.matchAll(/setAttribute\(\s*['"]class['"]\s*,\s*['"]([^'"]*)['"]/g)) addList(m[1]);
+  for (const m of text.matchAll(/classList\.\w+\(([^)]*)\)/g)) {
+    for (const q of m[1].matchAll(/['"]([^'"]+)['"]/g)) addList(q[1]);
+  }
+  let css = '';
+  if (rel.endsWith('.css')) css = text;
+  else for (const m of text.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)) css += m[1];
+  css = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const m of css.matchAll(/(?<!\d)\.(-?[_a-zA-Z][\w-]*)/g)) out.add(m[1]);
+  return out;
+}
+
 // Append one entry per batch. `html` files must link the shared sheet;
 // every file in `html` + `js` must be free of legacy tokens; `markers` maps
 // file -> tokens that must be present after convergence.
@@ -100,6 +123,33 @@ const BATCHES = [
     sharedExtra: ['empty-state-compact'],
     manifestRemoved: ['stats-empty', 'quality-empty'],
   },
+  {
+    name: 'batch 3 (sidebar notifications, dashboard, annotation-list)',
+    classContext: true,
+    markers: {},
+    html: ['pages/annotation/annotation-list.html'],
+    js: ['pages/shared/sidebar.js', 'pages/dashboard/dashboard.js'],
+    css: ['pages/shared/sidebar.css', 'pages/dashboard/dashboard.layout.css'],
+    // Legacy class tokens banned per file (class contexts only).
+    legacyByFile: {
+      'pages/annotation/annotation-list.html': ['empty', 'empty-msg'],
+      'pages/shared/sidebar.js': ['notif-empty'],
+      'pages/shared/sidebar.css': ['notif-empty'],
+      'pages/dashboard/dashboard.js': ['list-empty'],
+      'pages/dashboard/dashboard.layout.css': ['list-empty'],
+    },
+    // Class tokens that must be present (class contexts only).
+    classMarkers: {
+      'pages/annotation/annotation-list.html': ['empty-state', 'empty-state-panel', 'empty-state-desc', 'empty-state-action'],
+      'pages/shared/sidebar.js': ['empty-state', 'empty-state-compact'],
+      'pages/dashboard/dashboard.js': ['empty-state', 'empty-state-compact'],
+    },
+    // sidebar.css is loaded by every page: shared sheet must be its first statement.
+    firstStatement: { file: 'pages/shared/sidebar.css', statement: '@import url("./empty-state.css");' },
+    // dashboard keeps its test id on the converged element.
+    literals: { 'pages/dashboard/dashboard.js': ['data-testid="task-list-empty"'] },
+    manifestRemoved: ['empty', 'list-empty', 'notif-empty'],
+  },
 ];
 
 describe('empty-state shared stylesheet', () => {
@@ -123,10 +173,38 @@ for (const batch of BATCHES) {
         assert.match(read(file), /<link[^>]+href="\.\.\/shared\/empty-state\.css"/);
       });
     }
-    for (const file of [...batch.html, ...(batch.partials ?? []), ...batch.js]) {
+    for (const file of batch.classContext ? [] : [...batch.html, ...(batch.partials ?? []), ...batch.js]) {
       for (const token of batch.legacy ?? LEGACY) {
         it(`${file} has no legacy token ${token}`, () => {
           assert.doesNotMatch(read(file), legacyRe(token));
+        });
+      }
+    }
+    for (const [file, tokens] of Object.entries(batch.legacyByFile ?? {})) {
+      for (const token of tokens) {
+        it(`${file} has no class token ${token}`, () => {
+          assert.ok(!classTokens(file).has(token), `${file} still uses class ${token}`);
+        });
+      }
+    }
+    for (const [file, tokens] of Object.entries(batch.classMarkers ?? {})) {
+      for (const token of tokens) {
+        it(`${file} uses class ${token}`, () => {
+          assert.ok(classTokens(file).has(token), `${file} lacks class ${token}`);
+        });
+      }
+    }
+    if (batch.firstStatement) {
+      const { file, statement } = batch.firstStatement;
+      it(`${file} starts with ${statement}`, () => {
+        const css = read(file).replace(/\/\*[\s\S]*?\*\//g, '').trimStart();
+        assert.ok(css.startsWith(statement), `first statement is not ${statement}`);
+      });
+    }
+    for (const [file, lits] of Object.entries(batch.literals ?? {})) {
+      for (const lit of lits) {
+        it(`${file} keeps ${lit}`, () => {
+          assert.ok(read(file).includes(lit));
         });
       }
     }
@@ -179,6 +257,18 @@ for (const batch of BATCHES.filter((b) => b.blocks)) {
         assert.match(read(SHARED_CSS), new RegExp(`\\.${name}(?![\\w-])`));
       });
     }
+    for (const name of batch.manifestRemoved) {
+      it(`manifest transitionalClasses no longer lists ${name}`, () => {
+        const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
+        const listed = (manifest.classScan?.transitionalClasses ?? []).flatMap((t) => t.classes);
+        assert.ok(!listed.includes(name), `${name} still transitional`);
+      });
+    }
+  });
+}
+
+for (const batch of BATCHES.filter((b) => !b.blocks && b.manifestRemoved)) {
+  describe(`empty-state manifest: ${batch.name}`, () => {
     for (const name of batch.manifestRemoved) {
       it(`manifest transitionalClasses no longer lists ${name}`, () => {
         const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));

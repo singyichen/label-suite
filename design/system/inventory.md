@@ -544,7 +544,7 @@
 
 - class：`notif-*`、`mobile-notification-bell-btn`
 - 出現頁面：所有登入後頁面（`shared/sidebar.js` 共用 fragment）
-- 缺口：開合鍵盤行為、focus 管理、`notif-empty` 對應 Empty State 後的版式
+- 缺口：開合鍵盤行為、focus 管理、`empty-state-compact` 於通知下拉內的版式
 
 ---
 

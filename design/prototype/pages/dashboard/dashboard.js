@@ -420,7 +420,7 @@
       return createTaskCard(entry, task, role, index, outputTypeMap);
     }).join('');
     if (!markup) {
-      markup = '<p class="list-empty" data-testid="task-list-empty">'
+      markup = '<p class="empty-state empty-state-compact" data-testid="task-list-empty">'
         + escapeHtml(t('taskListEmpty'))
         + '</p>';
     }
