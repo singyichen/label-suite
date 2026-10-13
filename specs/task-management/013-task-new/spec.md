@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-new-step1-field-role-hints
 建立日期: 2026-04-20
-版本: 8.3.1
+版本: 8.3.2
 狀態: Draft
 ---
 
@@ -684,9 +684,11 @@ flowchart LR
 
 | Artifact | Responsibility | Covered FR/SC | Verification | Status |
 |----------|----------------|---------------|--------------|--------|
-| [design/prototype/pages/task-management/task-new.html](../../../design/prototype/pages/task-management/task-new.html) | Four-step wizard shell (Step 1–4), Step 1/2 taxonomy and output-type selection UI, config-builder preview, observable interaction, and RWD only; the spec remains authoritative for creation contracts, permissions, and idempotency. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-new-*.spec.ts`, 15 files) | Active |
-| [design/prototype/pages/task-management/task-config.data.js](../../../design/prototype/pages/task-management/task-config.data.js)<br>[design/prototype/pages/task-management/task-config.engine.js](../../../design/prototype/pages/task-management/task-config.engine.js)<br>[design/prototype/pages/task-management/task-config.yaml.js](../../../design/prototype/pages/task-management/task-config.yaml.js)<br>[design/prototype/pages/task-management/task-config.dataset.js](../../../design/prototype/pages/task-management/task-config.dataset.js)<br>[design/prototype/pages/task-management/task-config.css](../../../design/prototype/pages/task-management/task-config.css) | Shared `OUTPUT_TYPE_REGISTRY` config engine (Step 1/2 field rendering, preview, YAML/JSON code view, styling); co-owned with `014-task-detail`'s Overview/labeling-settings edit mode, which reuses the same engine for structural parity — not exclusive to this spec. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-new-*.spec.ts`, `task-detail-config-parity.spec.ts`) | Active; shared with 014 |
+| [design/prototype/pages/task-management/task-new.html](../../../design/prototype/pages/task-management/task-new.html) | Four-step wizard shell (Step 1–4), Step 1/2 taxonomy and output-type selection UI, config-builder preview, observable interaction, and RWD only; the spec remains authoritative for creation contracts, permissions, and idempotency. | FR-002c-2, FR-002c-6～FR-002c-8, FR-003a～FR-003a-3, FR-003d-1, FR-003d-10, FR-003g-2, FR-003j, FR-004a, FR-004d, FR-004d-1, FR-005b, FR-005b-1, FR-006, FR-007a, FR-008e, SC-002c, SC-002e, SC-002f, SC-003k, SC-003o, SC-003q, SC-003w, SC-004d | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-new-*.spec.ts`, 15 files) | Active |
+| [design/prototype/pages/task-management/task-config.data.js](../../../design/prototype/pages/task-management/task-config.data.js)<br>[design/prototype/pages/task-management/task-config.engine.js](../../../design/prototype/pages/task-management/task-config.engine.js)<br>[design/prototype/pages/task-management/task-config.yaml.js](../../../design/prototype/pages/task-management/task-config.yaml.js)<br>[design/prototype/pages/task-management/task-config.dataset.js](../../../design/prototype/pages/task-management/task-config.dataset.js)<br>[design/prototype/pages/task-management/task-config.css](../../../design/prototype/pages/task-management/task-config.css) | Shared `OUTPUT_TYPE_REGISTRY` config engine (Step 1/2 field rendering, preview, YAML/JSON code view, styling); co-owned with `014-task-detail`'s Overview/labeling-settings edit mode, which reuses the same engine for structural parity — not exclusive to this spec. | FR-002c-2, FR-002c-6～FR-002c-8, FR-003a～FR-003a-3, FR-003d-1, FR-003d-10, FR-003g-2, FR-003j, FR-004a, FR-004d, FR-004d-1, FR-005b, FR-005b-1, FR-006, FR-007a, FR-008e, SC-002c, SC-002e, SC-002f, SC-003k, SC-003o, SC-003q, SC-003w, SC-004d | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-new-*.spec.ts`, `task-detail-config-parity.spec.ts`) | Active; shared with 014 |
 | [design/system/pages/task-new.md](../../../design/system/pages/task-new.md) | Page-scoped design reference only; does not define runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design reference) | Active; no wireframe (frozen baseline predates this page) |
+
+> `Covered FR/SC` 欄的 `A～B` 表示依本 spec 已定義 ID 排序的連續範圍；清單僅取自 `design/prototype/tests/**` 檔頭 Traceability 標註的 FR/SC（issue #1316）。未列出的 FR 代表尚無原型測試標註，不代表已覆蓋。
 
 ---
 
@@ -798,6 +800,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 8.3.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 8.3.1 | 2026-10-08 | **初建循環參照的實作精度（issue #1160，PATCH）**：FR-006a／AC-4.3 明確要求預配置 task、config、guideline 三個 UUID，並於提交時驗證兩個非空、同任務的目前版本指標；原有 task／creator membership／兩版本／啟動設定同交易與全回滾行為不變。這是既有原子建立契約的約束精度，無新增使用者可觀察流程或 API 形狀。 |
 | 8.3.0 | 2026-10-06 | Issue #1160 T4：FR-006／FR-006a／FR-006d 與關鍵實體明定建立時不可變 config/schema v1、每次後續完整 config 儲存同步遞增、canonical schema digest 與釘住保留的 registry version；task、creator membership、config、指引及啟動設定同交易提交，維持既有 idempotency 時窗與導頁。對齊 014 v6.0.0 指引內容版本與顯示政策，新增 AC-4.3～4.5；PR 前 QA 補明 `task.create` 冪等 key 以已驗證建立者／操作為範圍、重送時重新授權、同 key 同正規化內容才回原 `task_id`，同 key 異內容回報衝突，新增 AC-4.6 並同步 SC-006。 |
 | 8.2.0 | 2026-10-06 | Issue #1160 D-9：FR-001a／SC-006 依 ADR-037 加入 system 層 `task.create` 矩陣必要條件，維持建立者原有角色與 membership 邊界；僅更新規劃契約。 |
