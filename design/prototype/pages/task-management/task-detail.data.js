@@ -1484,6 +1484,7 @@
       fieldRoleMap: created.fieldRoleMap || {},
       datasetFileName: created.datasetFileName || '',
       datasetRecords: created.datasetRecords || [],
+      list_title_field: created.list_title_field ?? null,
       guidelineFiles: DEFAULT_GUIDELINE_FILES
     };
   });

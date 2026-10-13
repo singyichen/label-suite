@@ -1,7 +1,7 @@
 # task-management/013-task-new Specification
 
 ## Purpose
-New Task（新增任務精靈與設定建構器，Project Leader）的 derived view。正典為 `specs/task-management/013-task-new/spec.md`（v7.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `2026-09-04-seq-tagging-span-config`（issue #581）之 FR-003d-1／FR-003d-3（修訂）。本檔於該 change archive 前以正典 v6.9.6 的兩條原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
+New Task（新增任務精靈與設定建構器，Project Leader）的 derived view。正典為 `specs/task-management/013-task-new/spec.md`（v8.4.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `2026-09-04-seq-tagging-span-config`（issue #581）之 FR-003d-1／FR-003d-3（修訂）、change `2026-10-13-task-new-list-title-field`（issue #1338）之 FR-002c-9（新增）。本檔於該 change archive 前以正典 v6.9.6 的兩條原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
 
 ## Requirements
 
@@ -194,3 +194,32 @@ Step 2 預覽 MUST 在 `sequence_tagging` 下對相交落點給出即時可見�
 - **Given** Step 4 留空且其餘建立設定通過驗證
 - **When** 任務建立交易成功
 - **Then** 建立同任務不可變的指引內容版本 1，`force_guideline` 留在 task 顯示政策中（TaskGuidelineConfig；AC-4.3）
+
+### Requirement: FR-002c-9 Step 1 清單標題欄位與標記清單預覽
+
+嵌入式資料預覽於資料列來源列下方，系統 MUST 提供「清單標題」下拉（任務設定鍵 `list_title_field`，型別 `string | null`，`null` 代表「自動」，預設為「自動」）。選項 MUST 由下列規則推導，且 MUST NOT 列出角色為 Output 的欄位：「自動（依資料形狀）」；目前所選資料列來源中角色為 Input 或 Evidence 的欄位；欄位名稱為 `id` 且角色不是 Output 的欄位。型別為物件陣列的欄位 MUST 以 `<欄位名>（取第 1 則的文字）` 標示。
+
+表格下方 MUST 顯示「標記清單預覽」，列出所選資料列來源前 3 筆紀錄的標題；所選為「自動」時的標題摘要規則不在本條範圍。預覽 MUST 於下拉選擇、欄位角色指定與資料列來源切換後即時更新，不需使用者點擊其他按鈕。
+
+非 `id` 欄位於角色改為「不使用」或 Output 時，或任何所選欄位不在新資料列來源的欄位中時，視為不再屬於選項集合；`id` 欄位例外，僅在角色改為 Output 或不在新資料列來源時才視為不再屬於選項集合（角色為「不使用」時仍可選）。所選欄位不再屬於選項集合時，系統 MUST 將 `list_title_field` 回退為 `null`（自動），並顯示說明原因的提示。建立任務 payload MUST 帶 `list_title_field`（自動時為 `null`）。task-detail 設定›基本資料編輯模式依 FR-014k（specs/task-management/014-task-detail/spec.md） 與本條同構。
+
+#### Scenario: AC-1.8 下拉選項不含 Output 欄位且預覽即時更新
+
+- **GIVEN** 已上傳資料集，其中一欄指定為 Input、一欄指定為 Output
+- **WHEN** 使用者開啟「清單標題」下拉並選擇 Input 欄位
+- **THEN** 選項只含「自動（依資料形狀）」、Input／Evidence 欄位與 `id`，不含 Output 欄位
+- **AND** 「標記清單預覽」立即顯示前 3 筆該欄位的值
+
+#### Scenario: AC-1.9 所選欄位失效時回退自動並提示
+
+- **GIVEN** 「清單標題」已選擇某 Input 欄位
+- **WHEN** 使用者將該欄位角色改為「不使用」或 Output（若所選為 `id`，僅改為 Output 才適用；`id` 改為「不使用」時維持原選擇）
+- **THEN** 「清單標題」回到「自動（依資料形狀）」並顯示說明原因的提示
+- **AND** 預覽改以「自動」呈現
+
+#### Scenario: SC-002i 清單標題隨建立任務 payload 帶出
+
+- **GIVEN** Step 1 已選定某 Input 欄位為「清單標題」
+- **WHEN** 使用者完成精靈並建立任務
+- **THEN** 建立任務 payload 的 `list_title_field` 為該欄位名稱
+- **AND** 重新載入精靈草稿後下拉仍為該選項

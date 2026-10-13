@@ -109,6 +109,8 @@ function seedDatasetFromProfile(profile) {
   /* Apply the profile's known field-role mapping after analysis, since
      analyzeDataset() only prunes stale roles — it never assigns new ones. */
   state.fieldRoleMap = Object.assign({}, profile.fieldRoleMap || {});
+  /* issue #1338: the engine's own render-time revert rule validates this. */
+  state.listTitleField = profile.list_title_field ?? null;
   state.datasetFiles.push({
     name: profile.datasetFileName || 'dataset.json',
     size: JSON.stringify(records).length,
@@ -168,6 +170,7 @@ function ensureTaskConfigSeeded() {
     datasetRecords: TASK_DATA.datasetRecords,
     datasetFileName: TASK_DATA.datasetFileName,
     fieldRoleMap: TASK_DATA.fieldRoleMap,
+    list_title_field: TASK_DATA.list_title_field,
   });
   state._configSeededForTaskId = TASK_DATA.taskId;
 }
