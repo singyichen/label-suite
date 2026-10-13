@@ -19,7 +19,11 @@ import { buildListUrl, buildWorkspaceUrl, patchDataFile, skipGuidelineModal } fr
  * annotation-workspace-i18n.spec.ts).
  *
  * Traceability: specs/annotation/015-annotation-workspace/spec.md
- * FR-106, AC-1.35, AC-1.36, AC-1.37, SC-028 (openspec delta). */
+ * FR-106, AC-1.35, AC-1.36, AC-1.37, AC-1.38, SC-028 (openspec delta).
+ *
+ * AC-1.38 (FR-106 addendum): the list search box (#searchInput, input event)
+ * also matches the text of every role==='input' field of a record, never
+ * Output or Evidence fields; the displayed summary is unchanged. */
 
 const AUTO_T013 = '我入手Note 10 plus第三天就退廠保修 過熱問題嚴重！差評';
 const SNIPPETS = '.sample-snippet, .text-snippet-content, [data-testid$="snippet"]';
@@ -145,5 +149,52 @@ test.describe('issue #1339: shared list summary (FR-106)', () => {
     const list = await listSnippet(page);
     expect(ws).toContain('@rottenrockteahouse:');
     expect(list).toBe(ws);
+  });
+  test('AC-1.38: search matches the second Input field (T011 Hypothesis); summary unchanged', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T011' }));
+    const search = page.locator('#searchInput');
+    await expect(search).toBeVisible();
+    await expect(page.getByTestId('ws-sample-item').first()).toBeVisible();
+    // only in record 00184's Hypothesis (the second Input), not in its Premise
+    await search.fill('不需醫師監控');
+    await search.dispatchEvent('input');
+    const rows = page.getByTestId('ws-sample-item');
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first()).toContainText('00184');
+    const summary = ((await rows.first().locator('.text-snippet-content').textContent()) || '').replace(/\s+/g, ' ');
+    expect(summary).toContain('阿斯匹靈可抑制血小板凝集');
+    expect(summary).not.toContain('不需醫師監控');
+  });
+
+  test('AC-1.38: search never matches Output or Evidence field text', async ({ page }) => {
+    await patchProfiles(page, {
+      tasks: ['T013'],
+      body: `p.fieldRoleMap.evid_note = 'evidence';
+             p.datasetRecords.forEach(function (r) { r.evid_note = 'EVIDSECRET-' + r.id; });`,
+    });
+    await page.goto(buildListUrl({ task_id: 'T013' }));
+    const search = page.locator('#searchInput');
+    const rows = page.getByTestId('ws-sample-item');
+    await expect(rows.first()).toBeVisible();
+
+    await search.fill('OUTSECRET-absa-001');
+    await search.dispatchEvent('input');
+    await expect(rows).toHaveCount(0);
+
+    await search.fill('EVIDSECRET-absa-001');
+    await search.dispatchEvent('input');
+    await expect(rows).toHaveCount(0);
+  });
+
+  test('AC-1.38: search matches an extra Input field that is not the displayed summary', async ({ page }) => {
+    await patchProfiles(page, { tasks: ['T013'] });
+    await page.goto(buildListUrl({ task_id: 'T013' }));
+    const search = page.locator('#searchInput');
+    const rows = page.getByTestId('ws-sample-item');
+    await expect(rows.first()).toBeVisible();
+    await search.fill('HEAD-absa-001');
+    await search.dispatchEvent('input');
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first()).toContainText('absa-001');
   });
 });
