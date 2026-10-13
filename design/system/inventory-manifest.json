@@ -87,7 +87,7 @@
     "Review Status Track": "review-status-track"
   },
   "classScan": {
-    "_comment": "Class-to-component mapping for the scan gate (scripts/gen-screen-inventory.mjs, issue #1188). A prefix p claims class c iff c === p, c starts with p- or p__. Every class used by design/prototype/pages/**/*.{html,js} must be claimed by at least one prefix in the sections below; when several prefixes claim a class, read it as the longest matching prefix (the gate does not enforce this). Known blind spots: a new class whose first segment is already a pageLocalClasses prefix (e.g. status-, panel-, item-, t-, is-), non-kebab class names (underscore or camelCase), and classes built via setAttribute('class', ...) or escaped quotes inside JS strings.",
+    "_comment": "Class-to-component mapping for the scan gate (scripts/gen-screen-inventory.mjs, issue #1188). A prefix p claims class c iff c === p, c starts with p- or p__. Every class used by design/prototype/pages/**/*.{html,js} must be claimed by at least one prefix in the sections below; when several prefixes claim a class, read it as the longest matching prefix (the gate does not enforce this). Known blind spots: a new class whose first segment is already a pageLocalClasses prefix (e.g. status-, panel-), non-kebab class names (underscore or camelCase), and classes built via setAttribute('class', ...) or escaped quotes inside JS strings. transitionalClasses is now empty (issue #1189 closed the empty-state convergence).",
     "componentClasses": {
       "button": ["btn", "sso-btn"],
       "mini-button": ["mini-btn"],
@@ -129,30 +129,28 @@
       "metric-kpi": ["metric"],
       "review-status-track": ["review-track"]
     },
-    "transitionalClasses": [
-      { "component": "empty-state", "classes": ["ar-empty", "ar-export-empty", "member-detail-empty", "member-search-empty", "progress-empty", "worklog-empty"], "reason": "Empty-state class family kept per page until the prototype classes converge on the Empty State component (#1189); registered here so the scan gate does not block on them." }
-    ],
+    "transitionalClasses": [],
     "pageLocalClasses": {
       "reason": "Page- or feature-local layout/content class, or a generic state modifier (active, hidden, is-*, ...); no cross-page component spec exists for it.",
       "classes": [
         "absa", "action", "actions", "active", "add", "admin", "alt", "annotation", "annotator",
-        "anomaly", "appearance", "ar", "arbiter", "aspect", "audit", "autosave", "back", "body", "brand",
+        "anomaly", "appearance", "ar-review", "ar-history", "ar-summary", "ar-expand", "ar-id", "ar-completed", "ar-stage", "ar-seq", "ar-export", "ar-filter", "arbiter", "aspect", "audit", "autosave", "back", "body", "brand",
         "cause", "char", "check", "clear", "col", "collapsed", "completion", "connector", "content",
         "controls", "dark", "dashboard", "data", "date", "dirty", "disable", "dispute", "dragover",
         "dry", "edit", "email", "enable", "entity", "error", "event", "exception", "exec", "execution",
         "expanded", "eye", "fail", "field", "filter", "forgot", "form", "grid", "group", "guideline",
         "has", "hidden", "hide", "high", "history", "iaa", "inactive", "initial", "inline",
-        "insufficient", "invite", "is", "isolation", "item", "kv", "last", "layout", "leader", "legend",
-        "loading", "locked", "login", "logout", "main", "match", "matrix", "md", "member", "metrics",
-        "mod", "module", "mono", "na", "normal", "not", "note", "notice", "open", "output", "overview",
-        "page", "panel", "pass", "passed", "perm", "phase", "preference", "preview", "quality", "re",
-        "readonly", "ready", "register", "regression", "rel", "required", "resend", "review", "reviewer",
-        "risk", "role", "round", "rv", "s2", "sa", "sample", "sampling", "saved", "schema", "search",
+        "insufficient", "invite", "is-loading", "is-active", "is-dark", "is-on", "is-settings", "is-integrated", "isolation", "item-pair", "kv-dl", "kv-item", "kv-key", "kv-value", "kv-sub", "last", "layout", "leader", "legend",
+        "loading", "locked", "login", "logout", "main", "match", "matrix", "md-id", "md-text", "md-time", "member", "metrics",
+        "mod-rate", "module", "mono", "na-cell", "normal", "not", "note", "notice", "open", "output", "overview",
+        "page", "panel", "pass", "passed", "perm", "phase", "preference", "preview", "quality", "re-preview",
+        "readonly", "ready", "register", "regression", "rel-sel", "required", "resend", "review", "reviewer",
+        "risk", "role", "round", "rv-btn", "rv-choice", "rv-answer", "rv-correction", "rv-review", "rv-decision", "rv-section", "rv-merged", "rv-finalized", "rv-unit", "rv-flow", "rv-submit", "s2-primary", "s2-preview", "s2-layout", "s2-visual", "s2-settings", "s2-code", "sa-col", "sample", "sampling", "saved", "schema", "search",
         "section", "select", "selected", "sent", "settings", "short", "shortcut", "show", "slim",
-        "small", "sort", "speed", "spinner", "split", "sr", "stage", "startup", "stats", "status",
-        "stop", "sub", "submit", "success", "sys", "system", "t", "task", "taxonomy", "td", "template",
-        "text", "title", "toggle", "token", "trb", "updated", "user", "va", "view", "visible", "warn",
-        "warning", "watch", "workflow", "worklog", "workspace", "ws", "yaml", "progress-metric",
+        "small", "sort", "speed", "spinner", "split", "sr-only", "stage", "startup", "stats", "status-badge", "status-hint", "status-stepper",
+        "stop", "sub", "submit", "success", "sys-col", "sys-bg", "system", "t-pass", "t-fail", "task-col", "task-role", "task-bg", "task-check", "task-item", "task-table", "task-row", "task-name", "task-type", "task-header", "taxonomy", "td-muted", "td-actions", "template",
+        "text", "title", "toggle", "token", "trb-text", "updated", "user", "va-dim", "view", "visible", "warn",
+        "warning", "watch", "workflow", "worklog", "workspace", "ws-lock", "ws-finalized", "ws-bypass", "yaml", "progress-metric",
         "progress-text"
       ]
     },
