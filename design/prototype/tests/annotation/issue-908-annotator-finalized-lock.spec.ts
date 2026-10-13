@@ -356,7 +356,12 @@ test.describe('issue #908 -- annotator finalized-lock (FR-101 / AC-2.27)', () =>
     expect(submitted).toBe(true);
   });
 
-  test('dry_run scope: a finalized-equivalent dry_run unit is never locked', async ({ page }) => {
+  /* Spec 015 v12.5.0 (issue #1328 / #1330): FR-101 splits the lock in two.
+   * The finalized-terminal lock is official_run only; a dry_run unit never
+   * shows the finalized presentation. A dry_run unit with a reviewer
+   * submission is still locked, but as V1 source-integrity (under_review),
+   * covered by issue-1330-annotator-v1-source-lock.spec.ts. */
+  test('dry_run scope: a finalized-equivalent dry_run unit never takes the finalized lock presentation', async ({ page }) => {
     const sampleId = 'ofs-01-agree-gold';
     const annotatorId = 'test_annotator_908c';
     await skipGuidelineModal(page);
@@ -372,19 +377,17 @@ test.describe('issue #908 -- annotator finalized-lock (FR-101 / AC-2.27)', () =>
     await seedFinalizedUnit(page, { sampleId, annotatorId, runType: DRY_RUN });
     await page.reload();
 
-    // Same finalized-equivalent shape as the official_run case above --
-    // FR-101's scope limitation, not a difference in the underlying derivation.
+    // The underlying derivation is unchanged; only the presentation scope differs.
     expect(await readReviewUnitStatus(page, { sampleId, annotatorId, runType: DRY_RUN })).toBe('finalized');
 
-    await expect(page.getByTestId('ws-annotator-finalized-notice')).toHaveCount(0);
-    // ws-skip-btn is deliberately excluded here: renderSkipControl()
-    // (annotation-workspace.config.js) already removes it from the DOM for
-    // ANY already-submitted sample, in every run_type, independent of this
-    // feature -- that pre-existing behavior is not part of FR-101's surface.
-    for (const testId of ['ws-save-btn', 'ws-submit-btn']) {
-      const btn = page.getByTestId(testId);
-      await expect(btn).toBeEnabled();
+    // No finalized terminal lock: the notice, if present, is the V1 under_review one.
+    const notice = page.getByTestId('ws-annotator-finalized-notice');
+    if (await notice.count()) {
+      await expect(notice).not.toHaveAttribute('data-lock-reason', 'finalized');
+      await expect(notice).toHaveAttribute('data-lock-reason', 'under_review');
     }
+    await expect(page.locator('[data-lock-reason="finalized"]')).toHaveCount(0);
+    await expect(page.getByTestId('ws-autosave-status')).not.toContainText('已定稿');
   });
 
   /* CI regression (2026-09-25): setPreviewControlsLocked()/setControlLocked()

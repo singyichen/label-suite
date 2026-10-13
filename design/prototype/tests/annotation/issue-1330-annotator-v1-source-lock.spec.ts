@@ -147,7 +147,9 @@ async function probeGuardedWrites(page: Page, runType: RunType, sampleId: string
         submitted: call(data.markSampleSubmitted, [taskId, 'annotator', runType, sampleId, payload, '', identity]),
         saved: call(data.markSampleSaved, [taskId, 'annotator', runType, sampleId, payload, '', identity]),
         timeline: call(data.appendSampleTimelineEvent, [
-          taskId, runType, sampleId, 'submitted', 'annotator', '', '', identity,
+          // Non-empty reason: appendSampleTimelineEvent returns false on an empty
+          // reason regardless of any lock, which would make the assertions vacuous.
+          taskId, runType, sampleId, 'submitted', 'annotator', 'probe', '', identity,
         ]),
       };
     },
