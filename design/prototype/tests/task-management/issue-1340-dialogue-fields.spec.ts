@@ -527,3 +527,43 @@ test.describe('Issue #1340 — task-detail unaffected', () => {
     await expect(block(page)).toHaveCount(0);
   });
 });
+
+/* ── review findings ────────────────────────────────────────────── */
+
+test.describe('Issue #1340 — review findings', () => {
+  const typeChip = (page: Page, key: string) =>
+    page.locator(`#taskInputTypeChips [data-key="${key}"]`);
+
+  test('switching Input type to item_pair removes the block and clears dialogueFields; switching back re-offers it', async ({
+    page,
+  }) => {
+    await setupDialogue(page);
+    await expect(block(page)).toBeVisible();
+
+    await typeChip(page, 'item_pair').click();
+    await expect(block(page)).toHaveCount(0);
+    expect(await page.evaluate(() => (window as WizardWindow).state.dialogueFields ?? null)).toBeNull();
+    const task = await readCreatedTask(page, 'issue-1340-type-switch');
+    expect(Object.prototype.hasOwnProperty.call(task!, 'dialogue_fields')).toBe(true);
+    expect(task!.dialogue_fields).toBeNull();
+
+    await typeChip(page, 'single_item').click();
+    await expect(block(page)).toBeVisible();
+    await expect(toggle(page)).toBeChecked();
+    await expect(textSel(page)).toHaveValue('text');
+    await expect(speakerSel(page)).toHaveValue('speaker');
+    await expect(uttSel(page)).toHaveValue('utt_id');
+  });
+
+  test('getDatasetPreviewText() keeps String(array) for a plain string-array Input (regression pin)', async ({
+    page,
+  }) => {
+    const out = await previewText(page, {
+      columns: ['turns'],
+      roles: { turns: 'input' },
+      row: { turns: ['a', 'b'] },
+    });
+    expect(out).toBe(String(['a', 'b']));
+    expect(out).toBe('a,b');
+  });
+});
