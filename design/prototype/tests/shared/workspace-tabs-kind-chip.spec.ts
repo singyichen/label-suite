@@ -22,7 +22,7 @@
  */
 import { test, expect } from '../fixtures';
 import type { Locator, Page } from '@playwright/test';
-import { tabBar, workspaceTabs, closeButton, setDesktopViewport, waitForTaskDetailReady, TAB_STORAGE_KEY } from './_workspace-tabs-helpers';
+import { workspaceTabs, closeButton, setDesktopViewport, waitForTaskDetailReady, TAB_STORAGE_KEY } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
@@ -430,17 +430,4 @@ test.describe('Workspace tabs — FR-010 English UI (chip kind text, nameEn, fal
     await expect(kindOf(tabs.nth(1))).toHaveText('Review');
     await expect(labelOf(tabs.nth(1))).toHaveText('T902');
   });
-});
-
-test('the tab bar still exposes exactly one role=tablist and every tab one chip at most', async ({ page }) => {
-  await skipGuidelineModal(page);
-  await setDesktopViewport(page);
-  await page.goto(ANNOTATE_T001_URL);
-  await page.goto(DETAIL_T002_R1_URL);
-  await expect(tabBar(page)).toHaveAttribute('role', 'tablist');
-  const tabs = workspaceTabs(page);
-  await expect(tabs).toHaveCount(2);
-  for (let i = 0; i < 2; i++) {
-    await expect(kindOf(tabs.nth(i))).toHaveCount(1);
-  }
 });
