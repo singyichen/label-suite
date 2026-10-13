@@ -38,25 +38,30 @@ if [[ -n "$route_files" && -n "$bru_files" ]]; then
     while IFS= read -r route_file; do
         module="$(printf '%s\n' "$route_file" | sed -n 's|^backend/app/modules/\([^/]*\)/.*|\1|p')"
         feature="$(printf '%s\n' "$route_file" | sed -n 's|^backend/app/modules/[^/]*/router/\([^.]*\)[.]py$|\1|p')"
+        bruno_prefix="backend/bruno/$module"
+        # The health endpoint is part of the canonical foundation collection.
+        if [[ "$module" == "health" ]]; then
+            bruno_prefix="backend/bruno/foundation/000-foundation"
+        fi
         matching_bru=0
 
         while IFS= read -r bru_file; do
-            if [[ -n "$feature" && "$bru_file" == "backend/bruno/$module/$feature/"* ]]; then
+            if [[ -n "$feature" && "$bru_file" == "$bruno_prefix/$feature/"* ]]; then
                 matching_bru=1
                 break
             fi
-            if [[ -z "$feature" && "$bru_file" == "backend/bruno/$module/"* ]]; then
+            if [[ -z "$feature" && "$bru_file" == "$bruno_prefix/"* ]]; then
                 matching_bru=1
                 break
             fi
         done <<< "$bru_files"
 
         if [[ "$matching_bru" -eq 0 && -n "$feature" ]]; then
-            echo "FR-131 gate: route changed in module '$module/$feature' but no matching backend/bruno/$module/$feature/ update found"
+            echo "FR-131 gate: route changed in module '$module/$feature' but no matching $bruno_prefix/$feature/ update found"
             exit 1
         fi
         if [[ "$matching_bru" -eq 0 ]]; then
-            echo "FR-131 gate: route changed in module '$module' but no matching backend/bruno/$module/ update found"
+            echo "FR-131 gate: route changed in module '$module' but no matching $bruno_prefix/ update found"
             exit 1
         fi
     done < <(printf '%s\n' "$route_files")

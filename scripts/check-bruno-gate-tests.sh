@@ -248,6 +248,22 @@ BRU
     assert_exit_code 0 "$GATE_EXIT" "single router with matching bru"
 }
 
+# Health's canonical Bruno request lives in the foundation collection rather
+# than backend/bruno/health/. A matching route/request update must pass.
+test_health_route_with_foundation_bru_passes() {
+    local repo
+    repo="$(make_demo_repo)"
+
+    mkdir -p "$repo/backend/app/modules/health"
+    write_router_py "$repo/backend/app/modules/health/router.py" v2
+    mkdir -p "$repo/backend/bruno/foundation/000-foundation"
+    write_valid_bru "$repo/backend/bruno/foundation/000-foundation/get-health.bru" v2
+    git -C "$repo" add backend/app/modules/health/router.py backend/bruno/foundation/000-foundation/get-health.bru
+
+    capture_gate "$repo"
+    assert_exit_code 0 "$GATE_EXIT" "health route with canonical foundation bru"
+}
+
 # 4. Split router changed, but the only .bru change is under a *different*
 #    feature folder of the same module. This is the subshell-exit-1 bug case
 #    from the embedded team-lead.md version: the extracted script must still
@@ -436,9 +452,16 @@ FR-131-exempt: skeleton-only route"
     assert_output_contains "$GATE_OUTPUT" "FR-131 gate:" "local mode marker not at HEAD"
 }
 
+if [[ "${BRUNO_GATE_TEST_CASE:-}" == "health" ]]; then
+    test_health_route_with_foundation_bru_passes
+    echo "health route regression test passed"
+    exit 0
+fi
+
 test_route_change_without_bru_fails
 test_exemption_marker_bypasses_gate
 test_single_router_with_matching_bru_passes
+test_health_route_with_foundation_bru_passes
 test_split_router_mismatched_feature_bru_fails
 test_split_router_matching_feature_bru_passes
 test_bru_wrong_depth_fails_path_check
