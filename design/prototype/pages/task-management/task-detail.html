@@ -10529,8 +10529,13 @@ function getTaskTypeLabel() {
       } else {
         dlBtn.disabled = true;
         dlBtn.title = t('arExportSnapshotMissingTitle');
+        var dlTip = document.createElement('span');
+        dlTip.className = 'btn-disabled-tip';
+        dlTip.title = t('arExportSnapshotMissingTitle');
+        dlTip.appendChild(dlBtn);
+        opsTd.appendChild(dlTip);
       }
-      opsTd.appendChild(dlBtn);
+      if (!dlBtn.disabled) opsTd.appendChild(dlBtn);
       tr.appendChild(opsTd);
       body.appendChild(tr);
     });
