@@ -10526,16 +10526,19 @@ function getTaskTypeLabel() {
         dlBtn.addEventListener('click', function() {
           redownloadArExportRecord(record);
         });
+        opsTd.appendChild(dlBtn);
       } else {
+        // issue #1311: .mini-btn:disabled has pointer-events:none, so the hover reason lives on the wrapper (same pattern as #1129).
+        // ponytail: a disabled button is unfocusable, so keyboard users never see the title; aria-disabled + focusable tooltip if needed.
+        var reason = t('arExportSnapshotMissingTitle');
         dlBtn.disabled = true;
-        dlBtn.title = t('arExportSnapshotMissingTitle');
+        dlBtn.title = reason;
         var dlTip = document.createElement('span');
         dlTip.className = 'btn-disabled-tip';
-        dlTip.title = t('arExportSnapshotMissingTitle');
+        dlTip.title = reason;
         dlTip.appendChild(dlBtn);
         opsTd.appendChild(dlTip);
       }
-      if (!dlBtn.disabled) opsTd.appendChild(dlBtn);
       tr.appendChild(opsTd);
       body.appendChild(tr);
     });
