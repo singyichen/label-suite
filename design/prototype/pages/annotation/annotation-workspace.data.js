@@ -1925,7 +1925,17 @@
         });
       }
       case 'entity_recognition':
-        return (submission.previewEntities || []).map(function (e) { return { text: e.text, type: e.type }; });
+        /* FR-107 (2): dialogue-shape entities keep utt_id/start/end; the flat
+         * shape stays exactly {text,type}. */
+        return (submission.previewEntities || []).map(function (e) {
+          var out = { text: e.text, type: e.type };
+          if (e.utt_id != null) {
+            out.utt_id = e.utt_id;
+            out.start = e.start != null ? e.start : null;
+            out.end = e.end != null ? e.end : null;
+          }
+          return out;
+        });
       case 'relation_identification':
         /* FR-098 §4: serialize the four offset fields plus relType
          * alongside the existing display strings, symmetric with the
@@ -1934,7 +1944,7 @@
          * (relType is absent, not null, on sources that never set it)
          * MUST still come out as an explicit `null`, not `undefined`. */
         return (submission.previewTriples || []).map(function (tr) {
-          return {
+          var out = {
             subj: tr.subj,
             rel: tr.rel,
             obj: tr.obj,
@@ -1944,6 +1954,12 @@
             objStart: tr.objStart != null ? tr.objStart : null,
             objEnd: tr.objEnd != null ? tr.objEnd : null,
           };
+          /* FR-107 (2): dialogue triples also keep their utterance ids. */
+          if (tr.subjUttId != null || tr.objUttId != null) {
+            out.subjUttId = tr.subjUttId != null ? tr.subjUttId : null;
+            out.objUttId = tr.objUttId != null ? tr.objUttId : null;
+          }
+          return out;
         });
       case 'free_text':
         return ps.text || '';

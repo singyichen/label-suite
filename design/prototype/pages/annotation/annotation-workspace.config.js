@@ -3403,6 +3403,12 @@
     var placed = [];
     entities.forEach(function (entity) {
       var out = { text: entity.text, type: entity.type };
+      /* Stored coordinates are authoritative (FR-107 (2)); no text search. */
+      if (entity.utt_id != null && entity.start != null && entity.end != null) {
+        out.utt_id = entity.utt_id; out.start = entity.start; out.end = entity.end;
+        placed.push(out);
+        return;
+      }
       for (var i = 0; cfg && cfg.text && entity.text && i < turns.length && out.start == null; i++) {
         var uttText = turns[i] && typeof turns[i][cfg.text] === 'string' ? turns[i][cfg.text] : '';
         var uttId = dialogueUttIdOf(turns[i], i, cfg);
@@ -3458,7 +3464,7 @@
          * legitimately land on 0, and a missing source key MUST still come
          * out as an explicit `null`, not `undefined`. */
         state.previewTriples = (mergedValue || []).map(function (tr) {
-          return {
+          var out = {
             subj: tr.subj,
             rel: tr.rel,
             obj: tr.obj,
@@ -3468,6 +3474,11 @@
             objStart: tr.objStart != null ? tr.objStart : null,
             objEnd: tr.objEnd != null ? tr.objEnd : null,
           };
+          if (tr.subjUttId != null || tr.objUttId != null) {
+            out.subjUttId = tr.subjUttId != null ? tr.subjUttId : null;
+            out.objUttId = tr.objUttId != null ? tr.objUttId : null;
+          }
+          return out;
         });
         state.previewInited = true;
         break;
