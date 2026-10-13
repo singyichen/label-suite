@@ -111,6 +111,7 @@ function seedDatasetFromProfile(profile) {
   state.fieldRoleMap = Object.assign({}, profile.fieldRoleMap || {});
   /* issue #1338: the engine's own render-time revert rule validates this. */
   state.listTitleField = profile.list_title_field ?? null;
+  state.listTitleReverted = false;
   state.datasetFiles.push({
     name: profile.datasetFileName || 'dataset.json',
     size: JSON.stringify(records).length,

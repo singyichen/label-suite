@@ -5438,10 +5438,9 @@ function renderListTitleBlock() {
   while (block.firstChild) block.removeChild(block.firstChild);
 
   var cands = listTitleCandidates();
-  var reverted = false;
   if (state.listTitleField && cands.indexOf(state.listTitleField) === -1) {
     state.listTitleField = null;
-    reverted = true;
+    state.listTitleReverted = true;
     markDirty();
   }
 
@@ -5462,13 +5461,14 @@ function renderListTitleBlock() {
   });
   sel.addEventListener('change', function() {
     state.listTitleField = sel.value || null;
+    state.listTitleReverted = false;
     renderInlineDatasetPreview();
     markDirty();
   });
   lbl.appendChild(sel);
   block.appendChild(lbl);
 
-  if (reverted) {
+  if (state.listTitleReverted) {
     var notice = document.createElement('p');
     notice.setAttribute('data-testid', 'list-title-revert-notice');
     notice.setAttribute('role', 'status');
@@ -5757,6 +5757,7 @@ function renderInlineDatasetPreview() {
 function resetInlinePreviewSelection() {
   state.fieldRoleMap = {};
   state.listTitleField = null;
+  state.listTitleReverted = false;
   if (state.dialogueFields !== undefined) { state.dialogueFields = null; state.dialogueDeclined = false; }
   state.datasetParsedColumns = [];
   state.datasetParsedRows = [];
