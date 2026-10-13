@@ -915,6 +915,7 @@
       status: listEntry.status,
       outputTypes: listEntry.outputTypes || [],
       fieldRoleMap: detailProfile.fieldRoleMap || {},
+      listTitleField: detailProfile.list_title_field ?? null,
       guidelineFiles: detailProfile.guidelineFiles || [],
       datasetRecords: detailProfile.datasetRecords || [],
       materializedRuns: detailProfile.materializedRuns || null
@@ -934,27 +935,18 @@
     return String(index);
   }
 
-  function stringifyFieldValue(value) {
-    if (value === undefined || value === null) return '';
-    if (typeof value === 'string') return value;
-    if (Array.isArray(value)) return value.map(stringifyFieldValue).join(', ');
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
+  /* FR-106: delegates to the helper shared with the workspace left rail. */
+  function getRecordSnippet(record, fieldRoleMap, listTitleField) {
+    if (!record) return '-';
+    return window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
+      record, fieldRoleMap, listTitleField, CURRENT_LANG
+    ) || '-';
   }
 
-  /*
-   * Data Fairness: only fieldRoleMap 'input' fields may appear in the list
-   * preview snippet. 'evidence' and 'output' fields are never read here.
-   */
-  function getRecordSnippet(record, fieldRoleMap) {
-    if (!record) return '-';
-    var inputKeys = Object.keys(fieldRoleMap || {}).filter(function (key) {
-      return fieldRoleMap[key] === 'input';
-    });
-    var parts = inputKeys
-      .map(function (key) { return stringifyFieldValue(record[key]); })
-      .filter(Boolean);
-    return parts.length > 0 ? parts.join(' ｜ ') : '-';
+  function getRecordSearchText(record, fieldRoleMap) {
+    return window.LabelSuiteAnnotationWorkspaceData.getRecordSearchText(
+      record, fieldRoleMap, CURRENT_LANG
+    );
   }
 
   function completionStateKey(role, taskId, runType) {
@@ -1340,7 +1332,8 @@
         item.statusLabel.toLowerCase().indexOf(query) !== -1 ||
         (item.annotator || '').toLowerCase().indexOf(query) !== -1 ||
         item.completedAt.toLowerCase().indexOf(query) !== -1 ||
-        item.text.toLowerCase().indexOf(query) !== -1
+        item.text.toLowerCase().indexOf(query) !== -1 ||
+        item.searchText.toLowerCase().indexOf(query) !== -1
       );
     });
   }
@@ -1768,7 +1761,8 @@
         status: status,
         statusLabel: statusText(status),
         completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
-        text: getRecordSnippet(record, profile.fieldRoleMap)
+        text: getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField),
+        searchText: getRecordSearchText(record, profile.fieldRoleMap)
       };
     });
   }
@@ -1790,7 +1784,8 @@
     profile.datasetRecords.forEach(function (record, index) {
       var recordId = getRecordId(record, index);
       var mockRows = getMockRows(context, recordId);
-      var text = getRecordSnippet(record, profile.fieldRoleMap);
+      var text = getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField);
+      var searchText = getRecordSearchText(record, profile.fieldRoleMap);
       mockRows.forEach(function (mockRow, rowIdx) {
         var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };
         var status = data.getReviewUnitStatus(
@@ -1813,6 +1808,7 @@
           statusLabel: reviewUnitStatusText(status),
           completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
           text: text,
+          searchText: searchText,
           overwrites: overwrites,
           finalizationSourceKeys: getFinalizationSourceKeys(
             profile, context, recordId, identity, overwrites)
