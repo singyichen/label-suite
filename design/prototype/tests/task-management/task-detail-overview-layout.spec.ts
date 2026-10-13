@@ -92,8 +92,11 @@ function contrast(a: string, b: string): number {
 test.describe('task-detail overview layout (FR-027)', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
+  /* #1348: a disabled CTA now uses the neutral action-column style, so the --color-cta
+     assertion runs against an enabled CTA (waiting, IAA done, pool sufficient). */
   test('CTA background resolves to --color-cta (site-wide btn-primary)', async ({ page }) => {
-    await open(page, DRAFT_URL);
+    await open(page, WAITING_URL);
+    await expect(cta(page)).toBeEnabled();
     const ctaColor = await resolveBg(page, '--color-cta');
     const bg = await cta(page).evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(bg).toBe(ctaColor);

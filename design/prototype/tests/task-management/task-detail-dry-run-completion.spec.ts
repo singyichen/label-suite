@@ -136,7 +136,10 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     // still happen -- IAA is advisory, and the three new conditions are not IAA conditions.
     await expect(page.locator('#statusBadge')).toContainText(WAITING_BADGE);
     expect(await persistedStatus(page, TASK)).toBe('waiting_iaa_confirmation');
-    await expect(page.locator('#publishActionRow li')).toHaveCount(0);
+    /* #1348: waiting now lists its own IAA item as an <li>, so the blocker list is checked by id
+       plus the dry-run heading text instead of "no <li> at all". */
+    await expect(page.locator('#publishDryRunReasons')).toHaveCount(0);
+    await expect(page.locator('#publishActionRow')).not.toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
   });
 
   test('unmet reasons are visible text and reach screen readers through aria-describedby on the disabled next-round button (FR-008a scenario, AC-3.16 accessibility)', async ({

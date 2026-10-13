@@ -228,7 +228,7 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
     activeStepLabel: '已完成',
     roundCount: 1,
     actionButton: '#publishActionRow',
-    actionText: '此狀態不提供發布操作。',
+    actionText: '任務已完成，無待執行動作',
   },
 ];
 
