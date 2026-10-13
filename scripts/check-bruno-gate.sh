@@ -39,24 +39,31 @@ if [[ -n "$route_files" && -n "$bru_files" ]]; then
         module="$(printf '%s\n' "$route_file" | sed -n 's|^backend/app/modules/\([^/]*\)/.*|\1|p')"
         feature="$(printf '%s\n' "$route_file" | sed -n 's|^backend/app/modules/[^/]*/router/\([^.]*\)[.]py$|\1|p')"
         matching_bru=0
+        bru_dir="backend/bruno/$module"
+        # Explicit module -> Bruno directory exceptions (issue #1289).
+        # ponytail: single hardcoded exception; extract a table if a second appears
+        # health's .bru lives under the foundation spec, see specs/foundation/000-foundation/plan.md:269-271
+        if [[ "$module" == "health" ]]; then
+            bru_dir="backend/bruno/foundation/000-foundation"
+        fi
 
         while IFS= read -r bru_file; do
-            if [[ -n "$feature" && "$bru_file" == "backend/bruno/$module/$feature/"* ]]; then
+            if [[ -n "$feature" && "$bru_file" == "$bru_dir/$feature/"* ]]; then
                 matching_bru=1
                 break
             fi
-            if [[ -z "$feature" && "$bru_file" == "backend/bruno/$module/"* ]]; then
+            if [[ -z "$feature" && "$bru_file" == "$bru_dir/"* ]]; then
                 matching_bru=1
                 break
             fi
         done <<< "$bru_files"
 
         if [[ "$matching_bru" -eq 0 && -n "$feature" ]]; then
-            echo "FR-131 gate: route changed in module '$module/$feature' but no matching backend/bruno/$module/$feature/ update found"
+            echo "FR-131 gate: route changed in module '$module/$feature' but no matching $bru_dir/$feature/ update found"
             exit 1
         fi
         if [[ "$matching_bru" -eq 0 ]]; then
-            echo "FR-131 gate: route changed in module '$module' but no matching backend/bruno/$module/ update found"
+            echo "FR-131 gate: route changed in module '$module' but no matching $bru_dir/ update found"
             exit 1
         fi
     done < <(printf '%s\n' "$route_files")
