@@ -136,7 +136,7 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     // still happen -- IAA is advisory, and the three new conditions are not IAA conditions.
     await expect(page.locator('#statusBadge')).toContainText(WAITING_BADGE);
     expect(await persistedStatus(page, TASK)).toBe('waiting_iaa_confirmation');
-    await expect(page.locator('#publishActionRow li')).toHaveCount(0);
+    await expect(page.locator('#publishDryRunReasons li')).toHaveCount(0);
   });
 
   test('unmet reasons are visible text and reach screen readers through aria-describedby on the disabled next-round button (FR-008a scenario, AC-3.16 accessibility)', async ({
