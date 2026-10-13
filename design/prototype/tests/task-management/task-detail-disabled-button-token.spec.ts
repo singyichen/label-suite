@@ -31,13 +31,15 @@ test.describe('Task detail disabled .btn token (#1129)', () => {
     expect(style.transform).toBe('none');
   });
 
-  test('overview publish action .btn, disabled for a reviewer, uses opacity 0.4 and pointer-events none', async ({ page }) => {
+  /* #1348: the publish action area uses a neutral disabled style (opacity 1, grey
+     background, dashed border) scoped to #publishActionRow; the site-wide token is unchanged. */
+  test('overview publish action .btn, disabled for a reviewer, uses the neutral action-area style (#1348)', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002&task_role=reviewer`);
     const btn = page.locator('#publishActionRow .btn:disabled').first();
     await expect(btn).toBeAttached({ timeout: PANEL_LOAD_TIMEOUT });
 
     const style = await disabledStyle(btn);
-    expect.soft(style.opacity).toBe('0.4');
+    expect.soft(style.opacity).toBe('1');
     expect.soft(style.pointerEvents).toBe('none');
     expect(style.cursor).toBe('not-allowed');
   });
