@@ -2516,9 +2516,11 @@
     var snippet = document.createElement('div');
     snippet.className = 'sample-group-snippet';
     snippet.setAttribute('data-testid', 'ws-sample-group-snippet');
-    snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+    snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
       record,
-      currentProfile.fieldRoleMap
+      currentProfile.fieldRoleMap,
+      currentProfile.listTitleField,
+      state.lang
     );
     header.appendChild(snippet);
 
@@ -2582,7 +2584,7 @@
        or a ground-truth field (Data Fairness). */
     var record = findRecordById(sampleId);
     var previewText = record
-      ? window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(record, currentProfile.fieldRoleMap)
+      ? window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(record, currentProfile.fieldRoleMap, currentProfile.listTitleField, state.lang)
       : '';
     if (previewText) {
       var snippet = document.createElement('div');
@@ -2773,9 +2775,11 @@
       if (currentRole !== 'reviewer') {
         var snippet = document.createElement('div');
         snippet.className = 'sample-snippet';
-        snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+        snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
           record,
-          currentProfile.fieldRoleMap
+          currentProfile.fieldRoleMap,
+          currentProfile.listTitleField,
+          state.lang
         );
         meta.appendChild(snippet);
       } else {

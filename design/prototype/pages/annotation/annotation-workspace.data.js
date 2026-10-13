@@ -58,6 +58,7 @@
       nameEn: listEntry.nameEn,
       outputs: detail.outputs || [],
       fieldRoleMap: detail.fieldRoleMap || {},
+      listTitleField: detail.list_title_field ?? null,
       datasetRecords: detail.datasetRecords || [],
       datasetFileName: detail.datasetFileName || '',
       taskInputTypes: detail.taskInputTypes || ['single_item'],
@@ -108,13 +109,51 @@
     return String(index);
   }
 
-  /* First 'input'-role field's value, used as the sample-list snippet. */
-  function getRecordPreviewText(record, fieldRoleMap) {
-    var inputKey = Object.keys(fieldRoleMap || {}).find(function (key) {
-      return fieldRoleMap[key] === 'input';
+  /* FR-106 (issue #1339): the single sample-summary helper shared by the
+     workspace left rail and annotation-list. Never reads an output-role field
+     (Data Fairness); never emits "[object Object]"; does not truncate. */
+  function objectTextField(obj) {
+    if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
+    if (typeof obj.text === 'string') return obj.text;
+    return Object.keys(obj).map(function (k) { return obj[k]; }).find(function (v) {
+      return typeof v === 'string';
     });
-    if (inputKey && record && record[inputKey] != null) return String(record[inputKey]);
-    return record && record.id != null ? String(record.id) : '';
+  }
+
+  function valueToSummaryText(value, lang) {
+    if (value === undefined || value === null || value === '') return '';
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '';
+      if (value.every(function (el) { return objectTextField(el) !== undefined; })) {
+        return objectTextField(value[0]);
+      }
+      return lang === 'en' ? value.length + ' items' : value.length + ' 筆資料';
+    }
+    if (typeof value === 'object') {
+      var k = Object.keys(value).length;
+      if (k === 0) return '';
+      return lang === 'en' ? k + ' fields' : k + ' 個欄位';
+    }
+    return String(value);
+  }
+
+  function getRecordSummaryText(record, fieldRoleMap, listTitleField, lang) {
+    if (!record) return '';
+    var roles = fieldRoleMap || {};
+    var explicitOk = listTitleField != null && (
+      roles[listTitleField] === 'input' || roles[listTitleField] === 'evidence' ||
+      (listTitleField === 'id' && roles.id !== 'output')
+    );
+    var text = explicitOk ? valueToSummaryText(record[listTitleField], lang) : '';
+    if (!text) {
+      Object.keys(roles).some(function (key) {
+        if (roles[key] !== 'input') return false;
+        text = valueToSummaryText(record[key], lang);
+        return !!text;
+      });
+    }
+    if (text) return text;
+    return roles.id !== 'output' && record.id != null ? String(record.id) : '';
   }
 
   /* Generic localStorage-backed JSON object store, factored out so the
@@ -4034,7 +4073,7 @@
     resolveTaskProfile: resolveTaskProfile,
     sanitizeRecordForAnnotator: sanitizeRecordForAnnotator,
     getRecordId: getRecordId,
-    getRecordPreviewText: getRecordPreviewText,
+    getRecordSummaryText: getRecordSummaryText,
     isSampleSubmitted: isSampleSubmitted,
     getSampleStatus: getSampleStatus,
     getSampleSubmittedAt: getSampleSubmittedAt,

@@ -915,6 +915,7 @@
       status: listEntry.status,
       outputTypes: listEntry.outputTypes || [],
       fieldRoleMap: detailProfile.fieldRoleMap || {},
+      listTitleField: detailProfile.list_title_field ?? null,
       guidelineFiles: detailProfile.guidelineFiles || [],
       datasetRecords: detailProfile.datasetRecords || [],
       materializedRuns: detailProfile.materializedRuns || null
@@ -934,27 +935,12 @@
     return String(index);
   }
 
-  function stringifyFieldValue(value) {
-    if (value === undefined || value === null) return '';
-    if (typeof value === 'string') return value;
-    if (Array.isArray(value)) return value.map(stringifyFieldValue).join(', ');
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
-  }
-
-  /*
-   * Data Fairness: only fieldRoleMap 'input' fields may appear in the list
-   * preview snippet. 'evidence' and 'output' fields are never read here.
-   */
-  function getRecordSnippet(record, fieldRoleMap) {
+  /* FR-106: delegates to the helper shared with the workspace left rail. */
+  function getRecordSnippet(record, fieldRoleMap, listTitleField) {
     if (!record) return '-';
-    var inputKeys = Object.keys(fieldRoleMap || {}).filter(function (key) {
-      return fieldRoleMap[key] === 'input';
-    });
-    var parts = inputKeys
-      .map(function (key) { return stringifyFieldValue(record[key]); })
-      .filter(Boolean);
-    return parts.length > 0 ? parts.join(' ｜ ') : '-';
+    return window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
+      record, fieldRoleMap, listTitleField, CURRENT_LANG
+    ) || '-';
   }
 
   function completionStateKey(role, taskId, runType) {
@@ -1768,7 +1754,7 @@
         status: status,
         statusLabel: statusText(status),
         completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
-        text: getRecordSnippet(record, profile.fieldRoleMap)
+        text: getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField)
       };
     });
   }
@@ -1790,7 +1776,7 @@
     profile.datasetRecords.forEach(function (record, index) {
       var recordId = getRecordId(record, index);
       var mockRows = getMockRows(context, recordId);
-      var text = getRecordSnippet(record, profile.fieldRoleMap);
+      var text = getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField);
       mockRows.forEach(function (mockRow, rowIdx) {
         var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };
         var status = data.getReviewUnitStatus(
