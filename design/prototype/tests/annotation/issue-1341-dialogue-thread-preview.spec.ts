@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import {
   buildWorkspaceUrl,
   dismissGuidelineModal,
+  gotoReviewerWorkspace,
   patchDataFile,
   selectWorkspaceText,
   skipGuidelineModal,
@@ -258,5 +259,202 @@ test.describe('issue #1341: Data Fairness - Output never rendered (AC-2.35)', ()
     await openT013(page);
     await expect(page.locator('details').filter({ hasText: '"speaker": "rottenrockteahouse"' })).toHaveCount(1);
     await expectNoGoldLeak(page);
+  });
+});
+
+/* ---- utt_id persistence across save / rehydrate (FR-107 (2), RED) --------
+ * FR-107 (2): dialogue entities MUST be recorded as {text,type,utt_id,start,
+ * end} (half-open inside the utterance) and relation triples MUST carry
+ * subjUttId / objUttId. The live engine state already does (task-config.
+ * engine.js:2342 / :2074-2075), but the persisted CompactAnswer drops them:
+ *   - serialize: annotation-workspace.data.js convertSubmissionAnswer()
+ *     entity_recognition -> {text,type}; relation_identification has no
+ *     subjUttId / objUttId.
+ *   - rehydrate: annotation-workspace.config.js applyCompactAnswerToState()
+ *     -> placeCompactEntitiesInTurns() ignores the stored utt_id/start/end
+ *     and re-places by FIRST text occurrence; the triple map drops
+ *     subjUttId / objUttId.
+ * "問題" occurs in utterance 0 ("過熱問題嚴重") AND utterance 1 ("沒有這個問題");
+ * every entity below is marked in the LATER one (utt 1), so first-occurrence
+ * re-placement yields the wrong utt_id / start. */
+const DUP_TEXT = '問題';
+const UTT_1 = '我已經拿了九天了就沒有這個問題你在唬爛';
+const UTT_3 = '@isbonny 澳門的代理商';
+
+type PersistedTriple = {
+  subj: string; rel: string; obj: string;
+  subjUttId?: unknown; objUttId?: unknown;
+  subjStart?: number | null; subjEnd?: number | null; objStart?: number | null; objEnd?: number | null;
+};
+
+async function markEntity(page: Page, type: string, row: number, text: string) {
+  await page.getByRole('button', { name: type, exact: true }).click();
+  await selectWorkspaceText(page, page.getByTestId('dialogue-thread-row').nth(row).getByTestId('dialogue-text'), text);
+  await page.getByRole('button', { name: type, exact: true }).click(); // toggle the type off
+}
+
+/* Build the relation 問題 (utt 1) -[你在]-> 代理商 (utt 3) through the real UI. */
+async function buildDialogueRelation(page: Page) {
+  await markEntity(page, 'Aspect', 1, DUP_TEXT);
+  await markEntity(page, 'Opinion', 3, '代理商');
+  const text = (row: number) => page.getByTestId('dialogue-thread-row').nth(row).getByTestId('dialogue-text');
+  await selectWorkspaceText(page, text(1), DUP_TEXT);
+  await page.getByRole('button', { name: 'E1/Arg1', exact: true }).click();
+  await selectWorkspaceText(page, text(1), '你在');
+  await page.getByRole('button', { name: 'Relation', exact: true }).click();
+  await selectWorkspaceText(page, text(3), '代理商');
+  await page.getByRole('button', { name: 'E2/Arg2', exact: true }).click();
+  await page.getByRole('button', { name: /^(Add|新增)$/ }).click();
+}
+
+async function readTriples(page: Page): Promise<PersistedTriple[]> {
+  return page.evaluate(
+    () => JSON.parse(JSON.stringify((window as unknown as { state: { previewTriples: unknown[] } }).state.previewTriples)),
+  );
+}
+
+async function saveDraft(page: Page) {
+  await page.getByTestId('ws-save-btn').click();
+}
+
+/* The serialized CompactAnswer of the stored draft, via the data layer's own
+ * getSampleAnswers() + convertSubmissionAnswer() (the same pair the review
+ * list / history consumers use). */
+async function serializedDraft(page: Page, taskId: string, sampleId: string, outKey: string) {
+  return page.evaluate(
+    ({ taskId, sampleId, outKey }) => {
+      const data = (window as any).LabelSuiteAnnotationWorkspaceData;
+      const stored = data.getSampleAnswers(taskId, 'annotator', 'official_run', sampleId, {});
+      return JSON.parse(JSON.stringify(data.convertSubmissionAnswer(outKey, stored)));
+    },
+    { taskId, sampleId, outKey },
+  );
+}
+
+test.describe('issue #1341: utt_id survives save (FR-107 (2), serialized answer)', () => {
+  test('entity marked in the LATER duplicate utterance serializes with utt_id/start/end', async ({ page }) => {
+    await openT013(page);
+    await markEntity(page, 'Aspect', 1, DUP_TEXT);
+    const live = (await readEntities(page)).find((e) => e.text === DUP_TEXT);
+    // sanity (already Green): live state is correct, so a later failure is a persistence failure
+    expect(String(live?.utt_id)).toBe('1');
+    expect(live?.start).toBe(UTT_1.indexOf(DUP_TEXT));
+    await saveDraft(page);
+
+    const compact = await serializedDraft(page, 'T013', 'absa-001', 'entity_recognition');
+    const ent = compact.find((e: { text: string }) => e.text === DUP_TEXT);
+    expect(ent, 'entity must be serialized').toBeTruthy();
+    expect(ent).toEqual({
+      text: DUP_TEXT, type: 'Aspect', utt_id: 1,
+      start: UTT_1.indexOf(DUP_TEXT), end: UTT_1.indexOf(DUP_TEXT) + DUP_TEXT.length,
+    });
+  });
+
+  test('relation triple serializes subjUttId/objUttId and in-utterance offsets', async ({ page }) => {
+    await openT013(page);
+    await buildDialogueRelation(page);
+    const live = await readTriples(page);
+    // sanity (already Green): the engine row carries the ids
+    expect(live).toHaveLength(1);
+    expect(String(live[0].subjUttId)).toBe('1');
+    expect(String(live[0].objUttId)).toBe('3');
+    await saveDraft(page);
+
+    const compact = (await serializedDraft(page, 'T013', 'absa-001', 'relation_identification')) as PersistedTriple[];
+    expect(compact).toHaveLength(1);
+    expect(compact[0].subjUttId).toBe(1);
+    expect(compact[0].objUttId).toBe(3);
+    expect(compact[0].subjStart).toBe(UTT_1.indexOf(DUP_TEXT));
+    expect(compact[0].subjEnd).toBe(UTT_1.indexOf(DUP_TEXT) + DUP_TEXT.length);
+    expect(compact[0].objStart).toBe(UTT_3.indexOf('代理商'));
+    expect(compact[0].objEnd).toBe(UTT_3.indexOf('代理商') + 3);
+  });
+});
+
+test.describe('issue #1341: utt_id survives reload / rehydrate (FR-107 (2), state level)', () => {
+  test('saved draft reloaded keeps entity utt_id/start/end and triple subjUttId/objUttId', async ({ page }) => {
+    await openT013(page);
+    await buildDialogueRelation(page);
+    const before = await readEntities(page);
+    const beforeTriples = await readTriples(page);
+    await saveDraft(page);
+
+    await page.reload();
+    await dismissGuidelineModal(page);
+    await expect(page.getByTestId('dialogue-thread-row')).toHaveCount(5);
+    expect(await readEntities(page)).toEqual(before);
+    expect(await readTriples(page)).toEqual(beforeTriples);
+  });
+
+  test('CompactAnswer rehydrate (reviewer demo-row seed) keeps the stored utt_id/start/end instead of first-occurrence re-placement', async ({ page }) => {
+    const s = UTT_1.indexOf(DUP_TEXT);
+    const o = UTT_3.indexOf('代理商');
+    await patchDataFile(page, 'annotation-workspace.data.js', `
+      var data = window.LabelSuiteAnnotationWorkspaceData;
+      data.REVIEWER_MOCK_ROWS.T013['absa-001'][0].answers.entity_recognition = [
+        { text: '${DUP_TEXT}', type: 'Aspect', utt_id: 1, start: ${s}, end: ${s + DUP_TEXT.length} },
+        { text: '代理商', type: 'Opinion', utt_id: 3, start: ${o}, end: ${o + 3} }
+      ];
+      data.REVIEWER_MOCK_ROWS.T013['absa-001'][0].answers.relation_identification = [
+        { subj: '${DUP_TEXT}', rel: '你在', obj: '代理商', relType: null,
+          subjUttId: 1, subjStart: ${s}, subjEnd: ${s + DUP_TEXT.length},
+          objUttId: 3, objStart: ${o}, objEnd: ${o + 3} }
+      ];
+    `);
+    await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001' });
+    await dismissGuidelineModal(page);
+
+    const ents = await readEntities(page);
+    const dup = ents.find((e) => e.text === DUP_TEXT);
+    expect(dup, 'entity must be rehydrated').toBeTruthy();
+    expect(String(dup!.utt_id), 'must stay in the later utterance, not the first occurrence').toBe('1');
+    expect(dup!.start).toBe(s);
+    expect(dup!.end).toBe(s + DUP_TEXT.length);
+    const agent = ents.find((e) => e.text === '代理商');
+    expect(String(agent?.utt_id)).toBe('3');
+
+    const triples = await readTriples(page);
+    expect(triples).toHaveLength(1);
+    expect(triples[0].subjUttId).toBe(1);
+    expect(triples[0].objUttId).toBe(3);
+    expect(triples[0].subjStart).toBe(s);
+    expect(triples[0].objStart).toBe(o);
+  });
+});
+
+test.describe('issue #1341: non-dialogue serialization is unchanged (FR-107 (2) scope guard)', () => {
+  test('flat entity_recognition (T007) still serializes exactly {text,type}', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T007', sample_id: 'entity-recognition-001' }));
+    await dismissGuidelineModal(page);
+    await saveDraft(page);
+
+    const compact = await serializedDraft(page, 'T007', 'entity-recognition-001', 'entity_recognition');
+    expect(compact.length).toBeGreaterThan(0);
+    compact.forEach((e: Record<string, unknown>) => {
+      expect(Object.keys(e).sort()).toEqual(['text', 'type']);
+    });
+  });
+
+  test('flat relation_identification (T008) carries no subjUttId/objUttId', async ({ page }) => {
+    await patchDataFile(page, 'task-detail.data.js', `
+      window.LabelSuiteTaskDetailData.profiles.T008.datasetRecords[0].triples = [];
+    `);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001' }));
+    await dismissGuidelineModal(page);
+    await selectWorkspaceText(page, 'ws-input-content', '高血壓');
+    await page.getByTestId('ws-ri-e1-btn').click();
+    await selectWorkspaceText(page, 'ws-input-content', '導致');
+    await page.getByTestId('ws-ri-relation-btn').click();
+    await selectWorkspaceText(page, 'ws-input-content', '動脈硬化');
+    await page.getByTestId('ws-ri-e2-btn').click();
+    await page.getByTestId('ws-ri-add-btn').click();
+    await expect(page.getByTestId('ws-ri-triple-item')).toHaveCount(1);
+    await saveDraft(page);
+
+    const compact = await serializedDraft(page, 'T008', 'rel-001', 'relation_identification');
+    expect(compact).toHaveLength(1);
+    expect(Object.keys(compact[0]).sort()).toEqual(
+      ['obj', 'objEnd', 'objStart', 'rel', 'relType', 'subj', 'subjEnd', 'subjStart'],
+    );
   });
 });
