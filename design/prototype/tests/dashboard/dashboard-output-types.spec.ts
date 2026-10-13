@@ -335,8 +335,7 @@ test.describe('Dashboard output-type task summaries', () => {
             });
             if (!record) return null;
             // A TaskProfile may declare multiple 'input'-role fields (e.g.
-            // T013's absa_va composed input carries both a structured
-            // `utterances` array and its flattened `text` string
+            // a structured array next to its flattened `text` string
             // representation). Only a string-shaped field can ever appear
             // verbatim as a substring of the rendered ws-input-content DOM
             // text, so skip non-string input-role fields instead of only
@@ -349,7 +348,20 @@ test.describe('Dashboard output-type task summaries', () => {
             const stringField = inputFields.find(
               (field) => typeof record[field] === 'string',
             );
-            const value = stringField ? record[stringField] : undefined;
+            let value: unknown = stringField ? record[stringField] : undefined;
+            if (typeof value !== 'string') {
+              // issue #1341: T013's only Input is the structured `utterances`
+              // array, rendered as a dialogue thread; its first turn's text is
+              // what must surface in ws-input-content.
+              for (const field of inputFields) {
+                const turns = record[field];
+                const first = Array.isArray(turns) ? turns[0] : undefined;
+                if (first && typeof first === 'object' && typeof (first as Record<string, unknown>)['text'] === 'string') {
+                  value = (first as Record<string, unknown>)['text'];
+                  break;
+                }
+              }
+            }
             return typeof value === 'string' ? value.slice(0, 8) : null;
           },
           { taskId: entry.exampleTaskId, sampleId: entry.latestUnfinishedSampleId },
