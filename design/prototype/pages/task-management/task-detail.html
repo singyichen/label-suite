@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="stylesheet" href="task-config.css">
   <style>
@@ -588,20 +589,6 @@
     .phase-status-tag--pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .phase-iaa-text { margin-left: auto; font-size: 12px; color: var(--color-ink-muted); font-weight: 600; }
     .phase-meta { font-size: 13px; color: var(--color-text-soft); margin-top: 8px; }
-    .progress-empty-state {
-      border: 1px dashed var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 20px;
-      text-align: center;
-      margin-top: 10px;
-    }
-    .progress-empty-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--color-ink);
-      margin-bottom: 10px;
-    }
     .worklog-filter-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -641,25 +628,6 @@
       height: 16px;
       flex-shrink: 0;
       opacity: 0.9;
-    }
-    .worklog-empty-state {
-      border: 1px dashed var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 22px;
-      text-align: center;
-    }
-    .worklog-empty-icon {
-      width: 34px;
-      height: 34px;
-      margin: 0 auto 10px;
-      opacity: 0.7;
-    }
-    .worklog-empty-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--color-ink);
-      margin-bottom: 10px;
     }
     .table-wrap {
       border: 1px solid var(--color-border);
@@ -796,12 +764,6 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 12px;
       color: var(--color-text-soft);
-    }
-    .member-search-empty {
-      text-align: center;
-      color: var(--color-text-soft);
-      font-size: 13px;
-      padding: 18px 12px;
     }
     .role-select-inline {
       width: 130px;
@@ -1120,12 +1082,7 @@
     .badge-ar-pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .ar-export-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
     .ar-export-table-wrap { margin-top: var(--space-sm); }
-    .ar-export-empty { font-size: 13px; color: var(--color-text-soft); text-align: center; padding: var(--space-lg) 0; margin: 0; }
     .ar-export-action-btn { white-space: nowrap; }
-    .ar-empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: var(--space-xl) 0; text-align: center; }
-    .ar-empty-icon { width: 40px; height: 40px; opacity: 0.3; }
-    .ar-empty-title { font-size: 16px; font-weight: 600; color: var(--color-ink); }
-    .ar-empty-hint { font-size: 13px; color: var(--color-text-soft); }
     .ar-va-stats { font-size: 12px; line-height: 1.7; font-family: var(--font-mono); }
     .ar-va-stats-row { color: var(--color-text-soft); white-space: nowrap; }
     .ar-dist-text { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -1137,7 +1094,6 @@
     .ar-classif-chips { display: flex; flex-wrap: wrap; gap: 4px; }
     .ar-classif-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
     .member-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
-    .member-detail-empty { font-size: 13px; color: var(--color-text-soft); text-align: center; padding: var(--space-lg) 0; margin: 0; }
     .md-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
     .md-text-cell { font-size: 13px; max-width: 280px; }
     .md-chips { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -1617,10 +1573,6 @@
       color: var(--color-text-soft);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-    }
-    .annotation-preview-empty {
-      font-size: 13px;
-      color: var(--color-text-soft);
     }
     .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
     .aspect-list-preview-row { display: flex; align-items: center; gap: 8px; }
@@ -7899,8 +7851,15 @@ function getTaskTypeLabel() {
       var idleTr = document.createElement('tr');
       var idleTd = document.createElement('td');
       idleTd.colSpan = 5;
-      idleTd.className = 'member-search-empty';
-      idleTd.textContent = t('memberSearchIdle');
+      idleTd.className = 'empty-state-td';
+      var idleBox = document.createElement('div');
+      idleBox.className = 'empty-state empty-state-cell';
+      var idleMsg = document.createElement('p');
+      idleMsg.className = 'empty-state-desc';
+      idleMsg.textContent = t('memberSearchIdle');
+      idleBox.appendChild(idleMsg);
+      idleTd.appendChild(idleBox);
+      idleTr.className = 'empty-state-row';
       idleTr.appendChild(idleTd);
       tbody.appendChild(idleTr);
       return;
@@ -7909,8 +7868,15 @@ function getTaskTypeLabel() {
       var emptyTr = document.createElement('tr');
       var emptyTd = document.createElement('td');
       emptyTd.colSpan = 5;
-      emptyTd.className = 'member-search-empty';
-      emptyTd.textContent = t('memberSearchEmpty');
+      emptyTd.className = 'empty-state-td';
+      var emptyBox = document.createElement('div');
+      emptyBox.className = 'empty-state empty-state-cell';
+      var emptyMsg = document.createElement('p');
+      emptyMsg.className = 'empty-state-desc';
+      emptyMsg.textContent = t('memberSearchEmpty');
+      emptyBox.appendChild(emptyMsg);
+      emptyTd.appendChild(emptyBox);
+      emptyTr.className = 'empty-state-row';
       emptyTr.appendChild(emptyTd);
       tbody.appendChild(emptyTr);
       return;

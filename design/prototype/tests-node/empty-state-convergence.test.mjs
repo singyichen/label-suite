@@ -203,6 +203,40 @@ const BATCHES = [
     },
     manifestRemoved: ['anomaly-empty', 'annotation-preview-empty', 'taxonomy-selector-empty'],
   },
+  {
+    name: 'batch 6 (task-detail)',
+    classContext: true,
+    markers: {},
+    // Partials are deliberately not in `html`: the shared sheet is linked once, from the host page.
+    html: ['pages/task-management/task-detail.html'],
+    js: [],
+    legacyByFile: {
+      'pages/task-management/task-detail.html': [
+        'ar-empty-state', 'ar-empty-icon', 'ar-empty-title', 'ar-empty-hint',
+        'ar-export-empty', 'member-detail-empty', 'member-search-empty',
+        'progress-empty-state', 'progress-empty-title',
+        'worklog-empty-state', 'worklog-empty-icon', 'worklog-empty-title',
+        'annotation-preview-empty',
+      ],
+      'pages/task-management/task-detail.panels/annotation-progress.html': ['progress-empty-state', 'progress-empty-title', 'member-detail-empty'],
+      'pages/task-management/task-detail.panels/annotation-results.html': ['ar-empty-state', 'ar-empty-icon', 'ar-empty-title', 'ar-empty-hint', 'ar-export-empty'],
+      'pages/task-management/task-detail.panels/work-log.html': ['worklog-empty-state', 'worklog-empty-icon', 'worklog-empty-title'],
+    },
+    classMarkers: {
+      // JS-built member-search rows: tr.empty-state-row > td.empty-state-td > div.empty-state.empty-state-cell > p.empty-state-desc
+      'pages/task-management/task-detail.html': ['empty-state', 'empty-state-row', 'empty-state-td', 'empty-state-cell', 'empty-state-desc'],
+      'pages/task-management/task-detail.panels/annotation-progress.html': ['empty-state', 'empty-state-panel', 'empty-state-title', 'empty-state-action', 'empty-state-compact'],
+      'pages/task-management/task-detail.panels/annotation-results.html': ['empty-state', 'empty-state-panel', 'empty-state-icon', 'empty-state-title', 'empty-state-desc', 'empty-state-compact'],
+      'pages/task-management/task-detail.panels/work-log.html': ['empty-state', 'empty-state-panel', 'empty-state-icon', 'empty-state-title', 'empty-state-action'],
+    },
+    // Hooks that JS / tests rely on must survive the class swap.
+    literals: {
+      'pages/task-management/task-detail.panels/annotation-progress.html': ['id="progressEmptyState"', 'id="progressEmptyTitle"', 'id="finalExceptionPoolEmpty"', 'id="memberDetailEmpty"'],
+      'pages/task-management/task-detail.panels/annotation-results.html': ['id="arEmptyState"', 'id="arEmptyTitle"', 'id="arEmptyHint"', 'id="arExportHistoryEmpty"'],
+      'pages/task-management/task-detail.panels/work-log.html': ['id="workLogEmptyState"', 'id="workLogEmptyTitle"', 'id="workLogBackToOverviewBtn"'],
+    },
+    manifestRemoved: ['ar-empty', 'ar-export-empty', 'member-detail-empty', 'member-search-empty', 'progress-empty', 'worklog-empty'],
+  },
 ];
 
 describe('empty-state shared stylesheet', () => {
@@ -339,4 +373,31 @@ describe('empty-state inventory manifest', () => {
     assert.ok(Array.isArray(classes), "componentClasses['empty-state'] is missing");
     assert.ok(classes.includes('empty-state'));
   });
+});
+
+// Manifest hygiene (issue #1189 close-out): no transitional exceptions left, and
+// the page-local registry holds narrow prefixes rather than 1-4 letter catch-alls.
+describe('empty-state manifest hygiene', () => {
+  const manifest = () => JSON.parse(readFileSync(MANIFEST, 'utf8'));
+  const OVERLY_GENERIC = ['t', 'is', 'ar', 'item', 're', 'rv', 's2', 'sa', 'sr', 'md', 'na', 'kv', 'ws', 'td', 'sys', 'trb', 'va', 'mod', 'rel', 'task', 'status'];
+  const NARROWED = ['t-pass', 't-fail', 'is-loading', 'is-active', 'is-dark', 'is-on', 'is-settings', 'is-integrated', 'ar-review', 'ar-history', 'ar-summary', 'ar-expand', 'ar-id', 'ar-completed', 'ar-stage', 'ar-seq', 'ar-export', 'ar-filter', 'item-pair', 're-preview', 'rv-btn', 'rv-choice', 'rv-answer', 'rv-correction', 'rv-review', 'rv-decision', 'rv-section', 'rv-merged', 'rv-finalized', 'rv-unit', 'rv-flow', 'rv-submit', 's2-primary', 's2-preview', 's2-layout', 's2-visual', 's2-settings', 's2-code', 'sa-col', 'sr-only', 'md-id', 'md-text', 'md-time', 'na-cell', 'kv-dl', 'kv-item', 'kv-key', 'kv-value', 'kv-sub', 'ws-lock', 'ws-finalized', 'ws-bypass', 'td-muted', 'td-actions', 'sys-col', 'sys-bg', 'trb-text', 'va-dim', 'mod-rate', 'rel-sel', 'task-col', 'task-role', 'task-bg', 'task-check', 'task-item', 'task-table', 'task-row', 'task-name', 'task-type', 'task-header', 'status-badge', 'status-hint', 'status-stepper'];
+
+  it('classScan.transitionalClasses is an empty array', () => {
+    const t = manifest().classScan?.transitionalClasses;
+    assert.ok(Array.isArray(t), 'transitionalClasses is not an array');
+    assert.deepEqual(t, []);
+  });
+
+  it('pageLocalClasses.classes holds no overly generic prefix', () => {
+    const classes = manifest().classScan?.pageLocalClasses?.classes ?? [];
+    const found = OVERLY_GENERIC.filter((p) => classes.includes(p));
+    assert.deepEqual(found, [], `generic prefixes still registered: ${found.join(', ')}`);
+  });
+
+  for (const prefix of NARROWED) {
+    it(`pageLocalClasses.classes contains narrowed prefix ${prefix}`, () => {
+      const classes = manifest().classScan?.pageLocalClasses?.classes ?? [];
+      assert.ok(classes.includes(prefix), `${prefix} is not registered`);
+    });
+  }
 });
