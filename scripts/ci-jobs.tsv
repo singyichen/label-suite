@@ -13,6 +13,7 @@ inventory-tests	scripts/inventory-tests.sh	gen-screen-inventory.mjs
 none	one-off repository bootstrap; cannot fail a change	init.sh
 none	one-off label migration; cannot fail a change	migrate-labels.sh
 none	one-off demo data seeding; cannot fail a change	seed.sh
+none	Codex companion launcher helper; cannot fail a change	codex-companion.sh
 none	Pencil editor save helper; cannot fail a change	pencil-save.sh
 none	local static server for prototype runs; cannot fail a change	serve-prototype.sh
 none	worktree scaffolding helper; cannot fail a change	worktree-init.sh
