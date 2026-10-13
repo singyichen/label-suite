@@ -179,6 +179,10 @@
       annotatorFinalizedNoticeDesc: '作答內容已鎖定，無法再修改或提交。如需異動請聯絡審核員。',
       annotatorFinalizedToast: '此標記結果已定稿，無法再修改或提交',
       wsAutosaveFinalized: '已定稿，不再自動儲存',
+      annotatorUnderReviewNoticeTitle: '此標記已進入審核',
+      annotatorUnderReviewNoticeDesc: '審核員已開始處理這筆作答，內容已鎖定，無法再修改或提交。',
+      annotatorUnderReviewToast: '此標記已進入審核，無法再修改或提交',
+      wsAutosaveUnderReview: '審核中，不再自動儲存',
       wsExceptionSampleGroupAria: '樣本 {sample}，{n} 項待處置例外',
       wsExceptionSampleGroupCount: '{n} 項例外',
       wsExceptionQueueItemAria: '標記員 {annotator}，{output}，{status}',
@@ -349,6 +353,10 @@
       annotatorFinalizedNoticeDesc: 'Answers are locked and can no longer be edited or submitted. Contact a reviewer if a change is needed.',
       annotatorFinalizedToast: 'This annotation is finalized and can no longer be edited or submitted.',
       wsAutosaveFinalized: 'Finalized — autosave stopped.',
+      annotatorUnderReviewNoticeTitle: 'This annotation is under review.',
+      annotatorUnderReviewNoticeDesc: 'A reviewer has started working on this answer. The content is locked and can no longer be edited or submitted.',
+      annotatorUnderReviewToast: 'This annotation is under review and can no longer be edited or submitted.',
+      wsAutosaveUnderReview: 'Under review — autosave stopped.',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -1627,12 +1635,13 @@
      independently. Mirrors data.js's own isAnnotatorWriteLocked() scope
      guard at the UI layer (belt and suspenders) so a future status shape
      coincidence can never render the notice for dry_run. */
+  function getCurrentSampleLockReason() {
+    return window.LabelSuiteAnnotationWorkspaceData.getAnnotatorLockReason(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
+  }
   function isCurrentSampleAnnotatorLocked() {
-    if (currentRunType !== 'official_run') return false;
-    var data = window.LabelSuiteAnnotationWorkspaceData;
-    return data.getReviewUnitStatus(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
-    ) === data.REVIEW_UNIT_STATUS.FINALIZED;
+    return getCurrentSampleLockReason() !== null;
   }
 
   /* Unlike setPreviewControlsLocked() below, this function's two callers
@@ -1682,16 +1691,19 @@
     var existingNotice = document.querySelector('[data-testid="ws-annotator-finalized-notice"]');
     if (existingNotice) existingNotice.remove();
 
-    var locked = isCurrentSampleAnnotatorLocked();
+    var lockReason = getCurrentSampleLockReason();
+    var locked = lockReason !== null;
     if (locked && scroll && preview) {
+      var noticeKey = lockReason === 'under_review' ? 'annotatorUnderReviewNotice' : 'annotatorFinalizedNotice';
       var notice = document.createElement('div');
       notice.setAttribute('data-testid', 'ws-annotator-finalized-notice');
+      notice.setAttribute('data-lock-reason', lockReason);
       notice.className = 'content-card ws-finalized-notice';
       notice.innerHTML = LOCK_SVG.replace(/\{size\}/g, '18')
         + '<div><div class="ws-finalized-notice-title"></div>'
         + '<div class="ws-finalized-notice-desc"></div></div>';
-      notice.querySelector('.ws-finalized-notice-title').textContent = t('annotatorFinalizedNoticeTitle');
-      notice.querySelector('.ws-finalized-notice-desc').textContent = t('annotatorFinalizedNoticeDesc');
+      notice.querySelector('.ws-finalized-notice-title').textContent = t(noticeKey + 'Title');
+      notice.querySelector('.ws-finalized-notice-desc').textContent = t(noticeKey + 'Desc');
       scroll.insertBefore(notice, preview);
     }
 
@@ -1986,7 +1998,7 @@
     if (isCurrentSampleAnnotatorLocked()) {
       dot.className = 'autosave-dot hidden';
       dot.insertAdjacentHTML('afterend', LOCK_SVG.replace(/\{size\}/g, '14').replace('class="ws-lock-icon"', 'class="autosave-lock"'));
-      setText('wsAutosaveLabel', t('wsAutosaveFinalized'));
+      setText('wsAutosaveLabel', t(getCurrentSampleLockReason() === 'under_review' ? 'wsAutosaveUnderReview' : 'wsAutosaveFinalized'));
       return;
     }
     if (currentSampleDirty) {
@@ -2949,7 +2961,7 @@
       currentIdentity
     );
     if (saved === false) {
-      showToast(t('annotatorFinalizedToast'), 'warning');
+      showToast(t(getCurrentSampleLockReason() === 'under_review' ? 'annotatorUnderReviewToast' : 'annotatorFinalizedToast'), 'warning');
       return;
     }
     clearUnsaved();
@@ -3034,7 +3046,7 @@
     }
     var submitted = window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary(), currentIdentity);
     if (submitted === false) {
-      showToast(t('annotatorFinalizedToast'), 'warning');
+      showToast(t(getCurrentSampleLockReason() === 'under_review' ? 'annotatorUnderReviewToast' : 'annotatorFinalizedToast'), 'warning');
       state.submitBusy = false;
       if (submitBtnEl) submitBtnEl.disabled = false;
       return;
@@ -3674,7 +3686,7 @@
       /* issue #1247: direct clicks on a greyed-out button stay silent, so the
          shortcut is the one path that explains the lock. */
       if (btn && btn.disabled && (id === 'wsSaveBtn' || id === 'wsSubmitBtn') && isCurrentSampleAnnotatorLocked()) {
-        showToast(t('annotatorFinalizedToast'), 'warning');
+        showToast(t(getCurrentSampleLockReason() === 'under_review' ? 'annotatorUnderReviewToast' : 'annotatorFinalizedToast'), 'warning');
         return;
       }
       if (btn && !btn.disabled && !btn.classList.contains('hidden')) btn.click();
