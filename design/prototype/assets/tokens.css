@@ -31,10 +31,13 @@
   --color-ink-muted:        #64748B;   /* slate-500 — WCAG AA fix (issue #973), was #94A3B8 (2.56:1); canonical, --color-text-muted is the legacy alias. Now equals --color-text-soft's value — the palette's next compliant step coincides with that token. */
 
   /* ── Workspace Tabs (issue #1099 G1) ─────────────────────────
-     --workspace-tab-width is a non-color layout constant, shared by
-     both themes (no dark override needed). The two color tokens below
+     --workspace-tab-min-width / --workspace-tab-max-width are non-color
+     layout constants (issue #1280; replace the fixed 180px width), shared
+     by both themes (no dark override needed). Tabs share the strip with
+     flex: 1 1 0, clamped to this range. The two color tokens below
      ARE theme-specific and are re-declared in the dark block. */
-  --workspace-tab-width:    180px;
+  --workspace-tab-min-width: 104px;
+  --workspace-tab-max-width: 220px;
   --color-tab-active-bg:    var(--color-slate-50);     /* neutral active-tab bg, replaces the old Violet 50 --color-surface */
   --color-tab-hover-bg:     var(--color-border-muted); /* neutral hover bg, distinguishable from --color-tab-active-bg */
 
