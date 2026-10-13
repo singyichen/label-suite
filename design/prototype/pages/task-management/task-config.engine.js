@@ -1536,6 +1536,52 @@ function renderOutputTypeFields(container, outKey) {
   });
 }
 
+/* Confirmed-dialogue text of an object-array Input value, '\n'-joined; null otherwise (#1340) */
+function dialogueJoinedText(v) {
+  var cfg = state.dialogueFields;
+  if (!Array.isArray(v) || !cfg || !cfg.text) return null;
+  var texts = v.filter(function(e) {
+    return e !== null && typeof e === 'object' && typeof e[cfg.text] === 'string';
+  }).map(function(e) { return e[cfg.text]; });
+  return texts.length > 0 ? texts.join('\n') : null;
+}
+
+/* Reusable dialogue thread renderer (also used by the annotation workspace, #1340):
+   one row per turn, first 20 turns then a "more" hint. cfg = { text, speaker, utt_id } */
+function renderDialogueThread(container, turns, cfg) {
+  var MAX_TURNS = 20;
+  turns.slice(0, MAX_TURNS).forEach(function(turn, i) {
+    var row = document.createElement('div');
+    row.setAttribute('data-testid', 'dialogue-thread-row');
+    row.style.cssText = 'display:flex;gap:8px;align-items:baseline;margin-bottom:4px';
+    var idVal = cfg.utt_id && turn && turn[cfg.utt_id] !== undefined && turn[cfg.utt_id] !== null
+      ? String(turn[cfg.utt_id]) : String(i + 1);
+    var idEl = document.createElement('span');
+    idEl.setAttribute('data-testid', 'dialogue-utt-id');
+    idEl.style.cssText = 'color:var(--text-secondary,#6b7280);flex:none';
+    idEl.textContent = idVal;
+    row.appendChild(idEl);
+    if (cfg.speaker) {
+      var spEl = document.createElement('span');
+      spEl.setAttribute('data-testid', 'dialogue-speaker');
+      spEl.style.cssText = 'font-weight:600;flex:none';
+      spEl.textContent = turn && turn[cfg.speaker] !== undefined && turn[cfg.speaker] !== null ? String(turn[cfg.speaker]) : '';
+      row.appendChild(spEl);
+    }
+    var txEl = document.createElement('span');
+    txEl.setAttribute('data-testid', 'dialogue-text');
+    txEl.textContent = turn && typeof turn[cfg.text] === 'string' ? turn[cfg.text] : '';
+    row.appendChild(txEl);
+    container.appendChild(row);
+  });
+  if (turns.length > MAX_TURNS) {
+    var more = document.createElement('div');
+    more.style.cssText = 'color:var(--text-secondary,#6b7280)';
+    more.textContent = t('dialogueMoreTurns').replace('{n}', turns.length - MAX_TURNS);
+    container.appendChild(more);
+  }
+}
+
 /* ── Dataset-aware preview text helper ── */
 function getDatasetPreviewText() {
   var raw = state.datasetRawFirstRow;
@@ -1549,7 +1595,10 @@ function getDatasetPreviewText() {
     var vals = inputCols.map(function(col) {
       var v = raw[col];
       if (v === undefined || v === null) return null;
-      return (typeof v === 'string') ? v : String(v);
+      if (typeof v === 'string') return v;
+      /* Objects never stringify to "[object Object]"; only a confirmed dialogue yields text (#1340) */
+      if (typeof v === 'object') return dialogueJoinedText(v);
+      return String(v);
     }).filter(function(v) { return v !== null && v !== ''; });
     if (vals.length > 0) return vals.join('\n');
     return null;
@@ -1559,6 +1608,8 @@ function getDatasetPreviewText() {
   for (var i = 0; i < state.datasetParsedColumns.length; i++) {
     var col = state.datasetParsedColumns[i];
     var v = raw[col];
+    var fbRole = state.fieldRoleMap[col];
+    if (fbRole === 'output' || fbRole === 'evidence') continue;
     if (typeof v === 'string' && v.length > bestLen) {
       bestCol = col;
       bestLen = v.length;
@@ -4397,7 +4448,10 @@ function updateAnnotationPreview() {
     } else if (!hasOutputOwnedInputPreview) {
       var inputCols = getFieldsByRole('input');
       var _rawInputVal = (inputCols.length > 0 && state.datasetRawFirstRow) ? state.datasetRawFirstRow[inputCols[0]] : undefined;
-      var sampleText = (_rawInputVal !== undefined && _rawInputVal !== null) ? String(_rawInputVal) : (getDatasetPreviewText() || t('previewSampleSentence'));
+      var _isObjInput = _rawInputVal !== null && typeof _rawInputVal === 'object';
+      var _dialogueTurns = (_isObjInput && Array.isArray(_rawInputVal) && state.dialogueFields) ? _rawInputVal : null;
+      var sampleText = _isObjInput ? (_dialogueTurns ? '' : JSON.stringify(_rawInputVal))
+        : (_rawInputVal !== undefined && _rawInputVal !== null) ? String(_rawInputVal) : (getDatasetPreviewText() || t('previewSampleSentence'));
       var _inputLabel = document.createElement('div');
       _inputLabel.className = 'annotation-preview-task-title';
       _inputLabel.style.marginBottom = '6px';
@@ -4406,10 +4460,15 @@ function updateAnnotationPreview() {
 
       var _sample = document.createElement('div');
       _sample.className = 'annotation-preview-sample';
-      if (hasEvidencePreviewOutput) {
-        _sample.setAttribute('data-testid', 'generation-input-preview');
+      if (_dialogueTurns) {
+        _sample.setAttribute('data-testid', 'dialogue-thread-preview');
+        renderDialogueThread(_sample, _dialogueTurns, state.dialogueFields);
+      } else {
+        if (hasEvidencePreviewOutput) {
+          _sample.setAttribute('data-testid', 'generation-input-preview');
+        }
+        _sample.textContent = sampleText.length > 300 ? sampleText.substring(0, 300) + '…' : sampleText;
       }
-      _sample.textContent = sampleText.length > 300 ? sampleText.substring(0, 300) + '…' : sampleText;
       preview.appendChild(_sample);
       var _sampleDiv = document.createElement('div');
       _sampleDiv.className = 'annotation-preview-divider';
@@ -5439,6 +5498,152 @@ function renderListTitleBlock() {
   block.appendChild(preview);
 }
 
+/* ── Dialogue fields (#1340): detect an Input object-array column, prefill and confirm ──
+   Enabled only on hosts that seed state.dialogueFields (task-new); undefined = off. */
+var DIALOGUE_FIELD_NAME_HINTS = {
+  text: ['text', 'utterance', 'content', 'message', 'sentence'],
+  speaker: ['speaker', 'role', 'author', 'user', 'name'],
+  uttId: ['utt_id', 'utterance_id', 'turn_id', 'id', 'idx', 'index']
+};
+
+function detectDialogueColumn() {
+  if (((state.taskInputTypes && state.taskInputTypes[0]) || 'single_item') !== 'single_item') return null;
+  var cols = state.datasetParsedColumns.filter(function(col) { return state.fieldRoleMap[col] === 'input'; });
+  for (var c = 0; c < cols.length; c++) {
+    var vals = state.datasetPreviewRawRows.map(function(r) { return r[cols[c]]; })
+      .filter(function(v) { return v !== undefined && v !== null; });
+    var valid = vals.length > 0 && vals.every(function(v) {
+      return Array.isArray(v) && v.length > 0 && v.every(function(e) {
+        return e !== null && typeof e === 'object' && !Array.isArray(e);
+      });
+    });
+    if (!valid) continue;
+    var elems = [];
+    vals.forEach(function(v) { elems = elems.concat(v); });
+    var keys = [];
+    elems.forEach(function(e) { Object.keys(e).forEach(function(k) { if (keys.indexOf(k) === -1) keys.push(k); }); });
+    var strKeys = keys.filter(function(k) { return elems.every(function(e) { return typeof e[k] === 'string'; }); });
+    if (strKeys.length === 0) continue;
+    var idKeys = keys.filter(function(k) {
+      return elems.every(function(e) { return typeof e[k] === 'string' || typeof e[k] === 'number'; });
+    });
+    return { col: cols[c], strKeys: strKeys, idKeys: idKeys };
+  }
+  return null;
+}
+
+function dialogueNameHit(key, hints, exact) {
+  var k = key.toLowerCase();
+  return hints.some(function(h) { return exact ? k === h : k.indexOf(h) !== -1; });
+}
+
+function prefillDialogueFields(det) {
+  var hits = det.strKeys.filter(function(k) { return dialogueNameHit(k, DIALOGUE_FIELD_NAME_HINTS.text, false); });
+  var text = hits.length ? hits[0] : det.strKeys[0];
+  var speakers = det.strKeys.filter(function(k) {
+    return k !== text && dialogueNameHit(k, DIALOGUE_FIELD_NAME_HINTS.speaker, false);
+  });
+  var ids = det.idKeys.filter(function(k) {
+    return k !== text && dialogueNameHit(k, DIALOGUE_FIELD_NAME_HINTS.uttId, true);
+  });
+  return { text: text, speaker: speakers.length ? speakers[0] : null, utt_id: ids.length ? ids[0] : null };
+}
+
+function dialogueFieldsValid(cfg, det) {
+  return !!cfg && det.strKeys.indexOf(cfg.text) !== -1 &&
+    (cfg.speaker === null || (cfg.speaker !== cfg.text && det.strKeys.indexOf(cfg.speaker) !== -1)) &&
+    (cfg.utt_id === null || (cfg.utt_id !== cfg.text && det.idKeys.indexOf(cfg.utt_id) !== -1));
+}
+
+function renderDialogueBlock() {
+  if (state.dialogueFields === undefined) return;
+  var old = el('inlineDialogueBlock');
+  if (old) old.parentNode.removeChild(old);
+  var det = detectDialogueColumn();
+  if (!det) {
+    state.dialogueFields = null;
+    state.dialogueDeclined = false;
+    return;
+  }
+  if (state.dialogueDeclined) state.dialogueFields = null;
+  else if (!dialogueFieldsValid(state.dialogueFields, det)) state.dialogueFields = prefillDialogueFields(det);
+  var cfg = state.dialogueFields || prefillDialogueFields(det);
+  var on = !!state.dialogueFields;
+
+  var anchor = el('inlineListTitleBlock') || el('inlinePreviewSourceBar');
+  if (!anchor) return;
+  var block = document.createElement('div');
+  block.id = 'inlineDialogueBlock';
+  block.className = 'inline-list-title-block';
+  block.setAttribute('data-testid', 'dialogue-fields-block');
+  anchor.parentNode.insertBefore(block, anchor.nextSibling);
+
+  var heading = document.createElement('div');
+  heading.textContent = t('dialogueBlockTitle') + ' (' + det.col + ')';
+  block.appendChild(heading);
+
+  var tgl = document.createElement('label');
+  var chk = document.createElement('input');
+  chk.type = 'checkbox';
+  chk.checked = on;
+  chk.setAttribute('data-testid', 'dialogue-fields-toggle');
+  tgl.appendChild(chk);
+  tgl.appendChild(document.createTextNode(' ' + t('dialogueToggleLabel')));
+  block.appendChild(tgl);
+
+  function addSelect(labelKey, testid, keys, current, noneKey) {
+    var lbl = document.createElement('label');
+    lbl.style.display = 'block';
+    lbl.textContent = t(labelKey) + ' ';
+    var sel = document.createElement('select');
+    sel.setAttribute('data-testid', testid);
+    sel.disabled = !on;
+    if (noneKey) {
+      var none = document.createElement('option');
+      none.value = '';
+      none.textContent = t(noneKey);
+      sel.appendChild(none);
+    }
+    keys.forEach(function(k) {
+      var opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      sel.appendChild(opt);
+    });
+    sel.value = current === null ? '' : current;
+    lbl.appendChild(sel);
+    block.appendChild(lbl);
+    return sel;
+  }
+  var textSel = addSelect('dialogueTextLabel', 'dialogue-field-text', det.strKeys, cfg.text, null);
+  var spkSel = addSelect('dialogueSpeakerLabel', 'dialogue-field-speaker',
+    det.strKeys.filter(function(k) { return k !== cfg.text; }), cfg.speaker, 'dialogueNoneOption');
+  var idSel = addSelect('dialogueUttIdLabel', 'dialogue-field-utt-id',
+    det.idKeys.filter(function(k) { return k !== cfg.text; }), cfg.utt_id, 'dialogueArrayIndexOption');
+
+  chk.addEventListener('change', function() {
+    if (chk.checked) {
+      state.dialogueDeclined = false;
+      state.dialogueFields = prefillDialogueFields(det);
+    } else {
+      state.dialogueDeclined = true;
+      state.dialogueFields = null;
+    }
+    renderInlineDatasetPreview();
+    markDirty();
+  });
+  function onSelectChange() {
+    state.dialogueFields = {
+      text: textSel.value,
+      speaker: spkSel.value && spkSel.value !== textSel.value ? spkSel.value : null,
+      utt_id: idSel.value && idSel.value !== textSel.value ? idSel.value : null
+    };
+    renderInlineDatasetPreview();
+    markDirty();
+  }
+  [textSel, spkSel, idSel].forEach(function(s) { s.addEventListener('change', onSelectChange); });
+}
+
 function renderInlineDatasetPreview() {
   var container = el('inlineDatasetPreview');
   if (!container) return;
@@ -5554,11 +5759,13 @@ function renderInlineDatasetPreview() {
   table.appendChild(tbody);
   wrap.appendChild(table);
   renderListTitleBlock();
+  renderDialogueBlock();
 }
 
 function resetInlinePreviewSelection() {
   state.fieldRoleMap = {};
   state.listTitleField = null;
+  if (state.dialogueFields !== undefined) { state.dialogueFields = null; state.dialogueDeclined = false; }
   state.datasetParsedColumns = [];
   state.datasetParsedRows = [];
   state.datasetRawFirstRow = {};
