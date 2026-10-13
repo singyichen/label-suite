@@ -22,7 +22,7 @@
 3. `N/A`：共用殼層元件，不是獨立 route，沒有角色 allowlist；顯示對象名稱沿用既有頁籤列的可見範圍。
 4. `N/A`：本次不新增 loading／empty／error 狀態；名稱解析失敗時沿用既有三段回退（即時查詢 → 快照 → 原始 `taskId`）。
 5. 通過：沿用既有 `data-testid="workspace-tab"`、`role="tab"`；新增 `.workspace-tab-kind` 選擇器，由本 change 的 Red 規格鎖定。
-6. 通過：標題組成表（種類小標籤 zh／en、對象名稱來源）已寫入 `FR-010` delta；名稱資料來源為 `task-list.data.js` 與 `dataset-analysis-list.data.js` 既有 `nameZh`／`nameEn`。
+6. 通過：標題組成表（種類小標籤 zh／en、對象名稱來源）已寫入 `FR-010` delta；名稱由殼層經 `task-list.data.js` 既有 `nameZh`／`nameEn` 解析（與 `dataset-analysis-list.data.js` 同源 id 一致）。
 7. 通過：zh／en 兩語系（驗收項 9 對應情境）、`aria-label`／`title` 完整文字、375px 以下沿用總覽選單、色彩只用語意 token（兩主題）。
 8. 通過：屬 `shared` 模組，`frontend/**` 實作為後續階段（spec 019 已註明原型先行）；Storybook scope 不在本次。
 9. `N/A`：頁籤列是導覽殼層，沒有「完成後去向」型目標；`design/system/user-path-map.html` 不涵蓋此元件，無 F3／F4 命中。

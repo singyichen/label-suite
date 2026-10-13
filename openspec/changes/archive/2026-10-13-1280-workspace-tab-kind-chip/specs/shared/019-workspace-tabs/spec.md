@@ -18,7 +18,7 @@
    | `task-detail`（無 `ap_stage`） | 詳情／Detail | 任務名稱 |
    | `task-detail`（`ap_stage=rN`） | 試標 RN／Dry Run RN | 任務名稱 |
    | `task-detail`（`ap_stage=official`） | 正式／Official | 任務名稱 |
-   | `dataset-analysis-detail` | 分析／Analysis | 任務名稱（資料集以 `task_id` 定位，名稱取自 `dataset-analysis-list.data.js` 的 `nameZh`／`nameEn`） |
+   | `dataset-analysis-detail` | 分析／Analysis | 任務名稱（資料集以 `task_id` 定位，名稱經殼層以 `LabelSuiteTaskListData`（`task-list.data.js`）的 `nameZh`／`nameEn` 解析，與 `dataset-analysis-list.data.js` 同源 id 之名稱一致） |
 
 2. **名稱解析**：任務名稱 MUST 依序回退——即時查詢（目前頁面的任務資料）→ 頁籤上的名稱快照 → 原始 `taskId`；英文介面取 `nameEn`，缺漏時回退 `nameZh`。名稱快照 MUST 對所有帶 `taskId` 的頁面種類寫入（不再僅限 `task-detail`）。去重鍵對照表（`FR-006`）MUST NOT 因本條改變，本條只影響顯示。
 3. **純文字版標題**：`title` 屬性、關閉按鈕的 `aria-label`、總覽選單列（`FR-023`）與行動版選單 MUST 使用純文字版標題「小標籤＋空格＋名稱」（無小標籤的頁面種類即為頁面種類名），且 MUST NOT 渲染小標籤 DOM；總覽選單的篩選（`FR-023`）MUST 比對純文字版標題，因此輸入任務名稱亦能篩到對應的標記作業頁籤。名稱過長時 `.workspace-tab-label` MUST 以 `text-overflow: ellipsis` 截斷。
