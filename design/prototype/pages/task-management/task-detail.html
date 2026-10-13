@@ -2445,11 +2445,6 @@
       toastRevisionNoteBlockedTpl: '修訂紀錄未完成，無法新增試標回合 R{round}：',
       trialRoundRevisionCancelBtn: '取消',
       trialRoundRevisionConfirmTpl: '建立 R{round}',
-      statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
-      statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
-      statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
-      statusHintOfficial: 'Official Run 進行中。',
-      statusHintCompleted: '任務已完成。',
       statusLabel: {
         draft: '草稿',
         dry_run_in_progress: '試標進行中',
@@ -2995,11 +2990,6 @@
       toastRevisionNoteBlockedTpl: 'Revision note incomplete, cannot add trial round R{round}: ',
       trialRoundRevisionCancelBtn: 'Cancel',
       trialRoundRevisionConfirmTpl: 'Create R{round}',
-      statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
-      statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
-      statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
-      statusHintOfficial: 'Official run is in progress.',
-      statusHintCompleted: 'Task is completed.',
       statusLabel: {
         draft: 'Draft',
         dry_run_in_progress: 'Dry run in progress',
@@ -4607,14 +4597,6 @@
     'work-log': './task-detail.panels/work-log.html',
     'member-management': './task-detail.panels/member-management.html'
   };
-
-  var statusHintMap = {
-    draft: 'statusHintDraft',
-    dry_run_in_progress: 'statusHintDry',
-    waiting_iaa_confirmation: 'statusHintIaa',
-    official_run_in_progress: 'statusHintOfficial',
-    completed: 'statusHintCompleted'
-  };
   var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
   var STATUS_ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
   var toastTimer = null;
@@ -5538,10 +5520,6 @@ function interpolate(template, payload) {
     }
   }
 
-  function getStatusHint() {
-    return t(statusHintMap[TASK_DATA.status] || 'statusHintDraft');
-  }
-
   function applySamplingDefaultsToTaskData() {
     var defs = SAMPLING_DEFAULTS_BY_TYPE[TASK_DATA.taskTypeKey] ||
       { targetIAA: 0.75, targetStd: null, minAnnotators: 3, trialPercent: 15 };
@@ -6403,7 +6381,6 @@ function interpolate(template, payload) {
       statusBadge.className = 'badge ' + statusCls;
       statusBadge.textContent = (I18N[state.lang].statusLabel || I18N.zh.statusLabel)[TASK_DATA.status] || TASK_DATA.status;
     }
-    setText('statusHint', getStatusHint());
     renderBreadcrumbCurrent();
     updateStatusStepper();
   }
@@ -10528,11 +10505,19 @@ function getTaskTypeLabel() {
         dlBtn.addEventListener('click', function() {
           redownloadArExportRecord(record);
         });
+        opsTd.appendChild(dlBtn);
       } else {
+        // issue #1311: .mini-btn:disabled has pointer-events:none, so the hover reason lives on the wrapper (same pattern as #1129).
+        // ponytail: a disabled button is unfocusable, so keyboard users never see the title; aria-disabled + focusable tooltip if needed.
+        var reason = t('arExportSnapshotMissingTitle');
         dlBtn.disabled = true;
-        dlBtn.title = t('arExportSnapshotMissingTitle');
+        dlBtn.title = reason;
+        var dlTip = document.createElement('span');
+        dlTip.className = 'btn-disabled-tip';
+        dlTip.title = reason;
+        dlTip.appendChild(dlBtn);
+        opsTd.appendChild(dlTip);
       }
-      opsTd.appendChild(dlBtn);
       tr.appendChild(opsTd);
       body.appendChild(tr);
     });
