@@ -6,6 +6,7 @@
   <title>Label Suite — 標記清單</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
@@ -390,15 +391,6 @@
       color: var(--color-white);
     }
     .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .empty {
-      padding: var(--space-xl);
-      text-align: center;
-      color: var(--color-ink-muted);
-      font-size: 14px;
-      border-top: 1px solid var(--color-border);
-    }
-    .empty .empty-msg { margin: 0; }
-    .empty .clear-btn { margin-top: 10px; }
     .pagination {
       display: flex;
       align-items: center;
@@ -643,11 +635,11 @@
        static markup lives here. -->
   <section class="list hidden" id="dryRunFeedbackCard" aria-label="試標歷史回饋" data-testid="ws-dry-run-feedback-card"></section>
 
-  <section class="empty hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
+  <section class="empty-state empty-state-panel hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
 
   <!-- Issue #449: shown when the reviewer arrived from the quick-review CTA
        and no review unit on this task is actionable for them. -->
-  <section class="empty hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
+  <section class="empty-state empty-state-panel hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
 
   <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選" id="listToolbar">
     <div class="toolbar-left">
@@ -684,7 +676,7 @@
         <tbody id="sampleRows"></tbody>
       </table>
     </div>
-    <div class="empty hidden" id="emptyState"></div>
+    <div class="empty-state empty-state-page hidden" id="emptyState"></div>
     <div class="pagination hidden" id="paginationBar">
       <div class="pagination-left">
         <span class="pagination-info" id="paginationInfo"></span>
@@ -2098,13 +2090,13 @@
   function renderEmptyState(emptyEl, hasAnyRows, context) {
     emptyEl.innerHTML = '';
     var msg = document.createElement('p');
-    msg.className = 'empty-msg';
+    msg.className = 'empty-state-desc';
     msg.textContent = t(hasAnyRows ? 'emptyNoResults' : 'emptyNoData');
     emptyEl.appendChild(msg);
     if (hasAnyRows) {
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'clear-btn';
+      btn.className = 'clear-btn empty-state-action';
       btn.setAttribute('data-testid', 'empty-clear-filters');
       btn.textContent = t('clearFiltersLabel');
       btn.addEventListener('click', function () {

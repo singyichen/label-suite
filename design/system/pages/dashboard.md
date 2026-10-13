@@ -18,7 +18,7 @@ Solid `step-icon--*-solid` variants were removed as dead CSS (zero markup usage)
 
 ## Empty State (UXC-09)
 
-`.list-empty` (dashed `--color-border`, `--color-ink-muted`, centered) renders when a role task list has no entries. The dashboard has no list filters, so only the no-data mode applies; there is no per-role creation action on this page, so it is message-only (`taskListEmpty`, zh/en).
+`.empty-state.empty-state-compact` (dashed `--color-border`, `--color-text-soft`, centered) renders when a role task list has no entries. The dashboard has no list filters, so only the no-data mode applies; there is no per-role creation action on this page, so it is message-only (`taskListEmpty`, zh/en).
 
 ## URL State (UXC-11)
 

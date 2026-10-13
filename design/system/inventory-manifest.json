@@ -101,6 +101,7 @@
       "pagination": ["pagination", "page-btn", "page-size-select", "page-ellipsis"],
       "chip": ["cause-chip", "task-type-chip", "rv-unit-chip", "md-chip", "md-chips", "ar-va-chip", "ar-classif-chip", "round-metric-chip"],
       "toolbar": ["toolbar"],
+      "empty-state": ["empty-state"],
       "content-tabs": ["admin-tab", "admin-tabs"],
       "color-dot": ["entity-color-dot", "t-dot"],
       "divider": ["divider"],
@@ -129,7 +130,7 @@
       "review-status-track": ["review-track"]
     },
     "transitionalClasses": [
-      { "component": "empty-state", "classes": ["empty", "ar-empty", "ar-export-empty", "anomaly-empty", "audit-drawer-empty", "history-empty", "list-empty", "member-detail-empty", "member-search-empty", "progress-empty", "quality-empty", "stats-empty", "worklog-empty", "notif-empty", "annotation-preview-empty", "taxonomy-selector-empty"], "reason": "Empty-state class family kept per page until the prototype classes converge on the Empty State component (#1189); registered here so the scan gate does not block on them." }
+      { "component": "empty-state", "classes": ["ar-empty", "ar-export-empty", "anomaly-empty", "audit-drawer-empty", "history-empty", "member-detail-empty", "member-search-empty", "progress-empty", "worklog-empty", "annotation-preview-empty", "taxonomy-selector-empty"], "reason": "Empty-state class family kept per page until the prototype classes converge on the Empty State component (#1189); registered here so the scan gate does not block on them." }
     ],
     "pageLocalClasses": {
       "reason": "Page- or feature-local layout/content class, or a generic state modifier (active, hidden, is-*, ...); no cross-page component spec exists for it.",

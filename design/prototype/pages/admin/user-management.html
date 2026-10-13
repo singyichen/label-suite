@@ -6,6 +6,7 @@
   <title>Label Suite — 使用者管理</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
@@ -189,16 +190,6 @@
       background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
       appearance: none; -webkit-appearance: none; cursor: pointer;
     }
-
-    /* ── Empty State ─────────────────────────────────────────────── */
-    .empty-state { padding: var(--space-2xl) var(--space-lg); text-align: center; }
-    .empty-state-icon {
-      width: 48px; height: 48px; border-radius: 50%; background: var(--color-border-muted);
-      display: inline-flex; align-items: center; justify-content: center;
-      margin-bottom: var(--space-md); color: var(--color-ink-muted);
-    }
-    .empty-state-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
-    .empty-state-desc { font-size: 13px; color: var(--color-text-soft); margin-bottom: var(--space-lg); }
 
     /* ── Modal ──────────────────────────────────────────────────── */
     .modal-overlay {
@@ -613,7 +604,7 @@
 
       <!-- Empty State -->
       <div class="table-container hidden" id="emptyState">
-        <div class="empty-state">
+        <div class="empty-state empty-state-page">
           <div class="empty-state-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -624,7 +615,7 @@
           </div>
           <p id="emptyTitle" class="empty-state-title">找不到符合條件的使用者</p>
           <p id="emptyDesc" class="empty-state-desc">請嘗試清除篩選條件或使用不同的關鍵字</p>
-          <button class="btn-ghost" onclick="clearFilters()" id="clearFiltersBtn">清除篩選</button>
+          <button class="btn-ghost empty-state-action" onclick="clearFilters()" id="clearFiltersBtn">清除篩選</button>
         </div>
       </div>
 

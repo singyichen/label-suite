@@ -6,6 +6,7 @@
   <title>Label Suite — 資料集分析</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -203,13 +204,9 @@
     .badge-role-rev   { color: var(--color-info);     background: var(--color-info-bg);         border-color: var(--color-info-border); }
 
     /* ── Empty state ─────────────────────────────────────────── */
-    .empty-row, .error-row { cursor: default !important; }
-    .empty-row:hover, .error-row:hover { background: transparent !important; }
-    .empty-row-cell { padding: 48px 20px !important; }
-    .empty-row-wrap { text-align: center; max-width: 420px; margin: 0 auto; }
-    .empty-title, .error-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
-    .empty-desc, .error-desc { font-size: 14px; color: var(--color-text-soft); margin: 0 0 16px; }
-    .empty-desc { margin-bottom: 0; }
+    .error-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
+    .error-desc { font-size: 14px; color: var(--color-text-soft); margin: 0 0 16px; }
+    .empty-state-row .empty-state-desc { margin-bottom: 0; }
 
     /* ── Pagination ──────────────────────────────────────────── */
     .pagination {

@@ -523,7 +523,7 @@
 
 **MASTER.md 狀態：** 已定義（MASTER.md §Empty State：icon／標題／說明／可選動作；table-cell、panel、full-page 三種尺寸；issue #1188）
 
-- **過渡狀態：** prototype 目前仍有約十餘套各頁自訂的空狀態 class（`empty-state*`、`empty-row-*`、`stats-empty*`、`quality-empty*`、`ar-empty-*`、`worklog-empty-*` 等），在掃描閘門列為 `transitionalClasses`，理由指向 issue #1189（class 統一另案處理）
+- **過渡狀態：** prototype 目前仍有約十餘套各頁自訂的空狀態 class（`empty-state*`、`empty-row-*`、`ar-empty-*`、`worklog-empty-*` 等），在掃描閘門列為 `transitionalClasses`，理由指向 issue #1189（class 統一另案處理）
 - 與 State Panel 的差異：State Panel 是「表單送出後整區取代表單」，Empty State 是「清單／表格／面板沒有資料」
 - 出現頁面：dashboard、task-list、task-detail、annotation-list、annotation-workspace、user-management、role-settings、dataset-analysis-list、dataset-analysis-detail、shared notification dropdown
 
@@ -544,7 +544,7 @@
 
 - class：`notif-*`、`mobile-notification-bell-btn`
 - 出現頁面：所有登入後頁面（`shared/sidebar.js` 共用 fragment）
-- 缺口：開合鍵盤行為、focus 管理、`notif-empty` 對應 Empty State 後的版式
+- 缺口：開合鍵盤行為、focus 管理、`empty-state-compact` 於通知下拉內的版式
 
 ---
 
