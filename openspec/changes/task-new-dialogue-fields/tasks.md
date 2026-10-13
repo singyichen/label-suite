@@ -19,7 +19,7 @@
 
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.data.js`
 
-- [ ] 1.1 新增 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts` 的 Red：斷言 zh／en 字串表皆含對話串確認區的標題、提議勾選、文字／發言者／發言編號欄位標籤、「不使用」與「使用陣列序號」選項、剩餘則數提示。 [@senior-qa]
+- [x] 1.1 新增 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts` 的 Red：斷言 zh／en 字串表皆含對話串確認區的標題、提議勾選、文字／發言者／發言編號欄位標籤、「不使用」與「使用陣列序號」選項、剩餘則數提示。 [@senior-qa]
 - [ ] 1.2 （Green）修改 `design/prototype/pages/task-management/task-config.data.js`，於 zh／en 字串表新增上述字串，不改既有鍵。 [@senior-frontend]
 
 ## 2. 偵測與確認（AC-1.10、AC-1.11）
@@ -29,7 +29,7 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.engine.js`
 > **相依**：群組 1。
 
-- [ ] 2.1 修改 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts`，補 Red：含 `utterances[]` 的資料集提議對話串並預填三個欄位；字串 Input、元素非物件、元素缺字串子欄位時不提議；更改對應與取消勾選後狀態更新且不被自動預填覆蓋；角色改走或換資料列來源後重新偵測。 [@senior-qa]
+- [x] 2.1 修改 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts`，補 Red：含 `utterances[]` 的資料集提議對話串並預填三個欄位；字串 Input、元素非物件、元素缺字串子欄位時不提議；更改對應與取消勾選後狀態更新且不被自動預填覆蓋；角色改走或換資料列來源後重新偵測。 [@senior-qa]
 - [ ] 2.2 （Green）修改 `design/prototype/pages/task-management/task-config.engine.js`：偵測、預填、確認區與失效重新偵測（design.md D2、D3、D5）。 [@senior-frontend]
 
 ## 3. Step 2 預覽與文字來源（AC-1.12）
@@ -39,7 +39,7 @@
 > **產品檔案（0 新增）**：沿用 `task-config.engine.js`。
 > **相依**：群組 2。
 
-- [ ] 3.1 修改 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts`，補 Red：Step 2 預覽每則一列含編號、發言者、文字；未確認時物件 Input 以 JSON 呈現；全頁無 `[object Object]`；無 Input 欄位時退回來源不選 Output／Evidence 欄位；字串 Input 的預覽文字與既有行為相同。 [@senior-qa]
+- [x] 3.1 修改 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts`，補 Red：Step 2 預覽每則一列含編號、發言者、文字；未確認時物件 Input 以 JSON 呈現；全頁無 `[object Object]`；無 Input 欄位時退回來源不選 Output／Evidence 欄位；字串 Input 的預覽文字與既有行為相同。 [@senior-qa]
 - [ ] 3.2 （Green）修改 `design/prototype/pages/task-management/task-config.engine.js`：`getDatasetPreviewText()` 物件安全與退回排除、通用輸入文字區塊的對話串渲染（design.md D4）。 [@senior-frontend]
 
 ## 4. task-new 持久化（SC-002j）
@@ -49,7 +49,7 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-new.html`
 > **相依**：群組 2。
 
-- [ ] 4.1 修改 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts`，補 Red：建立任務 payload 的 `dialogue_fields` 為確認的對應、未採用時為 `null`；重新載入精靈草稿後確認區仍為該對應；取消提議後重載仍為取消。 [@senior-qa]
+- [x] 4.1 修改 `design/prototype/tests/task-management/issue-1340-dialogue-fields.spec.ts`，補 Red：建立任務 payload 的 `dialogue_fields` 為確認的對應、未採用時為 `null`；重新載入精靈草稿後確認區仍為該對應；取消提議後重載仍為取消。 [@senior-qa]
 - [ ] 4.2 （Green）修改 `design/prototype/pages/task-management/task-new.html`：狀態初始化、草稿可持久化鍵清單與建立任務 payload。 [@senior-frontend]
 
 ## 5. 回歸與審查
