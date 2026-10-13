@@ -1150,6 +1150,7 @@
     .settings-layout { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px; align-items: start; }
     .settings-section-nav { display: flex; flex-direction: column; gap: var(--space-xs); overflow-x: auto; }
     .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 4px; background: transparent; color: var(--color-ink-muted); font: inherit; font-size: 14px; text-align: center; cursor: pointer; }
+    .settings-section-status { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     .settings-nav-item[aria-selected="true"] { background: var(--color-white); color: var(--color-ink); font-weight: 600; }
     .settings-section.panel { border: 1px solid var(--color-border); box-shadow: none; border-radius: var(--radius-lg); background: var(--color-white); margin-bottom: 0; }
     /* FR-026 (1) / design.md: section title, text-link edit, divided definition list. Scoped to the settings tab only. */
@@ -2229,7 +2230,7 @@
   </div>
 </div>
 
-<!-- FR-026 (2): unsaved settings changes on section / tab switch. -->
+<!-- FR-026 (2): unsaved settings changes on section / tab switch or section Cancel. -->
 <div class="modal-overlay" id="settingsLeaveModal" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="settingsLeaveTitle" aria-describedby="settingsLeaveBody">
   <div class="modal">
     <h2 id="settingsLeaveTitle">放棄未儲存的變更？</h2>
@@ -2322,6 +2323,7 @@
       tabWorkLog: '工時紀錄',
       tabMemberManagement: '成員管理',
       settingsSectionNavLabel: '設定區段',
+      settingsSectionSwitched: '已切換到{label}',
       settingsLeaveTitle: '放棄未儲存的變更？',
       settingsLeaveBody: '目前區段有尚未儲存的變更，離開後這些變更將會遺失。',
       settingsLeaveCancelBtn: '取消',
@@ -2369,7 +2371,6 @@
       editReviewerGuidelineFilesLabel: '上傳檔案',
       editForceGuidelineDesc: '啟用後，標記員進入作業前必須先閱讀說明',
       guidelineSaveSuccess: '標記說明已更新',
-      guidelineLeaveConfirm: '你有尚未儲存的標記說明變更，確定要離開編輯模式嗎？',
       guidelineFileTypeInvalid: '僅支援 PDF / PNG / JPG / JPEG / WEBP / Markdown',
       overviewEditTitle: '基本資料',
       overviewEditBtn: '編輯',
@@ -2380,7 +2381,6 @@
       overviewReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯基本資料。',
       overviewReadonlyDraftOnly: '',
       overviewSaveSuccess: '基本資料已更新',
-      overviewLeaveConfirm: '你有尚未儲存的基本資訊變更，確定要離開編輯模式嗎？',
       overviewEditTaskNameRequired: '任務名稱不可為空。',
       overviewEditTaskTypeRequired: '請至少選擇大分類、輸入類型與輸出類型各一項。',
       overviewEditDatasetRequired: '請上傳資料集。',
@@ -2396,7 +2396,6 @@
       settingsSaveCodeBtnLabel: '套用',
       settingsCodeAppliedToast: '已套用至 Visual，請按儲存送出',
       settingsSaveSuccess: '標記設定已更新',
-      settingsLeaveConfirm: '你有尚未儲存的標記設定變更，確定要離開編輯模式嗎？',
       settingsCodeUnsaved: '請先套用 Code 的修改再儲存。',
       editTaskNameLabel: '任務名稱',
       editTaskTypeLabel: '任務類型',
@@ -2412,7 +2411,6 @@
       samplingReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯抽樣設定。',
       samplingReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯抽樣設定。',
       samplingSaveSuccess: '抽樣設定已更新',
-      samplingLeaveConfirm: '你有尚未儲存的抽樣設定變更，確定要離開編輯模式嗎？',
       reviewSettingsTitle: '審核設定',
       reviewEditBtn: '編輯',
       reviewSaveBtn: '儲存',
@@ -2428,7 +2426,6 @@
       arbiterIdsValueEmpty: '未指定仲裁者',
       reviewSettingsErrorReviewerIdsEmpty: '請至少勾選一位審核員。',
       reviewSettingsErrorNoAssignableReviewer: '請至少保留一位未被指定為仲裁者的審核員。',
-      reviewLeaveConfirm: '你有尚未儲存的審核設定變更，確定要離開編輯模式嗎？',
       reviewReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯審核設定。',
       reviewReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯審核設定。',
       reviewSaveSuccess: '審核設定已更新',
@@ -2878,6 +2875,7 @@
       tabWorkLog: 'Work log',
       tabMemberManagement: 'Member management',
       settingsSectionNavLabel: 'Settings sections',
+      settingsSectionSwitched: 'Switched to {label}',
       settingsLeaveTitle: 'Discard unsaved changes?',
       settingsLeaveBody: 'This section has unsaved changes that will be lost if you leave.',
       settingsLeaveCancelBtn: 'Cancel',
@@ -2925,7 +2923,6 @@
       editReviewerGuidelineLabel: 'Review guideline content',
       editReviewerGuidelineFilesLabel: 'Upload files',
       guidelineSaveSuccess: 'Guideline updated',
-      guidelineLeaveConfirm: 'You have unsaved guideline changes. Leave edit mode?',
       guidelineFileTypeInvalid: 'Only PDF / PNG / JPG / JPEG / WEBP / Markdown are supported',
       overviewEditTitle: 'Task basics',
       overviewEditBtn: 'Edit basics',
@@ -2936,7 +2933,6 @@
       overviewReadonlyStatusOnly: 'Task is no longer in draft. Task basics can no longer be edited.',
       overviewReadonlyDraftOnly: '',
       overviewSaveSuccess: 'Task basics updated',
-      overviewLeaveConfirm: 'You have unsaved task basics changes. Leave edit mode?',
       overviewEditTaskNameRequired: 'Task name is required.',
       settingsEditBtn: 'Edit label settings',
       settingsSaveBtn: 'Save',
@@ -2950,7 +2946,6 @@
       settingsSaveCodeBtnLabel: 'Apply',
       settingsCodeAppliedToast: 'Applied to Visual. Click Save to submit.',
       settingsSaveSuccess: 'Label settings updated',
-      settingsLeaveConfirm: 'You have unsaved label settings changes. Leave edit mode?',
       settingsCodeUnsaved: 'Apply your Code changes before saving.',
       editTaskNameLabel: 'Task name',
       editTaskTypeLabel: 'Task type',
@@ -2966,7 +2961,6 @@
       samplingReadonlyRoleOnly: 'Read-only role. Only project leader can edit sampling settings.',
       samplingReadonlyStatusOnly: 'Task is no longer in draft. Sampling settings can no longer be edited.',
       samplingSaveSuccess: 'Sampling settings updated',
-      samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
       reviewSettingsTitle: 'Review Settings',
       reviewEditBtn: 'Edit',
       reviewSaveBtn: 'Save',
@@ -2982,7 +2976,6 @@
       arbiterIdsValueEmpty: 'No arbiter designated',
       reviewSettingsErrorReviewerIdsEmpty: 'Select at least one reviewer.',
       reviewSettingsErrorNoAssignableReviewer: 'Keep at least one reviewer who is not designated as an arbiter.',
-      reviewLeaveConfirm: 'You have unsaved review-setting changes. Leave edit mode?',
       reviewReadonlyRoleOnly: 'Read-only role. Only project leader can edit review settings.',
       reviewReadonlyStatusOnly: 'Task is no longer in draft. Review settings can no longer be edited.',
       reviewSaveSuccess: 'Review settings updated',
@@ -6574,7 +6567,7 @@ function getTaskTypeLabel() {
 
   function cancelOverviewEdit(force) {
     if (!state.overviewEditMode) return true;
-    if (!force && state.overviewDirty && !window.confirm(t('overviewLeaveConfirm'))) return false;
+    if (!force && state.overviewDirty) return confirmDiscardEdit(cancelOverviewEdit, 'overviewEditBtn');
     state.overviewEditMode = false;
     state.overviewDirty = false;
     resetTaskConfigSeedGuard();
@@ -6713,7 +6706,7 @@ function getTaskTypeLabel() {
 
   function cancelSamplingEdit(force) {
     if (!state.samplingEditMode) return true;
-    if (!force && state.samplingDirty && !window.confirm(t('samplingLeaveConfirm'))) return false;
+    if (!force && state.samplingDirty) return confirmDiscardEdit(cancelSamplingEdit, 'samplingEditBtn');
     state.samplingEditMode = false;
     state.samplingDirty = false;
     state.samplingDraft = null;
@@ -6940,7 +6933,7 @@ function getTaskTypeLabel() {
 
   function cancelReviewEdit(force) {
     if (!state.reviewEditMode) return true;
-    if (!force && state.reviewDirty && !window.confirm(t('reviewLeaveConfirm'))) return false;
+    if (!force && state.reviewDirty) return confirmDiscardEdit(cancelReviewEdit, 'reviewEditBtn');
     state.reviewEditMode = false;
     state.reviewDirty = false;
     state.reviewDraft = null;
@@ -7211,7 +7204,7 @@ function getTaskTypeLabel() {
 
   function cancelGuidelineEdit(force) {
     if (!state.guidelineEditMode) return true;
-    if (!force && state.guidelineDirty && !window.confirm(t('guidelineLeaveConfirm'))) return false;
+    if (!force && state.guidelineDirty) return confirmDiscardEdit(cancelGuidelineEdit, 'guidelineEditBtn');
     state.guidelineEditMode = false;
     state.guidelineDirty = false;
     state.guidelineDraft = null;
@@ -7379,7 +7372,7 @@ function getTaskTypeLabel() {
 
   function cancelSettingsEdit(force) {
     if (!state.settingsEditMode) return true;
-    if (!force && state.settingsDirty && !window.confirm(t('settingsLeaveConfirm'))) return false;
+    if (!force && state.settingsDirty) return confirmDiscardEdit(cancelSettingsEdit, 'settingsEditBtn');
     state.settingsEditMode = false;
     state.settingsDirty = false;
     state.codeDraftDirty = false;
@@ -7553,6 +7546,15 @@ function getTaskTypeLabel() {
     return Boolean(state[section.stateKey + 'EditMode'] && state[section.stateKey + 'Dirty']);
   }
 
+  function confirmDiscardEdit(cancelFn, editBtnId) {
+    openSettingsLeaveConfirm(function() {
+      cancelFn(true);
+      var b = document.getElementById(editBtnId);
+      if (b) b.focus();
+    });
+    return false;
+  }
+
   function openSettingsLeaveConfirm(onConfirm) {
     pendingSettingsLeave = onConfirm;
     var modal = document.getElementById('settingsLeaveModal');
@@ -7601,6 +7603,12 @@ function getTaskTypeLabel() {
     });
   }
 
+  function announceSettingsSection(slug) {
+    var status = document.getElementById('settingsSectionStatus');
+    var tab = document.getElementById('settingsTab-' + slug);
+    if (status && tab) status.textContent = t('settingsSectionSwitched').replace('{label}', tab.textContent);
+  }
+
   function selectSettingsSection(slug) {
     if (slug === state.settingsSection) return true;
     var current = SETTINGS_SECTIONS.filter(function(section) { return section.slug === state.settingsSection; })[0];
@@ -7609,6 +7617,7 @@ function getTaskTypeLabel() {
       state.settingsSection = slug;
       syncUrlToViewState();
       renderSettingsSectionNav();
+      announceSettingsSection(slug);
     }
     if (current && isSettingsSectionDirty(current)) {
       openSettingsLeaveConfirm(function() {
@@ -11552,9 +11561,12 @@ function getTaskTypeLabel() {
 
     document.getElementById('settingsSectionNav').addEventListener('keydown', function(e) {
       var step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-      if (!step || e.altKey || e.ctrlKey || e.metaKey) return;
+      var isEdge = e.key === 'Home' || e.key === 'End';
+      if ((!step && !isEdge) || e.altKey || e.ctrlKey || e.metaKey) return;
       var index = SETTINGS_SECTIONS.findIndex(function(section) { return section.slug === state.settingsSection; });
-      var next = SETTINGS_SECTIONS[(index + step + SETTINGS_SECTIONS.length) % SETTINGS_SECTIONS.length];
+      var next = e.key === 'Home' ? SETTINGS_SECTIONS[0]
+        : e.key === 'End' ? SETTINGS_SECTIONS[SETTINGS_SECTIONS.length - 1]
+        : SETTINGS_SECTIONS[(index + step + SETTINGS_SECTIONS.length) % SETTINGS_SECTIONS.length];
       e.preventDefault();
       if (selectSettingsSection(next.slug)) document.getElementById('settingsTab-' + next.slug).focus();
     });

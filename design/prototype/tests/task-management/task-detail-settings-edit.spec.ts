@@ -123,9 +123,11 @@ test.describe('Task detail settings edit state', () => {
   test('cancel restores the saved settings summary (T001)', async ({ page }) => {
     await openSettingsEdit(page, 'T001');
 
-    page.on('dialog', (dialog) => dialog.accept());
     await page.locator('#codeEditor').fill('outputs: []\n');
     await page.locator('#settingsCancelBtn').click();
+    // FR-026 (2): the discard confirmation is the in-page modal, not window.confirm.
+    await expect(page.locator('#settingsLeaveModal')).toBeVisible();
+    await page.locator('#settingsLeaveConfirmBtn').click();
 
     await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
     await expect(page.locator('#settingsConfigView')).toContainText('positive, neutral, negative');
