@@ -20,6 +20,7 @@
  * see that describe block for how this suite stays forward-compatible.
  */
 import { test, expect } from '../fixtures';
+import type { Locator } from '@playwright/test';
 import { workspaceTabs, closeTab, setDesktopViewport, waitForTaskDetailReady } from './_workspace-tabs-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
@@ -31,6 +32,17 @@ const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 const TASK_DETAIL_R1_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=r1';
 const TASK_DETAIL_OFFICIAL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&ap_stage=official';
 const TASK_NAME_ZH = '醫療文本情感分類';
+const TASK_NAME_EN = 'Medical Text Sentiment Classification';
+
+// Issue #1280 G2 (FR-010 delta / AC-1.6 revision): the stage text is the
+// kind chip (`.workspace-tab-kind`), the task name is `.workspace-tab-label`.
+function kindOf(tab: Locator): Locator {
+  return tab.locator('.workspace-tab-kind');
+}
+
+function labelOf(tab: Locator): Locator {
+  return tab.locator('.workspace-tab-label');
+}
 
 test.describe('Workspace tabs — AC-1.5 closing the active tab moves focus', () => {
   test.beforeEach(async ({ page }) => {
@@ -81,18 +93,28 @@ test.describe('Workspace tabs — AC-1.6 task-detail stage badge', () => {
   test('zh: dry-run tab shows "試標 R1" and official tab shows "正式", both with the task name', async ({ page }) => {
     await page.goto(TASK_DETAIL_R1_URL);
     await page.goto(TASK_DETAIL_OFFICIAL_URL);
+    await page.goto(DASHBOARD_URL); // active, so both stage tabs are inactive and their body colours comparable
     const tabs = workspaceTabs(page);
-    await expect(tabs).toHaveCount(2);
+    await expect(tabs).toHaveCount(3);
 
     const r1Tab = tabs.nth(0);
     const officialTab = tabs.nth(1);
     await expect(r1Tab).toHaveAttribute('data-stage-badge', 'dry_run');
-    await expect(r1Tab).toContainText('試標 R1');
-    await expect(r1Tab).toContainText(TASK_NAME_ZH);
+    await expect(kindOf(r1Tab)).toHaveText('試標 R1');
+    await expect(labelOf(r1Tab)).toHaveText(TASK_NAME_ZH);
 
     await expect(officialTab).toHaveAttribute('data-stage-badge', 'official_run');
-    await expect(officialTab).toContainText('正式');
-    await expect(officialTab).toContainText(TASK_NAME_ZH);
+    await expect(kindOf(officialTab)).toHaveText('正式');
+    await expect(labelOf(officialTab)).toHaveText(TASK_NAME_ZH);
+
+    // AC-1.6 (revised): the stage colour is carried by the chip alone, so
+    // the two tabs' name columns share one colour and differ from the chips'.
+    const r1LabelColor = await labelOf(r1Tab).evaluate((el) => getComputedStyle(el).color);
+    const officialLabelColor = await labelOf(officialTab).evaluate((el) => getComputedStyle(el).color);
+    expect(r1LabelColor).toBe(officialLabelColor);
+    const r1ChipColor = await kindOf(r1Tab).evaluate((el) => getComputedStyle(el).color);
+    const officialChipColor = await kindOf(officialTab).evaluate((el) => getComputedStyle(el).color);
+    expect(r1ChipColor).not.toBe(officialChipColor);
   });
 
   test('en: stage badges translate through the shared language toggle (#langToggle)', async ({ page }) => {
@@ -107,7 +129,9 @@ test.describe('Workspace tabs — AC-1.6 task-detail stage badge', () => {
     // only states the zh labels); this suite's own choice, matching this
     // codebase's existing progressStageDry/progressStageOfficial pair
     // (task-detail.html i18n: 'Dry Run' / 'Official Run').
-    await expect(tabs.nth(0)).toContainText(/Dry Run R1/i);
-    await expect(tabs.nth(1)).toContainText(/Official/i);
+    await expect(kindOf(tabs.nth(0))).toHaveText('Dry Run R1');
+    await expect(labelOf(tabs.nth(0))).toHaveText(TASK_NAME_EN);
+    await expect(kindOf(tabs.nth(1))).toHaveText('Official');
+    await expect(labelOf(tabs.nth(1))).toHaveText(TASK_NAME_EN);
   });
 });

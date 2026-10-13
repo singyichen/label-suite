@@ -202,20 +202,16 @@ test.describe('Workspace tabs visual — active tab uses a neutral surface, not 
   });
 });
 
-test.describe('Workspace tabs visual — stage badge stays legible on a truncated tab (FR-010, G1)', () => {
+test.describe('Workspace tabs visual — stage badge stays legible on a truncated tab (FR-010, G1; chip target #1280 G2)', () => {
   test.beforeEach(async ({ page }) => {
     await setDesktopViewport(page);
   });
 
-  // Judgment call (task brief item 5): this case already PASSES against
-  // unmodified code today -- nothing currently truncates or hides the
-  // label (no text-overflow/width rule exists yet, see the first describe
-  // block above), and `[data-stage-badge]`'s color already differs from a
-  // plain tab's color via the existing CSS rules (sidebar.css ~995-1001).
-  // Kept as a locked-in regression guard (not dropped) because it is
-  // exactly the scenario the fixed-width/ellipsis truncation above must
-  // not break -- FR-010's "stays legible after truncation" requirement.
-  test('a long-title, stage-badged tab keeps its badge color distinguishable and its label visible once truncated', async ({ page }) => {
+  // Issue #1280 G2 (AC-1.6 revision): the stage colour no longer paints the
+  // whole tab's text; it lives on the `.workspace-tab-kind` chip. The
+  // truncation guard is unchanged in intent -- the long name ellipsizes, the
+  // stage-coloured chip stays visible and distinguishable.
+  test('a long-title, stage-badged tab keeps its chip color distinguishable and its label visible once truncated', async ({ page }) => {
     await page.goto(DASHBOARD_URL); // plain inactive baseline, index 0
     await page.goto(LONG_TITLE_URL); // stage-badged, long title, index 1
     await page.goto(TASK_LIST_URL); // active, index 2 -- keeps index 1 inactive like index 0
@@ -228,10 +224,18 @@ test.describe('Workspace tabs visual — stage badge stays legible on a truncate
     await expect(badgeTab).toHaveAttribute('aria-selected', 'false');
     await expect(badgeTab).toHaveAttribute('data-stage-badge', 'official_run');
 
-    const plainColor = await plainTab.evaluate((el) => getComputedStyle(el).color);
-    const badgeColor = await badgeTab.evaluate((el) => getComputedStyle(el).color);
-    expect(badgeColor).not.toBe(plainColor);
+    const chip = badgeTab.locator('.workspace-tab-kind');
+    await expect(chip).toHaveText(LONG_TITLE_STAGE_TEXT_ZH);
 
+    // The whole-tab text colour is no longer stage-dependent...
+    const plainColor = await plainTab.evaluate((el) => getComputedStyle(el).color);
+    const badgeTabColor = await badgeTab.evaluate((el) => getComputedStyle(el).color);
+    expect(badgeTabColor).toBe(plainColor);
+    // ...the chip carries it instead.
+    const chipColor = await chip.evaluate((el) => getComputedStyle(el).color);
+    expect(chipColor).not.toBe(plainColor);
+
+    await expect(chip).toBeVisible();
     await expect(labelOf(badgeTab)).toBeVisible();
   });
 });
