@@ -20,7 +20,7 @@ issue #1337（複雜樣本顯示）的根因之一：左側標記清單把樣本
 ## What Changes
 
 - **新增 FR-106**：清單摘要規則——工作區左欄（標記員項目、reviewer 分組表頭、例外池分組表頭）與 `annotation-list` 文本摘要共用同一個 helper；指定 `list_title_field` 且仍有效時用該欄位，否則依資料形狀自動摘要；絕不輸出 `[object Object]`；絕不讀 Output 欄位。
-- **新增 AC-1.35、AC-1.36、AC-1.37、SC-028**：驗收自動摘要不出現 `[object Object]`、指定欄位後四處一致、Output 欄位永不入摘要，以及兩頁共用同一實作。
+- **新增 AC-1.35、AC-1.36、AC-1.37、AC-1.38、SC-028**：驗收自動摘要不出現 `[object Object]`、指定欄位後四處一致、Output 欄位永不入摘要，以及兩頁共用同一實作。
 - **不修訂既有條文**：全部以 `## ADDED Requirements` 承載（理由同 #1338：衍生檢視 `openspec/specs/` 不含 FR-007／FR-013A／FR-071 等條文，MODIFIED 會使 archive 硬中止）；FR-106 內明文述及其與 FR-007、FR-007I、FR-013A、FR-071 第 2 點的關係。
 - **行為變更**：`annotation-list` 文本摘要由「串接所有 Input 欄位」改為「單一欄位摘要」（與工作區一致）。
 

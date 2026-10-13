@@ -2,7 +2,7 @@
 
 ## Purpose
 
-本 delta 定義標記清單的「樣本摘要」規則：工作區左欄三處與 `annotation-list` 文本摘要共用單一 helper，讀取任務設定鍵 `list_title_field`（specs/task-management/013-task-new/spec.md FR-002c-9），自動模式依資料形狀產生文字，絕不輸出 `[object Object]`，且永不讀取 Output 欄位。本 delta **只新增 FR-106 與 AC-1.35／AC-1.36／AC-1.37／SC-028，不修訂任何既有條文**。
+本 delta 定義標記清單的「樣本摘要」規則：工作區左欄三處與 `annotation-list` 文本摘要共用單一 helper，讀取任務設定鍵 `list_title_field`（specs/task-management/013-task-new/spec.md FR-002c-9），自動模式依資料形狀產生文字，絕不輸出 `[object Object]`，且永不讀取 Output 欄位。本 delta **只新增 FR-106 與 AC-1.35／AC-1.36／AC-1.37／AC-1.38／SC-028，不修訂任何既有條文**。
 
 ## ADDED Requirements
 
@@ -16,7 +16,7 @@
 4. 欄位值為空（`null`、未定義、空字串、空陣列、空物件）或第 1 筆文字為空時視為無法產生文字；指定欄位無法產生文字時，改以第 2 點的自動規則補位；仍無任何文字時退回該筆的 `id`；無 `id`（或 `id` 角色為 Output）時為空字串，呼叫端自行顯示占位符。
 5. 摘要 MUST NOT 含 `[object Object]`；MUST NOT 讀取角色為 Output 的欄位值（Data Fairness，對應 FR-023、FR-024M-1）；摘要的截斷與展開沿用 FR-007I 與 CSS 截斷，helper 不另行截斷文字。
 
-`annotation-list` 文本摘要自本條起為單一欄位摘要，不再串接多個 Input 欄位。本條不規範發言者前綴、對話串渲染與中央整合預覽（另案）。
+`annotation-list` 文本摘要自本條起為單一欄位摘要，不再串接多個 Input 欄位。`annotation-list` 搜尋框 MUST 另外比對該筆所有角色為 Input 的欄位文字（物件陣列串接每筆文字，規則同第 3 點，不得輸出 `[object Object]`），不得比對 Output 與 Evidence 欄位，顯示的摘要不變（AC-1.38）；比對字串與摘要共用同一份資料層實作，`annotation-list` 不另行字串化。本條不規範發言者前綴、對話串渲染與中央整合預覽（另案）。
 
 #### Scenario: AC-1.35 自動摘要不出現 [object Object]
 
@@ -38,6 +38,13 @@
 - **WHEN** 渲染該樣本摘要
 - **THEN** 摘要為 `3 筆資料`（英文介面為 `3 items`）
 - **AND** 所有 Input 欄位皆為空時，摘要為該筆的 `id`
+
+#### Scenario: AC-1.38 搜尋比對所有 Input 欄位且不含 Output 與 Evidence
+
+- **GIVEN** item_pair 任務（Input 欄位為 Premise 與 Hypothesis），摘要顯示第一個 Input（Premise）
+- **WHEN** 在 `annotation-list` 搜尋框輸入只出現在 Hypothesis 的文字
+- **THEN** 該筆樣本的列出現在結果中，且顯示的摘要不變
+- **AND** 輸入只出現在 Output 或 Evidence 欄位的文字時，結果為 0 列
 
 #### Scenario: SC-028 工作區與清單共用同一個摘要實作
 
