@@ -943,6 +943,12 @@
     ) || '-';
   }
 
+  function getRecordSearchText(record, fieldRoleMap) {
+    return window.LabelSuiteAnnotationWorkspaceData.getRecordSearchText(
+      record, fieldRoleMap, CURRENT_LANG
+    );
+  }
+
   function completionStateKey(role, taskId, runType) {
     return [role, taskId, runType].join('|');
   }
@@ -1326,7 +1332,8 @@
         item.statusLabel.toLowerCase().indexOf(query) !== -1 ||
         (item.annotator || '').toLowerCase().indexOf(query) !== -1 ||
         item.completedAt.toLowerCase().indexOf(query) !== -1 ||
-        item.text.toLowerCase().indexOf(query) !== -1
+        item.text.toLowerCase().indexOf(query) !== -1 ||
+        item.searchText.toLowerCase().indexOf(query) !== -1
       );
     });
   }
@@ -1754,7 +1761,8 @@
         status: status,
         statusLabel: statusText(status),
         completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
-        text: getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField)
+        text: getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField),
+        searchText: getRecordSearchText(record, profile.fieldRoleMap)
       };
     });
   }
@@ -1777,6 +1785,7 @@
       var recordId = getRecordId(record, index);
       var mockRows = getMockRows(context, recordId);
       var text = getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField);
+      var searchText = getRecordSearchText(record, profile.fieldRoleMap);
       mockRows.forEach(function (mockRow, rowIdx) {
         var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };
         var status = data.getReviewUnitStatus(
@@ -1799,6 +1808,7 @@
           statusLabel: reviewUnitStatusText(status),
           completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
           text: text,
+          searchText: searchText,
           overwrites: overwrites,
           finalizationSourceKeys: getFinalizationSourceKeys(
             profile, context, recordId, identity, overwrites)

@@ -156,6 +156,25 @@
     return roles.id !== 'output' && record.id != null ? String(record.id) : '';
   }
 
+  /* List search string: the text of EVERY input-role field (never output or
+     evidence — Data Fairness), reusing valueToSummaryText's rules but joining
+     all elements of an object array instead of only the first. */
+  function getRecordSearchText(record, fieldRoleMap, lang) {
+    if (!record) return '';
+    var roles = fieldRoleMap || {};
+    return Object.keys(roles).filter(function (key) {
+      return roles[key] === 'input';
+    }).map(function (key) {
+      var value = record[key];
+      if (Array.isArray(value) && value.length > 0 && value.every(function (el) {
+        return objectTextField(el) !== undefined;
+      })) {
+        return value.map(objectTextField).join(' ');
+      }
+      return valueToSummaryText(value, lang);
+    }).filter(Boolean).join(' ');
+  }
+
   /* Generic localStorage-backed JSON object store, factored out so the
      review-decision-draft store below (issue #196) can reuse the same
      read/write tolerance as the submission buckets without duplicating it. */
@@ -4074,6 +4093,7 @@
     sanitizeRecordForAnnotator: sanitizeRecordForAnnotator,
     getRecordId: getRecordId,
     getRecordSummaryText: getRecordSummaryText,
+    getRecordSearchText: getRecordSearchText,
     isSampleSubmitted: isSampleSubmitted,
     getSampleStatus: getSampleStatus,
     getSampleSubmittedAt: getSampleSubmittedAt,
