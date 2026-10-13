@@ -567,3 +567,33 @@ test.describe('Issue #1340 — review findings', () => {
     expect(out).toBe('a,b');
   });
 });
+
+/* ── no non-Input fallback (Data Fairness) ──────────────────────── */
+
+test.describe('Issue #1340 — preview text never falls back to a non-Input column', () => {
+  test('getDatasetPreviewText() returns null when the only string column is role "not used"', async ({
+    page,
+  }) => {
+    const out = await previewText(page, {
+      columns: ['note'],
+      roles: { note: '' },
+      row: { note: 'UNUSEDSECRET-value' },
+    });
+    expect(out).toBeNull();
+  });
+
+  test('Step 2 preview does not show a "not used" column when no Input exists', async ({ page }) => {
+    await setupTask(
+      page,
+      [
+        { note: 'UNUSEDSECRET-one' },
+        { note: 'UNUSEDSECRET-two' },
+      ],
+      'issue-1340-unused.json',
+    );
+    await setFieldRole(page, 'note', '');
+    await gotoStep2(page);
+
+    await expect(page.locator('#step2Panel')).not.toContainText('UNUSEDSECRET');
+  });
+});
