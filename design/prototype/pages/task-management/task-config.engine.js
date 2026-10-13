@@ -5359,7 +5359,8 @@ function listTitleCandidates() {
 }
 
 function listTitleText(rawRow, idx) {
-  var v = rawRow[state.listTitleField || 'id'];
+  var v = state.listTitleField ? rawRow[state.listTitleField]
+    : (state.fieldRoleMap.id === 'output' ? undefined : rawRow.id);
   if (Array.isArray(v) && v.length > 0 && v[0] !== null && typeof v[0] === 'object') {
     var first = v[0];
     v = typeof first.text === 'string' ? first.text : Object.keys(first).map(function(k) { return first[k]; })
@@ -5557,6 +5558,7 @@ function renderInlineDatasetPreview() {
 
 function resetInlinePreviewSelection() {
   state.fieldRoleMap = {};
+  state.listTitleField = null;
   state.datasetParsedColumns = [];
   state.datasetParsedRows = [];
   state.datasetRawFirstRow = {};
