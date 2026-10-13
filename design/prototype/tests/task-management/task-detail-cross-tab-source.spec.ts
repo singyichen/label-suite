@@ -4,7 +4,7 @@
  * Also: specs/task-management/014-task-detail/spec.md FR-005h, FR-010p
  *
  * TDD contract for issue #1120 group 1 (tasks.md task 1.1): task-detail's
- * five tabs (TASK_TABS) must derive every cross-tab figure from one shared
+ * TASK_TABS (six values; derived figures live on the five non-settings tabs) must derive every cross-tab figure from one shared
  * `task_id x run_type x round` query context instead of falling back to a
  * module-level shared demo fixture.
  *

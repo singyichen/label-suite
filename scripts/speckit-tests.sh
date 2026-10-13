@@ -2046,6 +2046,37 @@ test_check_sdd_rejects_suffixed_source_verify_id() {
     assert_command_fails_with "$repo" 1 "SOURCE_VERIFY_ID" "openspec/changes/project-sdd-lint/design.md" --not-rule SPEC_REQUIRED_IDS
 }
 
+test_check_sdd_rejects_all_fr_sc_in_prototype_traceability() {
+    local repo
+    repo="$(make_sdd_repo)"
+    cat >> "$repo/specs/dataset/001-legacy/spec.md" <<'TRACE'
+
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| `design/prototype/pages/dataset/list.html` | List page | All FR/SC in this spec | `pnpm test:node` | Ready |
+TRACE
+
+    assert_command_fails_with "$repo" 1 "TRACEABILITY_COARSE_SCOPE" "specs/dataset/001-legacy/spec.md"
+}
+
+test_check_sdd_accepts_explicit_fr_ranges_in_prototype_traceability() {
+    local repo
+    repo="$(make_sdd_repo)"
+    cat >> "$repo/specs/dataset/001-legacy/spec.md" <<'TRACE'
+
+## Prototype Traceability
+
+| Artifact | Responsibility | Covered FR/SC | Verification | Status |
+|----------|----------------|---------------|--------------|--------|
+| `design/prototype/pages/dataset/list.html` | List page | FR-001, FR-002 | `pnpm test:node` | Ready |
+| `design/prototype/pages/dataset/detail.html` | Detail page | No additional FR/SC | `pnpm test:node` | Ready |
+TRACE
+
+    assert_command_succeeds "$repo"
+}
+
 test_check_sdd_requires_exact_multisegment_source_verify_ids() {
     local repo
 
@@ -3413,6 +3444,8 @@ test_check_sdd_fails_for_spec_ready_near_match_goal_heading_without_ids
 test_check_sdd_rejects_arbitrary_dependency_heading_suffix
 test_check_sdd_accepts_approved_dependency_heading_suffix
 test_check_sdd_rejects_suffixed_source_verify_id
+test_check_sdd_rejects_all_fr_sc_in_prototype_traceability
+test_check_sdd_accepts_explicit_fr_ranges_in_prototype_traceability
 test_check_sdd_requires_exact_multisegment_source_verify_ids
 test_check_sdd_requires_one_unconsumed_red_per_green
 test_check_sdd_rejects_prescriptive_example_retired_command

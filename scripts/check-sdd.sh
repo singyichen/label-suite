@@ -142,6 +142,15 @@ section_is_valid() {
     '
 }
 requires_page_traceability() { [ "$1" != foundation ] && strip_markdown_fences "$2" | grep -Eq 'Prototype|design/prototype|產品 UI|頁面'; }
+# Prototype Traceability rows must name real FR/SC coverage (issue #1316); a blanket
+# "All FR/SC" in the third (Covered FR/SC) column hides which requirement a page implements.
+verify_traceability_scope() {
+    if strip_markdown_fences "$1" | awk -F '|' '
+        /^## / { in_section = ($0 == "## Prototype Traceability"); next }
+        in_section && /^\|/ && $4 ~ /All FR\/SC/ { found = 1 }
+        END { exit !found }
+    '; then add_error TRACEABILITY_COARSE_SCOPE "$2" 'Prototype Traceability Covered FR/SC must list FR/SC ranges or an explicit reason, not "All FR/SC"'; fi
+}
 collect_declared_ids() {
     local change_dir="$1" target="$2" delta
     : >"$target"
@@ -255,6 +264,7 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     section_is_valid "$canonical" '## 規格相依性' dependency || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
     verify_required_ids "$canonical" "$canonical_relative"
     verify_no_duplicate_ids "$canonical" "$canonical_relative"
+    verify_traceability_scope "$canonical" "$canonical_relative"
     if requires_page_traceability "$module" "$canonical" && ! strip_markdown_fences "$canonical" | grep -Eq '^## Prototype Traceability|Frontend Ready Gate.*不適用|prototype.*不適用'; then add_error SPEC_REQUIRED_IDS "$canonical_relative" 'page traceability or an explicit non-page exception is required'; fi
     allowed_ids="$tmp_dir/allowed-ids"
     collect_declared_ids "$change_dir" "$tmp_dir/added-ids"
@@ -346,6 +356,7 @@ while IFS= read -r spec_file; do
     relative="${spec_file#"$repo_root"/}"
     grep -Fqx "$relative" "$active_specs" && continue
     verify_no_duplicate_ids "$spec_file" "$relative"
+    case "$relative" in specs/_archive/*) ;; *) verify_traceability_scope "$spec_file" "$relative" ;; esac
     unfenced_spec="$tmp_dir/spec-unfenced"
     strip_markdown_fences "$spec_file" >"$unfenced_spec"
     spec_dir="$(basename "$(dirname "$spec_file")")"; number="${spec_dir%%-*}"
