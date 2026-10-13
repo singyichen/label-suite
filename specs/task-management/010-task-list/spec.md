@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.3.1
+版本: 2.3.2
 狀態: In Progress
 ---
 
@@ -334,9 +334,11 @@ flowchart LR
 
 | Artifact | Responsibility | Covered FR/SC | Verification | Status |
 |----------|----------------|---------------|--------------|--------|
-| [design/prototype/pages/task-management/task-list.html](../../../design/prototype/pages/task-management/task-list.html) | Task-list page shell, filters, sorting, pagination, delete-confirm flow, observable interaction, and RWD only; the spec remains authoritative for membership, filtering, and data contracts. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active |
-| [design/prototype/pages/task-management/task-list.data.js](../../../design/prototype/pages/task-management/task-list.data.js) | Synthetic safe prototype fixtures and list-derivation helpers only; fixtures are prototype acceptance baselines, never an API, membership, or output-combination whitelist. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active; page-owned data |
+| [design/prototype/pages/task-management/task-list.html](../../../design/prototype/pages/task-management/task-list.html) | Task-list page shell, filters, sorting, pagination, delete-confirm flow, observable interaction, and RWD only; the spec remains authoritative for membership, filtering, and data contracts. | FR-004e, FR-008c, FR-010e～FR-011c, SC-010～SC-013 | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active |
+| [design/prototype/pages/task-management/task-list.data.js](../../../design/prototype/pages/task-management/task-list.data.js) | Synthetic safe prototype fixtures and list-derivation helpers only; fixtures are prototype acceptance baselines, never an API, membership, or output-combination whitelist. | FR-004e, FR-008c, FR-010e～FR-011c, SC-010～SC-013 | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active; page-owned data |
 | [design/system/pages/task-list.md](../../../design/system/pages/task-list.md) | Page-scoped design reference only; does not define runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design reference) | Active; no wireframe (frozen baseline predates this page) |
+
+> `Covered FR/SC` 欄的 `A～B` 表示依本 spec 已定義 ID 排序的連續範圍；清單僅取自 `design/prototype/tests/**` 檔頭 Traceability 標註的 FR/SC（issue #1316）。未列出的 FR 代表尚無原型測試標註，不代表已覆蓋。
 
 ---
 
@@ -421,6 +423,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 2.3.1 | 2026-10-13 | Issue #1270：FR-010e 補釐清句——`task.delete` 已於 admin-007 v1.3.0 登錄（已登錄、待啟用），啟用前依未知鍵拒絕，刪除既有閘門與 `super_admin` 路徑不變；「42 列」改讀為 56 列；依賴表同步。條文未增減，純 PATCH。 |
 | 2.3.0 | 2026-10-06 | Issue #1160 D-9：依 ADR-037 加入 `task.list.view` 矩陣條件，保留 membership／全平台資料範圍；明列任務刪除尚無 V1 專用鍵，不能借用其他鍵，新增 SC-016。規劃契約尚未實作 runtime。 |
 | 2.2.0 | 2026-09-18 | Issue #815（OpenSpec change `retire-stale-review-demo-fixtures`，上游 015 v6.6.0 之下游同步）：平手示範任務 T017 之種子形狀只能由已廢止之多數決規則產生，其 fixture `review-flow-official-tie.json` 已自 `docs/product/example-data/` 與 prototype 移除。示例基線表移除該列，基線筆數 17 → 16（功能目標、SC-010、SC-015 同步），`single_label` 命中數 6 → 5，其餘輸出類型命中數不變；審核流程示範 seed 範圍改為 T014–T016。未新增或移除 FR／AC；v2.1.0 列所述「擴充至 17 筆」為當時沿革，不改寫。**分級理由**：驗收基線之筆數與命中數改變——MINOR（對齊 v2.1.0 擴充基線之分級先例）。 |

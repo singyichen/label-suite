@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dataset-analysis-output-types
 建立日期: 2026-04-24
-版本: 2.1.3
+版本: 2.1.4
 狀態: In Progress
 ---
 
@@ -221,9 +221,11 @@ flowchart LR
 
 | Artifact | Responsibility | Covered FR/SC | Verification | Status |
 |----------|----------------|---------------|--------------|--------|
-| [design/prototype/pages/dataset/dataset-analysis-list.html](../../../design/prototype/pages/dataset/dataset-analysis-list.html) | List page shell, filters, pagination, output-type membership tags, IAA status badges, observable interaction, and RWD only; the spec remains authoritative for membership, filtering, and data contracts. | All FR/SC in this spec | [design/prototype/tests/dataset/](../../../design/prototype/tests/dataset/) (`dataset-analysis-list-*.spec.ts`, 4 files) | Active |
-| [design/prototype/pages/dataset/dataset-analysis-list.js](../../../design/prototype/pages/dataset/dataset-analysis-list.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.data.js](../../../design/prototype/pages/dataset/dataset-analysis-list.data.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.i18n.js](../../../design/prototype/pages/dataset/dataset-analysis-list.i18n.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.model.js](../../../design/prototype/pages/dataset/dataset-analysis-list.model.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.view.js](../../../design/prototype/pages/dataset/dataset-analysis-list.view.js) | Page-owned rendering, view-state model, i18n, and synthetic safe prototype fixtures. Fixtures are prototype acceptance baselines, never an API, membership, or answer-content whitelist. | All FR/SC in this spec | [design/prototype/tests/dataset/](../../../design/prototype/tests/dataset/) (`dataset-analysis-list-*.spec.ts`, 4 files) | Active; page-owned |
+| [design/prototype/pages/dataset/dataset-analysis-list.html](../../../design/prototype/pages/dataset/dataset-analysis-list.html) | List page shell, filters, pagination, output-type membership tags, IAA status badges, observable interaction, and RWD only; the spec remains authoritative for membership, filtering, and data contracts. | FR-001～FR-004G, FR-005A, FR-005B, FR-005D, FR-006～FR-008, SC-007, SC-008 | [design/prototype/tests/dataset/](../../../design/prototype/tests/dataset/) (`dataset-analysis-list-*.spec.ts`, 4 files) | Active |
+| [design/prototype/pages/dataset/dataset-analysis-list.js](../../../design/prototype/pages/dataset/dataset-analysis-list.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.data.js](../../../design/prototype/pages/dataset/dataset-analysis-list.data.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.i18n.js](../../../design/prototype/pages/dataset/dataset-analysis-list.i18n.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.model.js](../../../design/prototype/pages/dataset/dataset-analysis-list.model.js)<br>[design/prototype/pages/dataset/dataset-analysis-list.view.js](../../../design/prototype/pages/dataset/dataset-analysis-list.view.js) | Page-owned rendering, view-state model, i18n, and synthetic safe prototype fixtures. Fixtures are prototype acceptance baselines, never an API, membership, or answer-content whitelist. | FR-001～FR-004G, FR-005A, FR-005B, FR-005D, FR-006～FR-008, SC-007, SC-008 | [design/prototype/tests/dataset/](../../../design/prototype/tests/dataset/) (`dataset-analysis-list-*.spec.ts`, 4 files) | Active; page-owned |
 | [design/system/pages/dataset-analysis-list.md](../../../design/system/pages/dataset-analysis-list.md) | Page-scoped design reference only; does not define runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design reference) | Active; no wireframe (frozen baseline predates this page) |
+
+> `Covered FR/SC` 欄的 `A～B` 表示依本 spec 已定義 ID 排序的連續範圍；清單僅取自 `design/prototype/tests/**` 檔頭 Traceability 標註的 FR/SC（issue #1316）。未列出的 FR 代表尚無原型測試標註，不代表已覆蓋。
 
 ---
 
@@ -268,6 +270,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 2.1.4 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 2.1.3 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-002 補述操作 → 權限鍵對應——在既有 `TASK_ROLES_ALLOWED` 條件之上，依 ADR-037 另以 `dataset.stats.view` 或 `dataset.quality.view` 格判定；V1 種子下範圍與既有相同，`invited` 等非 active membership 依 ADR-037 視同不存在。只對應鍵，不改既有可見範圍。 |
 | 2.1.2 | 2026-08-24 | Issue #261 drift 修正：更正「Prototype 示例資料基線」的 IAA 示意分布敘述——`pass = 6`／`not_started = 2` 為 v2.1.0 引入 `not_applicable` 徽章狀態前的舊值，未同步更新；實際 prototype fixture（`dataset-analysis-list.data.js`）與既有回歸測試（`dataset-analysis-list-filters-pagination.spec.ts` `IAA_FILTER_COUNTS`）皆為 `pass = 5`、`not_started = 1`、`not_applicable = 2`（2 筆 `free_text`-only 任務 T009／T012，依 FR-004A 顯示 `not_applicable`），純文字修正對齊既有正確行為，不改變任何 prototype 程式碼或測試。 |
 | 2.1.1 | 2026-08-24 | Issue #261：新增 Prototype Traceability，明確對應 dataset-analysis-list 原型頁面、資料層與設計層參考的責任邊界；規格條文未變。 |
