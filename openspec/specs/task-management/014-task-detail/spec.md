@@ -2,7 +2,7 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v12.1.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v12.2.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
 
 change `mvp-export-snapshot-isolation-correction`（issue #1160）補充 FR-010b／FR-010c 的跨 run 隔離語意，以及 FR-010i-1／FR-010i-2／FR-021 的請求接受時間與結果快照時間契約。
 
@@ -633,7 +633,7 @@ IAA 為非同步計算。任務依 FR-008a 進入 `waiting_iaa_confirmation` 時
 
 ### Requirement: FR-010u 跨頁籤衍生計數的共用查詢上下文與聚合單位（成功標準 SC-050）
 
-- **FR-010u**（**v5.0.0 新增**，對應 AC-1.26、AC-1.27、SC-050，issue #1120）：`task-detail` 五個頁籤（`TASK_TABS`）呈現的衍生計數必須以同一組查詢上下文推導，並必須依既有正典定義之聚合單位計數。(1) **共用查詢上下文**：任務、cycle、`run_type` 與回合為共用查詢上下文，概覽、成員、進度、結果四個頁籤之計數必須由同一組 `task_id × cycle_id × run_type × round_no` 推導；選取某一回合時不得混入其他回合或其他任務的資料。工時與匯出歷史必須依當前任務篩選；該任務無對應紀錄時必須呈現真實空狀態，不得呈現其他任務的通用示範資料。(2) **`已提交` 的分子分母**：分子為該 `task_id × cycle_id × run_type × round_no` 範圍內已提交之標記 assignment 數；分母為同範圍內未排除之標記工作 slot 數（含退回未指派的 slot）。依 FR-005h 被 `project_leader` 明確排除之標記作業不得計入分子或分母，與 FR-005h 既有的「不計入完成率或標記分布統計」一致。(3) **`已完成輪次` 的分子**：分子為已結束之試標回合數；當前進行中之回合不得計入。歷史回合與當前回合必須分列呈現，兩者之計數與決策不得交叉累計。「已結束」之判定依既有試標完成規則（FR-008a），本條不另定義該規則。(4) **既有定義不得重複**：`已定案 review unit` 之判定式與聚合單位（穩定 run／assignment 範圍內之樣本／標記員維度）以 `annotation/015-annotation-workspace` FR-051 為正典；`最終例外輸出項目` 之來源與逐筆收尾動作以 `annotation/015-annotation-workspace` FR-095 為正典，其分 `run_type` 獨立計數規則沿用本規格 FR-018 第 (5) 點。本規格必須讀取該兩處既有定義，不得另建第二份判定式、分母或狀態清單。(5) **單位不得相加**：標記 assignment、審核單位、爭議項（同一 run 範圍，以 `annotation/015-annotation-workspace` FR-061 第 7 點為計數單位：審核單位內之 `outKey × 合併鍵`，依 FR-059）分屬三個不同聚合層級，不得相加為單一數字，亦不得共用同一分母。畫面呈現必須使每個計數的單位可辨識；提交進度與定案進度必須分別命名，不得以同一標題涵蓋兩者。(6) **時間語意**：已提交時間不得被呈現為審核完成或仲裁完成時間；各階段時間必須取自其各自的事件來源。(7) **資料分配與工作完成分離**：樣本池分配的視覺呈現（FR-010p）必須附明確的「資料分配」語意說明；分配比例達滿不得被表述為標記或審核工作已完成。 上述範圍等價於穩定 `run_id`；重複 R1 不得合併 cycle。提交分母為同 run 未排除工作 slot 數（含退回未指派者），重指派不增分母；舊 cycle 回合不納入目前閘門。 **v9.0.0 工時補充**：工時與完成事件須依 `account_session_id × task_id × run_id × membership_id × work_kind × report_date` 分組；相同 task 的不同 session、cycle、run 不得合併。工時速度逐類顯示，標記 assignment、審核單位與爭議項不得相加；同一審核 submission head 的多筆 outKey 決策與修訂只計一次。
+- **FR-010u**（**v5.0.0 新增**，對應 AC-1.26、AC-1.27、SC-050，issue #1120）：`task-detail` 會呈現衍生計數的五個分頁（`概覽`、`成員管理`、`標記進度`、`標記結果`、`工時紀錄`；不含不呈現衍生計數的 `設定` 分頁，分頁清單見 FR-003、`TASK_TABS`）所呈現的衍生計數必須以同一組查詢上下文推導，並必須依既有正典定義之聚合單位計數。(1) **共用查詢上下文**：任務、cycle、`run_type` 與回合為共用查詢上下文，概覽、成員、進度、結果四個頁籤之計數必須由同一組 `task_id × cycle_id × run_type × round_no` 推導；選取某一回合時不得混入其他回合或其他任務的資料。工時與匯出歷史必須依當前任務篩選；該任務無對應紀錄時必須呈現真實空狀態，不得呈現其他任務的通用示範資料。(2) **`已提交` 的分子分母**：分子為該 `task_id × cycle_id × run_type × round_no` 範圍內已提交之標記 assignment 數；分母為同範圍內未排除之標記工作 slot 數（含退回未指派的 slot）。依 FR-005h 被 `project_leader` 明確排除之標記作業不得計入分子或分母，與 FR-005h 既有的「不計入完成率或標記分布統計」一致。(3) **`已完成輪次` 的分子**：分子為已結束之試標回合數；當前進行中之回合不得計入。歷史回合與當前回合必須分列呈現，兩者之計數與決策不得交叉累計。「已結束」之判定依既有試標完成規則（FR-008a），本條不另定義該規則。(4) **既有定義不得重複**：`已定案 review unit` 之判定式與聚合單位（穩定 run／assignment 範圍內之樣本／標記員維度）以 `annotation/015-annotation-workspace` FR-051 為正典；`最終例外輸出項目` 之來源與逐筆收尾動作以 `annotation/015-annotation-workspace` FR-095 為正典，其分 `run_type` 獨立計數規則沿用本規格 FR-018 第 (5) 點。本規格必須讀取該兩處既有定義，不得另建第二份判定式、分母或狀態清單。(5) **單位不得相加**：標記 assignment、審核單位、爭議項（同一 run 範圍，以 `annotation/015-annotation-workspace` FR-061 第 7 點為計數單位：審核單位內之 `outKey × 合併鍵`，依 FR-059）分屬三個不同聚合層級，不得相加為單一數字，亦不得共用同一分母。畫面呈現必須使每個計數的單位可辨識；提交進度與定案進度必須分別命名，不得以同一標題涵蓋兩者。(6) **時間語意**：已提交時間不得被呈現為審核完成或仲裁完成時間；各階段時間必須取自其各自的事件來源。(7) **資料分配與工作完成分離**：樣本池分配的視覺呈現（FR-010p）必須附明確的「資料分配」語意說明；分配比例達滿不得被表述為標記或審核工作已完成。 上述範圍等價於穩定 `run_id`；重複 R1 不得合併 cycle。提交分母為同 run 未排除工作 slot 數（含退回未指派者），重指派不增分母；舊 cycle 回合不納入目前閘門。 **v9.0.0 工時補充**：工時與完成事件須依 `account_session_id × task_id × run_id × membership_id × work_kind × report_date` 分組；相同 task 的不同 session、cycle、run 不得合併。工時速度逐類顯示，標記 assignment、審核單位與爭議項不得相加；同一審核 submission head 的多筆 outKey 決策與修訂只計一次。
 
 #### Scenario: 五個頁籤的計數同源且不混入其他任務或回合
 
@@ -1601,7 +1601,7 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 
 ### Requirement: FR-003 頁面提供六個 tabs 且預設為概覽
 
-頁面 MUST 提供六個 tabs，顯示順序固定為：`概覽`（`overview`）、`設定`（`settings`）、`成員管理`（`member-management`）、`標記進度`（`annotation-progress`）、`標記結果`（`annotation-results`）、`工時紀錄`（`work-log`），且預設為 `overview`。原分頁名稱「任務概覽」MUST 改為「概覽」。分頁列 MUST 使用 `role="tablist"` 與 `role="tab"`，並支援方向鍵在分頁間移動。`成員管理` 的可見性仍依 FR-006。
+頁面 MUST 提供六個 tabs，顯示順序固定為：`概覽`（`overview`）、`設定`（`settings`）、`成員管理`（`member-management`）、`標記進度`（`annotation-progress`）、`標記結果`（`annotation-results`）、`工時紀錄`（`work-log`），且預設為 `overview`。原分頁名稱「任務概覽」MUST 改為「概覽」。分頁列 MUST 使用 `role="tablist"` 與 `role="tab"`，並支援方向鍵在分頁間移動。`成員管理` 的可見性仍依 FR-006。 規格常數 `TASK_TABS` MUST 與上述六個分頁的值及順序一致。
 
 #### Scenario: 六個分頁依固定順序顯示
 
@@ -1790,3 +1790,15 @@ Overview「標記設定」摘要區塊必須依當前 outputs[] 動態顯示摘�
 - **GIVEN** 任務已設定 outputs[]
 - **WHEN** 檢視「標記設定」區塊的檢視狀態
 - **THEN** 固定欄位為「設定檔」與「標記類型」，其餘摘要列依 outputs[] 動態產生
+
+### Requirement: FR-014f 設定分頁的區塊與概覽分頁的區塊歸屬
+
+設定分頁（`settings`）MUST 以五個區塊雙模式呈現：`基本資料`、`標記設定`、`標記說明`、`抽樣設定`、`審核設定`，各區塊 MUST 明確定義顯示狀態與編輯狀態（FR-026）；其中 `標記說明` 區塊 MUST 維持 `提供給標記員` 與 `提供給審核員` 雙角色結構（FR-014f-1）。概覽分頁（`overview`）MUST NOT 納入上述雙模式區塊；其內容與樣式 MUST 依 FR-027 規範的 `任務狀態與執行控制`。匯出功能 MUST 留在 `annotation-results` 分頁。
+
+#### Scenario: 區塊歸屬與 FR-026、FR-027 一致
+
+- **GIVEN** `project_leader` 開啟 `task-detail`
+- **WHEN** 分別檢視 `設定` 與 `概覽` 分頁
+- **THEN** `設定` 分頁依序提供 基本資料／標記設定／標記說明／抽樣設定／審核設定 五個區塊的導覽
+- **AND** `概覽` 分頁只呈現 `任務狀態與執行控制`，不出現上述五個設定區塊
+- **AND** 匯出入口不出現在 `概覽` 與 `設定` 分頁
