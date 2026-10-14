@@ -51,8 +51,8 @@ rules:
       Every cited FR/AC ID MUST be locatable via grep in the canonical
       spec.md (Source-Verify gate).
     - >-
-      When the change comes from an issue or user-provided artifact /
-      prototype link (e.g. claude.ai/artifact/...), proposal.md MUST contain a
+      When the issue or the user provides a claude.ai/artifact/ link (a plain
+      prototype page path does not trigger this), proposal.md MUST contain a
       section with the exact heading "## 草圖元素對照表" listing every sketch
       element, each mapped to an FR/AC ID, or marked "不做" with a reason, or
       marked "延後至 #N". A bare "follow the sketch" is not allowed, and no
@@ -156,8 +156,8 @@ operations:
         applicable verification commands must exit 0 before completion.
       - >-
         If apply narrows scope (an AC or FR is not implemented), narrow the
-        spec delta to match immediately (before further apply work), write "延後至 #N" on the deferred
-        clause, and have the follow-up issue list the deferred clauses
+        spec delta to match immediately (before further apply work), write
+        "延後至 #N" on the deferred clause, and have the follow-up issue list the deferred clauses
         (spec path + FR/AC ID) to update when it lands. Do not defer without
         naming an issue.
       - >-
