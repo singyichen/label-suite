@@ -18,8 +18,8 @@
 
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.engine.js`
 
-- [ ] 1.1 新增 `design/prototype/tests/annotation/issue-1413-preview-entities-role-gate.spec.ts` 的 Red：對話 Input 的 `entities` 角色為 Output 時 `previewEntities` 為空且頁面不含其內容；角色未知（無鍵、空字串）時不預填（字串與對話 Input）；角色為 Input／Evidence 時照常載入；字串 Input 由 Output 欄位解析預填的回歸。 [@senior-qa]
-- [ ] 1.2 （Green）修改 `task-config.engine.js`：`initPreviewState()` 載入資料自帶實體欄位前依欄位角色對照表查角色。 [@senior-frontend]
+- [x] 1.1 新增 `design/prototype/tests/annotation/issue-1413-preview-entities-role-gate.spec.ts` 的 Red：對話 Input 的 `entities` 角色為 Output 時 `previewEntities` 為空且頁面不含其內容；角色未知（無鍵、空字串）時不預填（字串與對話 Input）；角色為 Input／Evidence 時照常載入；字串 Input 由 Output 欄位解析預填的回歸。 [@senior-qa]
+- [x] 1.2 （Green）修改 `task-config.engine.js`：`initPreviewState()` 載入資料自帶實體欄位前依欄位角色對照表查角色。 [@senior-frontend]
 
 ## 2. 驗證與 archive（最終群組）
 
