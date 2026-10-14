@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
@@ -58,17 +59,6 @@
       transition: background 150ms;
     }
     .banner-reload-btn:hover { background: var(--color-error-soft-bg); }
-
-    /* ── Admin Tabs ─────────────────────────────────────────────── */
-    .admin-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-lg); }
-    .admin-tab {
-      padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--color-text-soft);
-      border-bottom: 2px solid transparent; margin-bottom: -2px;
-      cursor: pointer; transition: color 150ms, border-color 150ms;
-      text-decoration: none; display: inline-block;
-    }
-    .admin-tab:hover { color: var(--color-primary); }
-    .admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
 
     /* ── Page Header ─────────────────────────────────────────────── */
     .page-header { display: flex; flex-direction: column; gap: 0; margin-bottom: 24px; }

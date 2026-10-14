@@ -1293,6 +1293,8 @@ Desktop/top-of-content tab navigation for section switching within the same modu
 | Inactive hover | `color: var(--color-primary)` |
 | Active alignment | `margin-bottom: -2px` (to align with container bottom border) |
 
+**Narrow viewport:** at `<=768px` the container stays a single row (`flex-wrap: nowrap`, never wraps) with `overflow-x: auto`; the scrollbar is hidden (`scrollbar-width: none`, `::-webkit-scrollbar { display: none }`) but the row remains scrollable. Tabs use `flex: 0 0 auto` and `white-space: nowrap`. The CSS lives only in `design/prototype/pages/shared/content-tabs.css`; pages must link it and not redefine `.admin-tabs` / `.admin-tab`.
+
 **CSS reference:**
 ```css
 .admin-tabs {
@@ -1316,6 +1318,7 @@ Desktop/top-of-content tab navigation for section switching within the same modu
   border-left: none;
   border-right: none;
   border-top: none;
+  white-space: nowrap;
 }
 
 .admin-tab:hover { color: var(--color-primary); }
@@ -1324,6 +1327,16 @@ Desktop/top-of-content tab navigation for section switching within the same modu
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
   font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tab { flex: 0 0 auto; }
 }
 ```
 
@@ -2985,4 +2998,5 @@ Before delivering any UI code, verify:
 | v1.28 | 2026-10-13 | **Workspace Tabs compact sizing (issue #1280)** — replaced the fixed `--workspace-tab-width` (180px) with `--workspace-tab-min-width` (104px) / `--workspace-tab-max-width` (220px) and `flex: 1 1 0`; tab font 13px to 12px, padding 8x16 to 6x10, gap 4px to 6px; page-kind icon 16px to 14px; close button 18px to 16px and shown only on active / hover / focus-within via `visibility`. Bar spacing, active/hover backgrounds and stage badge colors unchanged. |
 | v1.29 | 2026-10-13 | **Workspace Tabs kind chip (issue #1280)** — tab title is now a kind chip (`.workspace-tab-kind`: annotate / review / detail / dry run RN / official / analysis) plus the target name in `.workspace-tab-label`; the stage badge colour moved from the whole tab text to the chip using semantic token pairs (warning, primary, info, neutral) in both themes, and tab body text no longer changes with stage. Added a Kind chip row and rewrote the Stage badge row in §Workspace Tabs. No new token. |
 | v1.30 | 2026-10-13 | **Empty State convergence complete (issue #1189)** — §Empty State "Current prototype state" note updated: the last per-page families on task-detail (`ar-empty`, `ar-export-empty`, `member-detail-empty`, `member-search-empty`, `progress-empty`, `worklog-empty`) now use the shared `empty-state.css` vocabulary and `classScan.transitionalClasses` is empty; no component spec or token change |
-| v1.31 | 2026-10-14 | **Shared modal skeleton (issue #1390)** — §Modals now points to `pages/shared/modal.css` as the single definition of the overlay / dialog / header / title / description / close / footer skeleton and adds the Footer rules list (right-aligned actions, secondary left of primary, solid Danger variant in the primary position for destructive confirmations, `--space-sm` gap). task-list, task-new and task-detail adopt it (task-list `.modal-backdrop` renamed `.modal-overlay`); no token value changed. |
+| v1.31 | 2026-10-14 | **Desktop Content Tabs narrow-viewport rule (issue #1393)** — added a "Narrow viewport" rule to §Desktop Content Tabs: at <=768px the tab container stays a single row (`flex-wrap: nowrap`) with `overflow-x: auto` and a hidden-but-scrollable scrollbar, tabs `flex: 0 0 auto` / `white-space: nowrap`. The `.admin-tabs` / `.admin-tab` CSS now lives only in `pages/shared/content-tabs.css` (task-detail and dataset-analysis-detail link it); desktop values unchanged. |
+| v1.32 | 2026-10-14 | **Shared modal skeleton (issue #1390)** — §Modals now points to `pages/shared/modal.css` as the single definition of the overlay / dialog / header / title / description / close / footer skeleton and adds the Footer rules list (right-aligned actions, secondary left of primary, solid Danger variant in the primary position for destructive confirmations, `--space-sm` gap). task-list, task-new and task-detail adopt it (task-list `.modal-backdrop` renamed `.modal-overlay`); no token value changed. |
