@@ -463,3 +463,22 @@
       /* <img> SVG icons — invert to white (currentColor not inherited by <img>) */
       .step-icon img, .role-avatar img { filter: brightness(0) invert(1); }
     }
+
+    /* Sort select — mirrors task-list.html .filter-select until #1448 extracts a shared rule.
+       Chevron stroke #94A3B8 is mid-tone so it stays visible on light and dark backgrounds. */
+    .filter-select {
+      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      outline: none; min-width: 140px;
+      appearance: none; -webkit-appearance: none;
+      transition: border-color var(--dur-fast);
+    }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+
+    /* User view: only the inner .workflow-role-card keeps a frame (no card-in-card) */
+    #view-user > .panel {
+      border: 0;
+      background: transparent;
+      padding: 0;
+    }
