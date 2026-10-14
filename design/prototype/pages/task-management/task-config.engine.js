@@ -1934,7 +1934,9 @@ function initPreviewState() {
   var outputParsed = null;
   if (outputVal) { try { outputParsed = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
 
-  var dataEnts = Array.isArray(rawRow.entities) ? rawRow.entities : [];
+  /* #1413 Data Fairness: load the dataset's own entities column only when its role is a known non-Output role (fail-closed) */
+  var entitiesRole = state.fieldRoleMap.entities;
+  var dataEnts = (typeof entitiesRole === 'string' && entitiesRole !== '' && entitiesRole !== 'output' && Array.isArray(rawRow.entities)) ? rawRow.entities : [];
   /* #1371 Data Fairness: object-array (dialogue) Input never prefills entities from the Output column */
   if (dataEnts.length === 0 && !getObjectArrayInput() && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].text) {
     dataEnts = outputParsed;
