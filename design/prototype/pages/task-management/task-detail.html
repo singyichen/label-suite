@@ -4611,7 +4611,7 @@ function interpolate(template, payload) {
        zero (total disagreement)" instead of "no trial round exists yet" --
        exactly the coercion the issue flagged. Consumers (getTrialRounds()'s
        fallback round, the currentAgreementValue/round-timeline renderers,
-       and the stopAgreementPill) must treat null as "no data yet" and
+       and the next-step card IAA row) must treat null as "no data yet" and
        prefer getPrimaryIaaResult()'s live computeIaaAlpha() reading when
        one is computable. */
     TASK_DATA.currentAgreement = null;
