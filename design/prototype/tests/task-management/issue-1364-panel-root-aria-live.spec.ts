@@ -14,6 +14,9 @@ const PANEL_ROOTS = [
   { tab: 'overview', root: '#overviewPanel' },
   { tab: 'settings', root: '#settingsPanel' },
   { tab: 'annotation-progress', root: '#annotationProgressPanel' },
+  { tab: 'annotation-results', root: '#annotationResultsPanel' },
+  { tab: 'member-management', root: '#memberManagementPanel' },
+  { tab: 'work-log', root: '#workLogPanel' },
 ] as const;
 
 const PRESERVED_REGIONS = [
