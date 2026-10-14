@@ -35,7 +35,7 @@ test.describe('Dataset analysis detail relation stats i18n', () => {
     await expect(relationDistribution).not.toContainText(/[治療導致抑制結合調控]/);
 
     await expect(tripleSummary.locator('.panel-title')).toHaveText('Triple Count Summary');
-    await expect(tripleSummary.locator('.stats-metric-label').first()).toHaveText('Total triples');
+    await expect(tripleSummary.locator('.metric span').first()).toHaveText('Total triples');
     await expect(tripleSummary).not.toContainText(/[總數唯一平均標記員單句最多]/);
   });
 });
