@@ -136,7 +136,7 @@
         "absa", "action", "actions", "active", "add", "admin", "alt", "annotation", "annotator",
         "anomaly", "appearance", "ar-review", "ar-history", "ar-summary", "ar-expand", "ar-id", "ar-completed", "ar-stage", "ar-seq", "ar-export", "ar-filter", "arbiter", "aspect", "audit", "autosave", "back", "body", "brand",
         "cause", "char", "check", "clear", "col", "collapsed", "completion", "connector", "content",
-        "controls", "dark", "dashboard", "data", "date", "dirty", "disable", "dispute", "dragover",
+        "controls", "dark", "dashboard", "data", "date", "dialogue", "dirty", "disable", "dispute", "dragover",
         "dry", "edit", "email", "enable", "entity", "error", "event", "exception", "exec", "execution",
         "expanded", "eye", "fail", "field", "filter", "forgot", "form", "grid", "group", "guideline",
         "has", "hidden", "hide", "high", "history", "iaa", "inactive", "initial", "inline",
