@@ -55,6 +55,7 @@ for (const lang of [undefined, 'en'] as const) {
       await expect(node).toHaveText(name);
       await expect(node).toHaveAttribute('data-depth', String(depth));
       await expect(node).toHaveAttribute('data-label-path', labelPath);
+      await expect(node).toHaveAttribute('aria-label', labelPath);
     }
 
     // The tree is a read-only summary: no controls inside it.

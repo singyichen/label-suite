@@ -7274,6 +7274,7 @@ function getTaskTypeLabel() {
           li.setAttribute('data-testid', 'settings-label-node');
           li.setAttribute('data-depth', String(node.depth));
           li.setAttribute('data-label-path', node.path.join(' › '));
+          li.setAttribute('aria-label', node.path.join(' › '));
           li.style.paddingInlineStart = 'calc(' + (node.depth - 1) + ' * var(--space-md))';
           li.textContent = node.name;
           tree.appendChild(li);
