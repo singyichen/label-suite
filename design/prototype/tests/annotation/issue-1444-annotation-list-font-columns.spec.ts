@@ -43,36 +43,58 @@ test.describe('annotation-list font reset (#1444)', () => {
   });
 });
 
-test.describe('annotation-list reviewer queue columns at 1440px (#1444)', () => {
-  test.use({ viewport: { width: 1440, height: 900 } });
+const ZH_HEADERS = [
+  'ID',
+  '標記員',
+  '審核狀態',
+  '完成時間',
+  '文本摘要',
+  '標記結果',
+  '標記分布統計',
+  '處理狀況',
+  '操作',
+];
 
-  test('操作 column stays inside .task-table-wrap with all 9 reviewer columns kept', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
+/* T014 only lists its reviewer queue under dry_run; T015/T016 under official_run. */
+const CASES = [
+  { lang: 'zh', task_id: 'T014', run_type: 'dry_run', width: 1440 },
+  { lang: 'zh', task_id: 'T015', run_type: 'official_run', width: 1440 },
+  { lang: 'zh', task_id: 'T016', run_type: 'official_run', width: 1440 },
+  { lang: 'en', task_id: 'T014', run_type: 'dry_run', width: 1440 },
+  { lang: 'en', task_id: 'T015', run_type: 'official_run', width: 1440 },
+  { lang: 'en', task_id: 'T016', run_type: 'official_run', width: 1440 },
+  { lang: 'en', task_id: 'T016', run_type: 'official_run', width: 1920 },
+] as const;
 
-    const headers = page.locator('.task-table-wrap thead th');
-    await expect(headers).toHaveText([
-      'ID',
-      '標記員',
-      '審核狀態',
-      '完成時間',
-      '文本摘要',
-      '標記結果',
-      '標記分布統計',
-      '處理狀況',
-      '操作',
-    ]);
+test.describe('annotation-list reviewer queue columns (#1444)', () => {
+  for (const c of CASES) {
+    test(`${c.lang} ${c.task_id} at ${c.width}px: actions column stays inside .task-table-wrap, 9 columns kept`, async ({ page }) => {
+      await page.setViewportSize({ width: c.width, height: 900 });
+      await page.addInitScript((lang) => {
+        window.localStorage.setItem('labelsuite.lang', lang);
+      }, c.lang);
+      await page.goto(buildListUrl({ task_id: c.task_id, role: 'reviewer', run_type: c.run_type }));
 
-    const wrap = page.locator('.task-table-wrap');
-    const wrapBox = await wrap.boundingBox();
-    const opBox = await headers.last().boundingBox();
-    expect(wrapBox).not.toBeNull();
-    expect(opBox).not.toBeNull();
-    expect(opBox!.x + opBox!.width).toBeLessThanOrEqual(wrapBox!.x + wrapBox!.width + 1);
+      const headers = page.locator('.task-table-wrap thead th');
+      await expect(headers).toHaveCount(9);
+      if (c.lang === 'zh') {
+        await expect(headers).toHaveText(ZH_HEADERS);
+      } else {
+        await expect(headers.last()).toHaveText('Actions');
+      }
 
-    const { scrollWidth, clientWidth } = await wrap.evaluate((el) => ({
-      scrollWidth: el.scrollWidth,
-      clientWidth: el.clientWidth,
-    }));
-    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
-  });
+      const wrap = page.locator('.task-table-wrap');
+      const wrapBox = await wrap.boundingBox();
+      const opBox = await headers.last().boundingBox();
+      expect(wrapBox).not.toBeNull();
+      expect(opBox).not.toBeNull();
+      expect(opBox!.x + opBox!.width).toBeLessThanOrEqual(wrapBox!.x + wrapBox!.width + 1);
+
+      const { scrollWidth, clientWidth } = await wrap.evaluate((el) => ({
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      }));
+      expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+    });
+  }
 });
