@@ -307,7 +307,7 @@ test.describe('Issue #1338 — list title persistence (SC-002i)', () => {
 /* ── Review findings: id/Output leak (H1) and reset on file removal (M2) ── */
 
 test.describe('Issue #1338 — review findings', () => {
-  test('auto title never exposes an id column assigned Output; items fall back to row numbers (Data Fairness)', async ({
+  test('auto title never exposes an id column assigned Output; items show the Input text (Data Fairness, #1376)', async ({
     page,
   }) => {
     await setupTask(
@@ -331,8 +331,9 @@ test.describe('Issue #1338 — review findings', () => {
     }
     const items = page.getByTestId('list-title-preview-item');
     await expect(items).toHaveCount(3);
-    await expect(items.nth(0)).toContainText('1');
-    await expect(items.nth(2)).toContainText('3');
+    // #1376: auto = first Input field summary; row numbers only when no Input yields text
+    await expect(items.nth(0)).toHaveText('first sample');
+    await expect(items.nth(2)).toHaveText('third sample');
   });
 
   test('removing all uploaded files and re-uploading resets the list title to auto', async ({
