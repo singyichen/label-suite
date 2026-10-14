@@ -212,6 +212,8 @@ test.describe('stop pills carry a non-colour cue (issue #1127)', () => {
 
   test('en: annotator pill shows Met, then Not met after disabling an active annotator', async ({ page }) => {
     await page.goto(`${URL_BASE}&task_id=T001`);
+    /* applyLang re-renders the work log, so wait for its fetched partial first */
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
     await page.evaluate(() => (window as any).applyLang('en'));
     await expectPill(page, 'stopAnnotatorPill', 'met', 'en', /annotators ≥ 3/);
     await page.evaluate(() => (window as any).applyLang('zh'));
