@@ -14,8 +14,8 @@ async function gotoQualityWithLang(page: Page, taskId: string, lang: 'zh' | 'en'
 test.describe('Dataset analysis detail composite IAA badge math (outputs[] iteration)', () => {
   test('T107: partial-pass composite badge shows x/y with excluded-type suffix and mirrors secondary output cards without a title', async ({ page }) => {
     await gotoQualityWithLang(page, 'T107', 'zh');
-
-    // entity_recognition (fail) + single_label (pass) count toward the gate; free_text is
+    // entity_recognition (fail) + single_label (uncomputable, #1451: not in x) count toward y; free_text is
+    // excluded from both numerator and denominator (IAA_GATE_EXCLUDED_TYPES).
     // excluded from both numerator and denominator (IAA_GATE_EXCLUDED_TYPES).
     const badge = page.locator('#iaaSummaryBadge');
     // #1451: single_label (not computable, De = 0) is excluded from x but kept in y -> 0/2.
