@@ -22,7 +22,7 @@
 
 ### D5 切換
 
-`state.dialogueShowEntities`（預設 `true`）。「純文字」時 `fillText` 只寫 `textContent`，不呼叫 `fillDialogueUtterance`；按鈕按下後呼叫既有 `refresh()` 重繪。反白標記的位置計算依 DOM 文字，與模式無關。
+`state.dialogueShowEntities`（預設 `true`）。「純文字」時 `fillText` 只寫 `textContent`，不呼叫 `fillDialogueUtterance`；按鈕按下後呼叫既有 `refresh()` 重繪。切換元素為 `<span role="button" tabindex="0">`（含 Enter／Space 鍵盤處理），因工作區預覽區會改寫區內原生 `<button>` 的 testid。反白標記的位置計算依 DOM 文字，與模式無關。
 
 ### D6 字串
 

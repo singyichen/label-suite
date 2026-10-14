@@ -27,7 +27,7 @@ issue #1378 把草圖 artifact（https://claude.ai/artifact/B3fsqSYVQR2odnS987zG
 4. 通過：無 `reply_to`、無效 `reply_to`、`speaker` 為 `null` 的退化行為見 delta 第 11、12 點與 AC-2.41。
 5. 通過：新增 `data-testid` 於 `design.md` D3 列出，Red 與實作共用。
 6. 通過：`reply_to` 有效性規則見 `design.md` D1；無新增錯誤情境（無效即不縮排）。
-7. 通過：切換為原生 `<button>` 並以 `aria-pressed` 表示狀態，鍵盤可操作；字串進 `TASK_CONFIG_I18N` zh／en。
+7. 通過：切換為 `role="button"`、`tabindex="0"` 的元素並以 `aria-pressed` 表示狀態，Enter／Space 可操作（工作區預覽區會改寫區內原生 `<button>` 的 testid，故不用原生按鈕）；字串進 `TASK_CONFIG_I18N` zh／en。
 8. 通過：屬 `task-config.engine.js` 共用引擎，無新增 shared 元件；Storybook 不適用（prototype 階段）。
 9. 通過：切換只改變顯示，不改變頁面去向；`design/system/user-path-map.html` 無 F3／F4 命中新增。
 
