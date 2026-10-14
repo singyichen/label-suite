@@ -1323,6 +1323,34 @@ var TASK_META = {
 var DEFAULT_TASK_ID = 'T001';
 var S_ROUTE = { taskId: DEFAULT_TASK_ID };
 
+/* Shared single_label IAA derivation (#1451): the card and the header badge both read this,
+ * so they cannot disagree. Returns null when the shared data module is absent (callers fall
+ * back to the static iaaData). */
+function getSingleLabelIaaState() {
+  if (!window.LabelSuiteAnnotationWorkspaceData) return null;
+  var listTask = ((window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [])
+    .filter(function(task) { return task.id === S_ROUTE.taskId; })[0];
+  var runType = (listTask && listTask.runType === 'official_run') ? 'official_run' : 'dry_run';
+  var result = window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(S_ROUTE.taskId, runType, 'single_label');
+  var threshold = OUTPUT_TYPE_IAA_REGISTRY.single_label.defaultThreshold;
+  return {
+    computable: !!result.computable,
+    alpha: result.alpha,
+    threshold: threshold,
+    pass: !!result.computable && result.alpha >= threshold
+  };
+}
+
+/* Set card-<state> on every .iaa-score-card from its own .iaa-card-value state class (#1451). */
+function syncIaaCardStates(scope) {
+  Array.prototype.forEach.call(scope.querySelectorAll('.iaa-score-card'), function(card) {
+    var valueEl = card.querySelector('.iaa-card-value');
+    var match = valueEl && /\b(pass|warn|fail)\b/.exec(valueEl.className);
+    card.classList.remove('card-pass', 'card-warn', 'card-fail');
+    if (match) card.classList.add('card-' + match[1]);
+  });
+}
+
 /* ── Composite IAA badge (FR-024A/B/C, SC-021/022/023) ────────────── */
 function computeCompositeBadge(taskMeta) {
   var outputs = (taskMeta && taskMeta.outputs) || [];
@@ -1337,7 +1365,13 @@ function computeCompositeBadge(taskMeta) {
   counted.forEach(function(type) {
     var d = iaaData[type];
     if (!d) { hasPending = true; return; }
-    if (d.pass) x += 1;
+    // #1451: single_label counts the card's computed state (uncomputable => not in x, still in y).
+    var pass = d.pass;
+    if (type === 'single_label') {
+      var computed = getSingleLabelIaaState();
+      if (computed) pass = computed.pass;
+    }
+    if (pass) x += 1;
   });
   if (hasPending) return { state: 'pending', x: null, y: y, excludedCount: excludedCount };
   return { state: x === y ? 'pass' : 'fail', x: x, y: y, excludedCount: excludedCount };
@@ -1668,13 +1702,10 @@ function applySingleLabelIaaCard() {
   var thrTextEl = scope.querySelector('.iaa-threshold-item span:last-child');
   if (!valueEl || !barEl || !dotEl || !thrTextEl) return;
 
-  var listTask = ((window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [])
-    .filter(function(task) { return task.id === S_ROUTE.taskId; })[0];
-  var runType = (listTask && listTask.runType === 'official_run') ? 'official_run' : 'dry_run';
-  var result = window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(S_ROUTE.taskId, runType, 'single_label');
-  var threshold = OUTPUT_TYPE_IAA_REGISTRY.single_label.defaultThreshold;
+  var result = getSingleLabelIaaState();
+  var threshold = result.threshold;
 
-  var state = !result.computable ? 'warn' : (result.alpha >= threshold ? 'pass' : 'fail');
+  var state = !result.computable ? 'warn' : (result.pass ? 'pass' : 'fail');
   valueEl.className = 'iaa-card-value ' + state;
   valueEl.textContent = result.computable ? result.alpha.toFixed(2) : t('iaaNotComputable');
   barEl.className = 'iaa-bar-fill ' + state;
@@ -1970,6 +2001,7 @@ function loadQualityPanel() {
     updateSummaryBadge();
     applySmallSampleBadge();
     applySingleLabelIaaCard();
+    syncIaaCardStates(mount);
     applyAnnotatorModificationRates();
     syncRoleUi();
     wireQualityPanelInteractions();

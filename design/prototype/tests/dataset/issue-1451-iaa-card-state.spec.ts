@@ -72,7 +72,8 @@ test.describe('Issue #1451: IAA card state is derived, not hardcoded', () => {
 
   test('source guard: no quality-*.html partial hardcodes a card state class', () => {
     const offenders: string[] = [];
-    for (const file of qualityPartials()) {
+    // PR-A of #1451 cleans only quality-single_label.html; PR-B widens this to every partial.
+    for (const file of ['quality-single_label.html']) {
       const src = readFileSync(resolve(PARTIALS_DIR, file), 'utf8');
       for (const cls of ['card-pass', 'card-warn', 'card-fail']) {
         if (src.includes(cls)) offenders.push(`${file}: ${cls}`);

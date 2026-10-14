@@ -18,7 +18,8 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
     // entity_recognition (fail) + single_label (pass) count toward the gate; free_text is
     // excluded from both numerator and denominator (IAA_GATE_EXCLUDED_TYPES).
     const badge = page.locator('#iaaSummaryBadge');
-    await expect(badge).toHaveText('1/2 達標 · 1 型排除');
+    // #1451: single_label (not computable, De = 0) is excluded from x but kept in y -> 0/2.
+    await expect(badge).toHaveText('0/2 達標 · 1 型排除');
     await expect(badge).toHaveClass(/badge-fail/);
 
     // Primary output type (entity_recognition, outputs[0]) is mounted in full, so its own
@@ -54,7 +55,7 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
   test('T107: composite badge translates to English without mixed Chinese', async ({ page }) => {
     await gotoQualityWithLang(page, 'T107', 'en');
 
-    await expect(page.locator('#iaaSummaryBadge')).toHaveText('1/2 Passed · 1 type(s) excluded');
+    await expect(page.locator('#iaaSummaryBadge')).toHaveText('0/2 Passed · 1 type(s) excluded'); // #1451: uncomputable single_label not counted in x
     await expect(page.locator('section[data-output-type="single_label"] .iaa-type-label')).toHaveText('Single-label');
     await expect(page.locator('section[data-output-type="free_text"] .iaa-type-label')).toHaveText('Free Text');
   });

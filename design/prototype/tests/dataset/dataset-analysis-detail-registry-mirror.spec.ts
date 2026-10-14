@@ -96,10 +96,11 @@ test.describe('Dataset detail — composite badge denominator excludes uncalibra
     });
 
     expect(result.y).toBe(1);
-    expect(result.x).toBe(1);
+    // #1451: page is T001, whose single_label IAA is not computable (De = 0) -> not in x, still in y.
+    expect(result.x).toBe(0);
     expect(result.excludedCount).toBe(2);
-    expect(result.state).toBe('pass');
-    expect(text).toBe('1/1 達標 · 2 型排除');
+    expect(result.state).toBe('fail');
+    expect(text).toBe('0/1 達標 · 2 型排除');
   });
 
   test('AC-3.9: task-level summary is not_applicable (never 0/0) when every output type is gate-excluded or uncalibrated', async ({ page }) => {
