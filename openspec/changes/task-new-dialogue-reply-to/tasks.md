@@ -18,8 +18,8 @@
 
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.data.js`
 
-- [ ] 1.1 新增 `design/prototype/tests/task-management/issue-1378-dialogue-reply-to-config.spec.ts` 的 Red：斷言 zh／en 字串表皆含 `dialogueReplyToLabel`、`dialogueReplyToNoneOption`。 [@senior-qa]
-- [ ] 1.2 （Green）修改 `task-config.data.js`，於 zh／en 字串表新增上述字串，不改既有鍵。 [@senior-frontend]
+- [x] 1.1 新增 `design/prototype/tests/task-management/issue-1378-dialogue-reply-to-config.spec.ts` 的 Red：斷言 zh／en 字串表皆含 `dialogueReplyToLabel`、`dialogueReplyToNoneOption`。 [@senior-qa]
+- [x] 1.2 （Green）修改 `task-config.data.js`，於 zh／en 字串表新增上述字串，不改既有鍵。 [@senior-frontend]
 
 ## 2. 候選、確認與失效（AC-1.13、AC-1.14）
 
@@ -28,8 +28,8 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.engine.js`
 > **相依**：群組 1。
 
-- [ ] 2.1 修改 `design/prototype/tests/task-management/issue-1378-dialogue-reply-to-config.spec.ts`，補 Red：有候選時下拉預設「不使用」、候選不含文字欄位；選擇與清除後 reply_to 對應更新；無候選時不顯示下拉；`reply_to` 失效時只清該對應、其餘保留；切換勾選重新預填時 `reply_to` 為 `null`。 [@senior-qa]
-- [ ] 2.2 （Green）修改 `task-config.engine.js`：候選偵測、`prefillDialogueFields` 與 `dialogueFieldsValid` 對 `reply_to` 的處理、確認區下拉（design.md D1～D4）。 [@senior-frontend]
+- [x] 2.1 修改 `design/prototype/tests/task-management/issue-1378-dialogue-reply-to-config.spec.ts`，補 Red：有候選時下拉預設「不使用」、候選不含文字欄位；選擇與清除後 reply_to 對應更新；無候選時不顯示下拉；`reply_to` 失效時只清該對應、其餘保留；切換勾選重新預填時 `reply_to` 為 `null`。 [@senior-qa]
+- [x] 2.2 （Green）修改 `task-config.engine.js`：候選偵測、`prefillDialogueFields` 與 `dialogueFieldsValid` 對 `reply_to` 的處理、確認區下拉（design.md D1～D4）。 [@senior-frontend]
 
 ## 3. payload 與草稿（SC-002j）
 
@@ -38,8 +38,8 @@
 > **產品檔案（0 新增）**：沿用群組 2 的引擎狀態；`task-new.html` 不修改。
 > **相依**：群組 2。
 
-- [ ] 3.1 修改 `design/prototype/tests/task-management/issue-1378-dialogue-reply-to-config.spec.ts`，補 Red：已選 reply_to 的 payload 與草稿重載後仍為該對應，未選為 null；既有 issue-1340 規格的 payload 斷言同步改為含 reply_to。 [@senior-qa]
-- [ ] 3.2 （Green）確認群組 2 實作使 3.1 通過；僅在必要時微調 `task-config.engine.js`。 [@senior-frontend]
+- [x] 3.1 修改 `design/prototype/tests/task-management/issue-1378-dialogue-reply-to-config.spec.ts`，補 Red：已選 reply_to 的 payload 與草稿重載後仍為該對應，未選為 null；既有 issue-1340 規格的 payload 斷言同步改為含 reply_to。 [@senior-qa]
+- [x] 3.2 （Green）確認群組 2 實作使 3.1 通過；僅在必要時微調 `task-config.engine.js`。 [@senior-frontend]
 
 ## 4. 回歸與審查
 
@@ -47,8 +47,8 @@
 
 > **產品檔案（0）**：只執行驗證與審查。
 
-- [ ] 4.1 執行 typecheck、test:node 與範圍限定的 Playwright（新 spec、所有引用 `dialogue_fields`／`dialogue-field-` 的規格），皆 exit 0。 [@main]
-- [ ] 4.2 senior-code-reviewer 獨立審查 Generalization-First、Data Fairness 與 Principle X。 [@senior-code-reviewer]
+- [x] 4.1 執行 typecheck、test:node 與範圍限定的 Playwright（新 spec、所有引用 `dialogue_fields`／`dialogue-field-` 的規格），皆 exit 0。 [@main]
+- [x] 4.2 senior-code-reviewer 獨立審查 Generalization-First、Data Fairness 與 Principle X。 [@senior-code-reviewer]
 
 ## 5. Source-Verify 與 archive
 
