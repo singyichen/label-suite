@@ -1693,6 +1693,7 @@
     .next-step-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
     .next-step-cond { color: var(--color-text-soft); }
     .next-step-cond-icon { font-weight: 700; }
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .next-step-cond[data-status="met"] .next-step-cond-icon { color: var(--color-success); }
     .next-step-cond[data-status="unmet"] .next-step-cond-icon { color: var(--color-ink-muted); }
     .next-step-cond[data-status="info"] .next-step-cond-icon { color: var(--color-warning); }
@@ -2267,6 +2268,9 @@
       nextStepCondDispute: '爭議都已仲裁',
       nextStepCondExceptionPool: '最終例外池已處置',
       nextStepCondQuality: '品質指標就緒',
+      nextStepStatusMet: '已滿足',
+      nextStepStatusUnmet: '未滿足',
+      nextStepStatusInfo: '提醒',
       reviewerHint: '僅 project leader 可操作',
       officialRunDisabled: '開始正式標記（唯讀）',
       dryRunNextRoundReason: '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合',
@@ -2833,6 +2837,9 @@
       nextStepCondDispute: 'All disputes arbitrated',
       nextStepCondExceptionPool: 'Final exception pool handled',
       nextStepCondQuality: 'Quality metrics ready',
+      nextStepStatusMet: 'Met',
+      nextStepStatusUnmet: 'Not met',
+      nextStepStatusInfo: 'Reminder',
       reviewerHint: 'Only project leader can perform this action',
       officialRunDisabled: 'Start official run (Read-only)',
       dryRunNextRoundReason: 'Finish this round\'s annotation, required review and required arbitration before adding the next round',
@@ -6071,15 +6078,21 @@ function interpolate(template, payload) {
     return { key: key, title: t(titleKeys[key]), rows: rows };
   }
 
+  function escapeHtml(value) {
+    return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function nextStepGroupsHtml(groups) {
     var iconGlyphs = { met: '✓', unmet: '○', info: 'ⓘ' };
+    var statusKeys = { met: 'nextStepStatusMet', unmet: 'nextStepStatusUnmet', info: 'nextStepStatusInfo' };
     return groups.map(function(group) {
-      return '<div class="next-step-group" data-group="' + group.key + '"><p class="next-step-group-title">' + group.title + '</p><ul>' +
+      return '<div class="next-step-group" data-group="' + group.key + '"><p class="next-step-group-title">' + escapeHtml(group.title) + '</p><ul>' +
         group.rows.map(function(row) {
           return '<li class="next-step-cond" data-cond="' + row.key + '" data-status="' + row.status + '"' + (row.id ? ' id="' + row.id + '"' : '') + '>' +
-            '<span class="next-step-cond-icon">' + iconGlyphs[row.status] + '</span> ' +
-            '<span class="next-step-cond-label">' + row.label + '</span> ' +
-            '<span class="next-step-cond-value">' + row.value + '</span> ' + row.extraHtml + '</li>';
+            '<span class="next-step-cond-icon" aria-hidden="true">' + iconGlyphs[row.status] + '</span>' +
+            '<span class="sr-only next-step-cond-status">' + t(statusKeys[row.status]) + '</span> ' +
+            '<span class="next-step-cond-label">' + escapeHtml(row.label) + '</span> ' +
+            '<span class="next-step-cond-value">' + escapeHtml(row.value) + '</span> ' + row.extraHtml + '</li>';
         }).join('') + '</ul></div>';
     }).join('');
   }
