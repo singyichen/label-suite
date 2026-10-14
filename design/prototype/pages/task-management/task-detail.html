@@ -181,6 +181,8 @@
     .btn-cta:hover:not(:disabled) { opacity: 0.9; }
     .btn-secondary { color: var(--color-ink); background: var(--color-white); border-color: var(--color-border); }
     .btn-secondary:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .btn-link { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
+    .btn-link:hover:not(:disabled) { background: transparent; text-decoration: underline; }
 
     .sampling-panel {
       border: 1px solid var(--color-border);
@@ -502,8 +504,8 @@
     .stage-split-fill.dry { background: var(--color-primary); }
     .stage-split-fill.official { background: var(--color-cta); }
     .phase-flow { display: flex; flex-direction: column; gap: 10px; }
-    .phase-item { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); padding: 14px; }
-    .phase-item--active { border-color: var(--color-primary); }
+    .phase-item { padding: 14px 0; }
+    .phase-item + .phase-item { border-top: 1px solid var(--color-border-muted); }
     .phase-item--pending { opacity: 0.55; }
     .phase-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .phase-round-label { font-size: 14px; font-weight: 700; color: var(--color-ink); }
@@ -655,12 +657,7 @@
       grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
       gap: var(--space-md);
     }
-    .member-entry-card {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-slate-50);
-      padding: var(--space-md);
-    }
+    .member-entry-card { padding: 0; }
     .member-entry-title {
       margin: 0 0 6px;
       font-size: 16px;
@@ -1036,11 +1033,9 @@
     .settings-section.panel { border: 1px solid var(--color-border); box-shadow: none; border-radius: var(--radius-lg); background: var(--color-white); margin-bottom: 0; }
     /* FR-026 (1) / design.md: section title, text-link edit, divided definition list. Scoped to the settings tab only. */
     .settings-section .panel-title { font-size: 16px; font-weight: 600; }
-    .settings-section [id$="EditBtn"] { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
-    .settings-section [id$="EditBtn"]:hover { background: transparent; text-decoration: underline; }
     .settings-section .kv-dl { grid-template-columns: 160px minmax(0, 1fr); gap: 10px 0; }
-    .settings-section .kv-dl-key { padding: 0 16px 10px 0; border-bottom: 1px solid var(--color-border-muted); }
-    .settings-section .kv-dl-value { padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
+    .settings-section .kv-dl-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
+    .settings-section .kv-dl-key { padding: 0 16px 0 0; }
 
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
@@ -1781,10 +1776,6 @@
       background: var(--color-warning-bg);
     }
     .round-history-panel {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      padding: 16px;
       margin-bottom: var(--space-md);
     }
     .round-history-head {
