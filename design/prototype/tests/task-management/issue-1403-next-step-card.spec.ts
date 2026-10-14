@@ -280,3 +280,102 @@ test.describe('Issue #1403 -- next-step card: dry_run_in_progress and official_r
     await expect(page.locator(`${CARD} li.next-step-cond[data-status="unmet"]`)).toHaveCount(0);
   });
 });
+
+const READONLY_TEXT = '僅 project leader 可操作';
+
+test.describe('Issue #1403 -- next-step card: reviewer, completed and disabled styling (tasks 4.1)', () => {
+  for (const [task, name] of [['T013', '新增試標回合'], ['T016', '標記完成']] as const) {
+    test(`reviewer ${task}: button (${name}) is disabled, 僅 project leader 可操作 is visible, no condition rows (AC-3.72)`, async ({ page }) => {
+      await open(page, url(task, 'reviewer'));
+      const btn = page.locator(`${CARD} #publishActionRow button`).first();
+      await expect(btn).toBeDisabled();
+      await expect(btn).toContainText(name);
+      await expect(btn).toHaveAttribute('title', READONLY_TEXT);
+      await expect(page.locator(`${CARD} .exec-action-readonly-note`)).toBeVisible();
+      await expect(page.locator(`${CARD} .exec-action-readonly-note`)).toContainText(READONLY_TEXT);
+      await expect(page.locator(`${CARD} li.next-step-cond`)).toHaveCount(0);
+    });
+  }
+
+  test('completed: title is 任務已完成，無待執行動作, no button and no condition rows (FR-027(6))', async ({ page }) => {
+    await open(page, url('T003', 'project_leader', '&status=completed'));
+    await expect(page.locator('#nextStepTitle')).toHaveText('任務已完成，無待執行動作');
+    await expect(page.locator(`${CARD} button`)).toHaveCount(0);
+    await expect(page.locator(`${CARD} li.next-step-cond`)).toHaveCount(0);
+  });
+
+  test('disabled buttons in the card: opacity 1, --color-text-soft text, not --color-cta, not dashed (FR-027(6))', async ({ page }) => {
+    await open(page, url('T018'));
+    const soft = await resolveToken(page, '--color-text-soft', 'color');
+    const cta = await resolveToken(page, '--color-cta', 'backgroundColor');
+    const disabled = page.locator(`${CARD} button:disabled`);
+    expect(await disabled.count()).toBeGreaterThanOrEqual(2);
+    const styles = await disabled.evaluateAll((bs) =>
+      bs.map((b) => {
+        const s = getComputedStyle(b);
+        return { id: b.id, opacity: s.opacity, color: s.color, bg: s.backgroundColor, borderStyle: s.borderTopStyle };
+      }),
+    );
+    for (const s of styles) {
+      expect(s.opacity, `${s.id} opacity`).toBe('1');
+      expect(s.color, `${s.id} text colour`).toBe(soft);
+      expect(s.bg, `${s.id} background`).not.toBe(cta);
+      expect(s.borderStyle, `${s.id} border`).not.toBe('dashed');
+    }
+  });
+
+  test('the disabled style stays scoped to the card: a .btn:disabled outside it keeps the site-wide opacity 0.4', async ({ page }) => {
+    await open(page, url('T001'));
+    const outside = await page.evaluate(() => {
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.disabled = true;
+      document.body.appendChild(b);
+      const opacity = getComputedStyle(b).opacity;
+      b.remove();
+      return opacity;
+    });
+    expect(outside).toBe('0.4');
+  });
+
+  test('icon colours: met / unmet / info resolve to --color-success / --color-ink-muted / --color-warning, with text glyphs', async ({ page }) => {
+    const [success, muted, warning] = [
+      await (async () => { await open(page, url('T001')); return resolveToken(page, '--color-success', 'color'); })(),
+      await resolveToken(page, '--color-ink-muted', 'color'),
+      await resolveToken(page, '--color-warning', 'color'),
+    ];
+    const iconOf = (key: string) => cond(page, key).locator('.next-step-cond-icon');
+    await expect(cond(page, 'pool')).toHaveAttribute('data-status', 'met');
+    await expect(iconOf('pool')).toHaveText('✓');
+    expect(await iconOf('pool').evaluate((e) => getComputedStyle(e).color)).toBe(success);
+    await expect(cond(page, 'iaa-later')).toHaveAttribute('data-status', 'info');
+    await expect(iconOf('iaa-later')).toHaveText('ⓘ');
+    expect(await iconOf('iaa-later').evaluate((e) => getComputedStyle(e).color)).toBe(warning);
+
+    await open(page, url('T018'));
+    await expect(cond(page, 'iaa-computed')).toHaveAttribute('data-status', 'unmet');
+    await expect(iconOf('iaa-computed')).toHaveText('○');
+    expect(await iconOf('iaa-computed').evaluate((e) => getComputedStyle(e).color)).toBe(muted);
+  });
+
+  for (const [label, target] of [
+    ['draft T013', url('T013')],
+    ['waiting T018', url('T018')],
+    ['dry_run T014', url('T014')],
+    ['official T016', url('T016')],
+  ] as const) {
+    test(`${label}: the card never shows a red ✗ (FR-027(4))`, async ({ page }) => {
+      await open(page, target);
+      expect(await page.locator(CARD).innerText()).not.toContain('✗');
+      const hasErrorIcon = await page.locator(`${CARD} .next-step-cond-icon`).evaluateAll((els) => {
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:absolute;color:var(--color-error)';
+        document.body.appendChild(probe);
+        const error = getComputedStyle(probe).color;
+        probe.remove();
+        return els.some((e) => getComputedStyle(e).color === error);
+      });
+      expect(hasErrorIcon).toBe(false);
+    });
+  }
+});
