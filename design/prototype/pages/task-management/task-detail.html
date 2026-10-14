@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="stylesheet" href="task-config.css">
   <style>
@@ -59,31 +60,6 @@
       color: var(--color-ink);
       margin: 0 0 4px;
     }
-
-    .admin-tabs {
-      display: flex;
-      border-bottom: 2px solid var(--color-border);
-      margin-bottom: var(--space-lg);
-    }
-    .admin-tab {
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--color-text-soft);
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      cursor: pointer;
-      transition: color var(--dur-fast), border-color var(--dur-fast);
-      text-decoration: none;
-      display: inline-block;
-      background: transparent;
-      border-left: none;
-      border-right: none;
-      border-top: none;
-      white-space: nowrap;
-    }
-    .admin-tab:hover { color: var(--color-primary); }
-    .admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
 
     .skeleton-stack {
       display: grid;
@@ -1122,7 +1098,6 @@
       .settings-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
       .settings-section-nav { flex-direction: row; }
       .settings-nav-item { flex: 0 0 auto; white-space: nowrap; }
-      .admin-tabs { overflow-x: auto; flex-wrap: wrap; }
       .kv-grid { grid-template-columns: 1fr; }
       .sampling-grid { grid-template-columns: 1fr; }
 .progress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
