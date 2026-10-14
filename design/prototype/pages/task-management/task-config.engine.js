@@ -1563,23 +1563,24 @@ function renderDialogueThread(container, turns, cfg, opts) {
   (opts.noLimit ? turns : turns.slice(0, MAX_TURNS)).forEach(function(turn, i) {
     var row = document.createElement('div');
     row.setAttribute('data-testid', 'dialogue-thread-row');
-    row.style.cssText = 'display:flex;gap:8px;align-items:baseline;margin-bottom:4px';
+    row.className = 'dialogue-thread-row';
     var uttId = dialogueUttIdOf(turn, i, cfg);
     row.setAttribute('data-utt-id', String(uttId));
     var idEl = document.createElement('span');
     idEl.setAttribute('data-testid', 'dialogue-utt-id');
-    idEl.style.cssText = 'color:var(--text-secondary,#6b7280);flex:none';
+    idEl.className = 'dialogue-utt-id';
     idEl.textContent = (opts.idPrefix || '') + String(uttId);
     row.appendChild(idEl);
     if (cfg.speaker) {
       var spEl = document.createElement('span');
       spEl.setAttribute('data-testid', 'dialogue-speaker');
-      spEl.style.cssText = 'font-weight:600;flex:none';
+      spEl.className = 'dialogue-speaker';
       spEl.textContent = turn && turn[cfg.speaker] !== undefined && turn[cfg.speaker] !== null ? String(turn[cfg.speaker]) : '';
       row.appendChild(spEl);
     }
     var txEl = document.createElement('span');
     txEl.setAttribute('data-testid', 'dialogue-text');
+    txEl.className = 'dialogue-text';
     var turnText = turn && typeof turn[cfg.text] === 'string' ? turn[cfg.text] : '';
     if (opts.fillText) opts.fillText(txEl, turnText, uttId, i);
     else txEl.textContent = turnText;
@@ -1588,7 +1589,7 @@ function renderDialogueThread(container, turns, cfg, opts) {
   });
   if (!opts.noLimit && turns.length > MAX_TURNS) {
     var more = document.createElement('div');
-    more.style.cssText = 'color:var(--text-secondary,#6b7280)';
+    more.className = 'dialogue-thread-more';
     more.textContent = t('dialogueMoreTurns').replace('{n}', turns.length - MAX_TURNS);
     container.appendChild(more);
   }
@@ -2322,7 +2323,7 @@ function renderDialogueInput(textEl, turns, allowEntityEditing, refresh) {
     idPrefix: '#',
     fillText: function(txEl, text, uttId, i) {
       txEl.setAttribute('data-turn-index', String(i));
-      txEl.style.whiteSpace = 'pre-wrap';
+      txEl.classList.add('dialogue-text-prewrap');
       fillDialogueUtterance(txEl, text, uttId);
     }
   });
@@ -5632,8 +5633,10 @@ function renderListTitleBlock() {
     block = document.createElement('div');
     block.id = 'inlineListTitleBlock';
     block.className = 'inline-list-title-block';
-    bar.parentNode.insertBefore(block, bar.nextSibling);
+    bar.appendChild(block);
   }
+  /* The bar is the "資料列來源" frame: keep it visible even with no candidate arrays */
+  bar.classList.remove('hidden');
   while (block.firstChild) block.removeChild(block.firstChild);
 
   var cands = listTitleCandidates();
@@ -5644,8 +5647,10 @@ function renderListTitleBlock() {
   }
 
   var lbl = document.createElement('label');
+  lbl.className = 'inline-preview-source-label';
   lbl.textContent = t('listTitleLabel');
   var sel = document.createElement('select');
+  sel.className = 'inline-list-title-select';
   sel.setAttribute('data-testid', 'list-title-field-select');
   var autoOpt = document.createElement('option');
   autoOpt.value = '';
@@ -5670,6 +5675,7 @@ function renderListTitleBlock() {
   if (state.listTitleReverted) {
     var notice = document.createElement('p');
     notice.setAttribute('data-testid', 'list-title-revert-notice');
+    notice.className = 'inline-list-title-notice';
     notice.setAttribute('role', 'status');
     notice.textContent = t('listTitleRevertNotice');
     block.appendChild(notice);
@@ -5677,7 +5683,9 @@ function renderListTitleBlock() {
 
   var preview = document.createElement('div');
   preview.setAttribute('data-testid', 'list-title-preview');
+  preview.className = 'inline-list-title-preview';
   var heading = document.createElement('div');
+  heading.className = 'inline-preview-source-label';
   heading.textContent = t('listTitlePreviewHeading');
   preview.appendChild(heading);
   state.datasetPreviewRawRows.slice(0, 3).forEach(function(rawRow, i) {
@@ -5761,15 +5769,17 @@ function renderDialogueBlock() {
   var cfg = state.dialogueFields || prefillDialogueFields(det);
   var on = !!state.dialogueFields;
 
-  var anchor = el('inlineListTitleBlock') || el('inlinePreviewSourceBar');
-  if (!anchor) return;
+  var bar = el('inlinePreviewSourceBar');
+  if (!bar) return;
   var block = document.createElement('div');
   block.id = 'inlineDialogueBlock';
   block.className = 'inline-list-title-block';
   block.setAttribute('data-testid', 'dialogue-fields-block');
-  anchor.parentNode.insertBefore(block, anchor.nextSibling);
+  bar.appendChild(block);
+  bar.classList.remove('hidden');
 
   var heading = document.createElement('div');
+  heading.className = 'inline-preview-source-label';
   heading.textContent = t('dialogueBlockTitle') + ' (' + det.col + ')';
   block.appendChild(heading);
 
@@ -5784,9 +5794,10 @@ function renderDialogueBlock() {
 
   function addSelect(labelKey, testid, keys, current, noneKey) {
     var lbl = document.createElement('label');
-    lbl.style.display = 'block';
+    lbl.className = 'inline-preview-source-label';
     lbl.textContent = t(labelKey) + ' ';
     var sel = document.createElement('select');
+    sel.className = 'inline-list-title-select';
     sel.setAttribute('data-testid', testid);
     sel.disabled = !on;
     if (noneKey) {
