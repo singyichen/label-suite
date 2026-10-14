@@ -1,5 +1,5 @@
 ---
-功能分支: feat/1340-dialogue-fields
+功能分支: feat/1378-dialogue-reply-to-config
 建立日期: 2026-04-20
 版本: 8.5.2
 狀態: Draft
