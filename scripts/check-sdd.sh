@@ -237,10 +237,11 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     relative_proposal="${proposal#"$repo_root"/}"
     if [ ! -r "$proposal" ]; then add_error ACTIVE_CHANGE_SPEC "${change_dir#"$repo_root"/}" 'active change is missing a readable proposal.md'; continue; fi
     # Issue #1379: a sketch artifact link needs the element table; deferral wording in ADDED/MODIFIED deltas needs `#N`.
-    if grep -Fq 'claude.ai/artifact/' "$proposal" && ! strip_markdown_fences "$proposal" | grep -Fqx '## 草圖元素對照表'; then add_error PROPOSAL_SKETCH_TABLE "$relative_proposal" 'proposal links a claude.ai/artifact/ sketch but has no "## 草圖元素對照表" heading'; fi
+    if grep -Fq 'claude.ai/artifact/' "$proposal" && ! strip_markdown_fences "$proposal" | grep -Eq '^##[[:space:]]+草圖元素對照表[[:space:]]*\r?$'; then add_error PROPOSAL_SKETCH_TABLE "$relative_proposal" 'proposal links a claude.ai/artifact/ sketch but has no "## 草圖元素對照表" heading'; fi
     while IFS= read -r delta_file; do
         strip_markdown_fences "$delta_file" | awk '
-            /^##[[:space:]]/ { inside = ($0 == "## ADDED Requirements" || $0 == "## MODIFIED Requirements"); next }
+            { sub(/\r$/, "") }
+            /^##[[:space:]]/ { inside = ($0 ~ /^##[[:space:]]+(ADDED|MODIFIED)[[:space:]]+Requirements[[:space:]]*$/); next }
             inside && /(不在本條範圍|另案|延後)/ && $0 !~ /#[0-9]+/ { found = 1 }
             END { exit !found }
         ' && add_error DEFERRAL_WITHOUT_ISSUE "${delta_file#"$repo_root"/}" 'ADDED/MODIFIED clause says 不在本條範圍/另案/延後 without a follow-up issue (#N)'

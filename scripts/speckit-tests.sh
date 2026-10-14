@@ -2840,6 +2840,15 @@ test_check_sdd_fails_for_deferral_without_issue_number() {
     assert_command_fails_with "$repo" 1 "DEFERRAL_WITHOUT_ISSUE" "openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
 }
 
+test_check_sdd_fails_for_deferral_in_crlf_modified_section() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\r\n## MODIFIED Requirements \r\n\r\n### Requirement: Fixture clause\r\n\r\n匯出格式另案處理。\r\n' \
+        >> "$repo/openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
+
+    assert_command_fails_with "$repo" 1 "DEFERRAL_WITHOUT_ISSUE" "openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
+}
+
 test_check_sdd_accepts_deferral_with_issue_number() {
     local repo
     repo="$(make_sdd_repo)"
@@ -3549,6 +3558,7 @@ test_check_sdd_fails_for_artifact_link_without_sketch_table
 test_check_sdd_accepts_artifact_link_with_sketch_table
 test_check_sdd_accepts_prototype_path_without_sketch_table
 test_check_sdd_fails_for_deferral_without_issue_number
+test_check_sdd_fails_for_deferral_in_crlf_modified_section
 test_check_sdd_accepts_deferral_with_issue_number
 test_check_sdd_ignores_deferral_wording_outside_added_or_modified
 test_path_map_freshness_help_documents_issue_645_dependency
