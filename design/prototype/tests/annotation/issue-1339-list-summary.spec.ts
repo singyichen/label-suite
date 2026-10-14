@@ -25,7 +25,8 @@ import { buildListUrl, buildWorkspaceUrl, patchDataFile, skipGuidelineModal } fr
  * also matches the text of every role==='input' field of a record, never
  * Output or Evidence fields; the displayed summary is unchanged. */
 
-const AUTO_T013 = '我入手Note 10 plus第三天就退廠保修 過熱問題嚴重！差評';
+/* issue #1378 (AC-1.35): the dialogue summary now carries the first speaker as a prefix. */
+const AUTO_T013 = 'rottenrockteahouse：我入手Note 10 plus第三天就退廠保修 過熱問題嚴重！差評';
 const SNIPPETS = '.sample-snippet, .text-snippet-content, [data-testid$="snippet"]';
 
 type ProfilePatch = { tasks: string[]; listTitleField?: string | null; body?: string };
