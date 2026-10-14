@@ -922,22 +922,29 @@ Compact in-row action buttons used in dense tables and list rows (`annotation-li
 
 ### Modals
 
+The modal skeleton (overlay, dialog, header, title, description, close button, footer) is defined once in `design/prototype/pages/shared/modal.css`. Pages link it after `tokens.css` and keep only page-specific styles (width overrides such as `.modal-xl`, previews, forms). Do not redefine the skeleton inline.
+
 ```css
-.modal-overlay {
+.modal-overlay {            /* hidden by default; toggle `.show` to display */
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  z-index: 300;
+  z-index: var(--z-modal);  /* 300 */
 }
 
 .modal {
-  background: white;
+  background: var(--color-white);
   border-radius: var(--radius-xl);
-  padding: 32px;
+  padding: var(--space-xl);
   box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
 }
 ```
+
+**Footer rules** (`.modal-footer` / `.modal-actions`):
+
+- Actions are right-aligned (`justify-content: flex-end`)
+- Secondary action (Cancel) on the left, primary action on the right
+- Destructive confirmations use the solid Danger variant (`.btn-danger`, see Buttons) in the primary position
+- Gap between actions uses `--space-sm`
 
 **Modal Interaction Rules:**
 
@@ -2978,3 +2985,4 @@ Before delivering any UI code, verify:
 | v1.28 | 2026-10-13 | **Workspace Tabs compact sizing (issue #1280)** — replaced the fixed `--workspace-tab-width` (180px) with `--workspace-tab-min-width` (104px) / `--workspace-tab-max-width` (220px) and `flex: 1 1 0`; tab font 13px to 12px, padding 8x16 to 6x10, gap 4px to 6px; page-kind icon 16px to 14px; close button 18px to 16px and shown only on active / hover / focus-within via `visibility`. Bar spacing, active/hover backgrounds and stage badge colors unchanged. |
 | v1.29 | 2026-10-13 | **Workspace Tabs kind chip (issue #1280)** — tab title is now a kind chip (`.workspace-tab-kind`: annotate / review / detail / dry run RN / official / analysis) plus the target name in `.workspace-tab-label`; the stage badge colour moved from the whole tab text to the chip using semantic token pairs (warning, primary, info, neutral) in both themes, and tab body text no longer changes with stage. Added a Kind chip row and rewrote the Stage badge row in §Workspace Tabs. No new token. |
 | v1.30 | 2026-10-13 | **Empty State convergence complete (issue #1189)** — §Empty State "Current prototype state" note updated: the last per-page families on task-detail (`ar-empty`, `ar-export-empty`, `member-detail-empty`, `member-search-empty`, `progress-empty`, `worklog-empty`) now use the shared `empty-state.css` vocabulary and `classScan.transitionalClasses` is empty; no component spec or token change |
+| v1.31 | 2026-10-14 | **Shared modal skeleton (issue #1390)** — §Modals now points to `pages/shared/modal.css` as the single definition of the overlay / dialog / header / title / description / close / footer skeleton and adds the Footer rules list (right-aligned actions, secondary left of primary, solid Danger variant in the primary position for destructive confirmations, `--space-sm` gap). task-list, task-new and task-detail adopt it (task-list `.modal-backdrop` renamed `.modal-overlay`); no token value changed. |
