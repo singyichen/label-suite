@@ -722,19 +722,20 @@ For rows containing both caution and destructive actions, place destructive acti
 
 **Danger (solid) — destructive-modal confirm variant:**
 
-Solid destructive confirm button used only inside destructive-action modals (UXC-10 consumers in admin pages). Shipped CSS (from `role-settings.html`):
+Solid destructive confirm button used only inside destructive-action modals (UXC-10 consumers in admin and task pages). Single definition lives in `design/prototype/pages/shared/modal.css`; pages must link that stylesheet and must not redefine `.btn-danger`. Shipped CSS:
 
 ```css
 .btn-danger {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
-  border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms;
+  padding: 8px 20px; border-radius: var(--radius-md); border: none;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: var(--color-error); color: var(--color-on-cta); transition: opacity 150ms;
 }
-.btn-danger:hover { opacity: 0.9; }
+.btn-danger:hover { opacity: .9; }
 ```
 
 - Table-row destructive actions keep the outline Danger mapping above; the solid variant is reserved for the modal confirm position
-- Dark mode: `--color-error` flips to `#F87171` — verify 4.5:1 contrast against the text color per Implementation Rule 3
+- Dark mode: `--color-error` flips to `#F87171` and the text uses `--color-on-cta` (`#1E1B4B`). Verified contrast (WCAG): light `#FFFFFF` on `#B91C1C` = 6.47:1; dark `#1E1B4B` on `#F87171` = 5.78:1 (both pass AA 4.5:1)
 
 **Mini Buttons (dense row actions):**
 
@@ -3000,3 +3001,4 @@ Before delivering any UI code, verify:
 | v1.30 | 2026-10-13 | **Empty State convergence complete (issue #1189)** — §Empty State "Current prototype state" note updated: the last per-page families on task-detail (`ar-empty`, `ar-export-empty`, `member-detail-empty`, `member-search-empty`, `progress-empty`, `worklog-empty`) now use the shared `empty-state.css` vocabulary and `classScan.transitionalClasses` is empty; no component spec or token change |
 | v1.31 | 2026-10-14 | **Desktop Content Tabs narrow-viewport rule (issue #1393)** — added a "Narrow viewport" rule to §Desktop Content Tabs: at <=768px the tab container stays a single row (`flex-wrap: nowrap`) with `overflow-x: auto` and a hidden-but-scrollable scrollbar, tabs `flex: 0 0 auto` / `white-space: nowrap`. The `.admin-tabs` / `.admin-tab` CSS now lives only in `pages/shared/content-tabs.css` (task-detail and dataset-analysis-detail link it); desktop values unchanged. |
 | v1.32 | 2026-10-14 | **Shared modal skeleton (issue #1390)** — §Modals now points to `pages/shared/modal.css` as the single definition of the overlay / dialog / header / title / description / close / footer skeleton and adds the Footer rules list (right-aligned actions, secondary left of primary, solid Danger variant in the primary position for destructive confirmations, `--space-sm` gap). task-list, task-new and task-detail adopt it (task-list `.modal-backdrop` renamed `.modal-overlay`); no token value changed. |
+| v1.33 | 2026-10-14 | **Single solid Danger definition (issue #1435)** — §Buttons "Danger (solid)" now names `pages/shared/modal.css` as the single `.btn-danger` definition (pages must link it) and its shipped CSS example matches; the per-page copies in task-config, user-management and role-settings are removed. Text colour is `--color-on-cta` in both themes (light 6.47:1, dark 5.78:1 against `--color-error`), replacing the unresolved dark-mode "verify 4.5:1" note; no token value changed. |
