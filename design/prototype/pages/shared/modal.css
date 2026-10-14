@@ -24,7 +24,7 @@
   padding: var(--space-xl);
 }
 
-.modal h2,
+:where(.modal) h2,
 .modal-title {
   font-size: 20px;
   font-weight: 700;
@@ -34,7 +34,7 @@
 }
 .modal-title { font-family: var(--font-serif-display, inherit); }
 
-.modal p,
+:where(.modal) p,
 .modal-desc {
   font-size: 14px;
   color: var(--color-text-soft);
