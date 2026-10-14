@@ -68,19 +68,18 @@
         <div class="split-legend split-legend-dynamic" id="splitLegendDynamic"></div>
       </div>
 
-      <div class="exec-stop-row" id="execStopRow">
-        <div class="exec-stop-main">
-          <span class="status-hint" id="stopConditionTitle">達標條件</span>
-          <div class="exec-stop-pills" id="execStopPills">
-            <span class="stop-pill" id="stopAgreementPill">IAA ≥ 0.80</span>
-            <span class="stop-pill" id="stopStdPill">Std ≤ 0.10</span>
-            <span class="stop-pill" id="stopAnnotatorPill">至少 3 位標記者</span>
+      <section class="next-step-card" id="nextStepCard" data-testid="next-step-card" aria-labelledby="nextStepTitle">
+        <div class="next-step-head">
+          <div class="next-step-head-text">
+            <h3 class="next-step-title" id="nextStepTitle"></h3>
+            <p class="status-hint next-step-desc" id="nextStepDesc"></p>
+          </div>
+          <div class="next-step-actions">
+            <div class="action-row" id="publishActionRow" style="margin:0;"></div>
           </div>
         </div>
-        <div class="exec-stop-actions">
-          <div class="action-row" id="publishActionRow" style="margin:0;"></div>
-        </div>
-      </div>
+        <div class="next-step-conditions" id="nextStepConditions"></div>
+      </section>
 
       <div class="exec-control-row">
         <div class="exec-info">
