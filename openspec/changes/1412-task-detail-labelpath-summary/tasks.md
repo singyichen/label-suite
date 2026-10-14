@@ -20,10 +20,10 @@
 
 > **產品檔案（2）**：`task-detail.config.js`、`task-detail.html`
 
-- [ ] 1.1 （Red）新增 `design/prototype/tests/task-management/issue-1412-task-detail-labelpath-summary.spec.ts`，斷言 T003 摘要為縮排清單、每列帶完整路徑、扁平任務不變；先 commit 並執行，留下預期失敗證據。 [@senior-qa]
-- [ ] 1.2 （Red）修改 `design/prototype/tests/task-management/task-detail-task-profiles.spec.ts`，把 T003 的舊期望值更新為新行為；與 1.1 同批 commit。 [@senior-qa]
-- [ ] 1.3 （Green）修改 `design/prototype/pages/task-management/task-detail.config.js`：摘要函式依 registry 欄位型別 `taxonomy-tree` 分流，回傳節點清單。 [@senior-frontend]
-- [ ] 1.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：`renderSettingsSummaryRows` 渲染縮排清單，使 1.1、1.2 通過。 [@senior-frontend]
+- [x] 1.1 （Red）新增 `design/prototype/tests/task-management/issue-1412-task-detail-labelpath-summary.spec.ts`，斷言 T003 摘要為縮排清單、每列帶完整路徑、扁平任務不變；先 commit 並執行，留下預期失敗證據。 [@senior-qa]
+- [x] 1.2 （Red）修改 `design/prototype/tests/task-management/task-detail-task-profiles.spec.ts`，把 T003 的舊期望值更新為新行為；與 1.1 同批 commit。 [@senior-qa]
+- [x] 1.3 （Green）修改 `design/prototype/pages/task-management/task-detail.config.js`：摘要函式依 registry 欄位型別 `taxonomy-tree` 分流，回傳節點清單。 [@senior-frontend]
+- [x] 1.4 （Green）修改 `design/prototype/pages/task-management/task-detail.html`：`renderSettingsSummaryRows` 渲染縮排清單，使 1.1、1.2 通過。 [@senior-frontend]
 
 ## 2. archive 與正典回寫（最終群組）
 
