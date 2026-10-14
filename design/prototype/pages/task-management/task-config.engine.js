@@ -5610,15 +5610,18 @@ function listTitleCandidates() {
 }
 
 function listTitleText(rawRow, idx) {
-  var v = state.listTitleField ? rawRow[state.listTitleField]
-    : (state.fieldRoleMap.id === 'output' ? undefined : rawRow.id);
+  if (!state.listTitleField) {
+    var summary = window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
+      rawRow, state.fieldRoleMap, null, state.lang, state.dialogueFields);
+    return summary || String(idx + 1);
+  }
+  var v = rawRow[state.listTitleField];
   if (Array.isArray(v) && v.length > 0 && v[0] !== null && typeof v[0] === 'object') {
     var first = v[0];
     v = typeof first.text === 'string' ? first.text : Object.keys(first).map(function(k) { return first[k]; })
       .filter(function(x) { return typeof x === 'string'; })[0];
   }
   if (v === undefined || v === null || v === '') {
-    if (!state.listTitleField) return String(idx + 1);
     return state.lang === 'en' ? '(empty)' : '（空白）';
   }
   var str = String(v);
