@@ -25,8 +25,6 @@ const url = (task: string, role = 'project_leader', extra = '') => `${BASE}?task
 const CARD = '#nextStepCard';
 const ROW = `${CARD} #publishActionRow`;
 const CONDS = `${CARD} #nextStepConditions`;
-// #1403 PR-A: dry_run / official / completed still render main's reason blocks inside the card, so the T014 description,
-// reason-overlap and completed tests keep their main-branch form; stage B restores the card contract.
 const READONLY_TEXT = '僅 project leader 可操作';
 
 async function open(page: Page, target: string, width?: number) {
@@ -103,25 +101,25 @@ test.describe('Issue #1348 -- vertical execution action column', () => {
     });
   }
 
-  test('T014: dryRunNextRoundReason stays visible as the reasons-list heading, not duplicated (FR-013(1))', async ({ page }) => {
+  test('T014: dryRunNextRoundReason stays visible as the card description, not duplicated (FR-013(1), FR-013(8))', async ({ page }) => {
     await open(page, url('T014'));
     const reason = '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合';
-    expect(countOf(await page.locator('#publishActionRow').innerText(), reason)).toBe(1);
-    const title = page.locator(`#publishActionRow .exec-action-reasons .exec-action-reasons-title`);
-    await expect(title).toBeVisible();
-    await expect(title).toContainText(reason);
-    await expect(page.locator(`#publishActionRow .exec-action-buttons`)).not.toContainText(reason);
-    await expect(page.locator(`#publishActionRow .exec-action-reasons li`).first()).toBeVisible();
-    await expect(page.locator(`#publishActionRow .exec-action-reasons li`).filter({ hasText: reason })).toHaveCount(0);
+    expect(countOf(await page.locator(CARD).innerText(), reason)).toBe(1);
+    const desc = page.locator('#nextStepDesc');
+    await expect(desc).toBeVisible();
+    await expect(desc).toContainText(reason);
+    await expect(page.locator(ROW)).not.toContainText(reason);
+    await expect(page.locator(`${CONDS} li.next-step-cond`).first()).toBeVisible();
+    await expect(page.locator(`${CONDS} li.next-step-cond`).filter({ hasText: reason })).toHaveCount(0);
   });
 
   for (const task of ['T003', 'T014', 'T015', 'T016']) {
     test(`${task}: reason items do not overlap any button (problem 3)`, async ({ page }) => {
       await open(page, url(task));
-      const items = page.locator(`#publishActionRow .exec-action-reasons li`);
+      const items = page.locator(`${CONDS} li.next-step-cond`);
       const n = await items.count();
       expect(n).toBeGreaterThan(0);
-      const buttons = page.locator(`#publishActionRow button`);
+      const buttons = page.locator(`${ROW} button`);
       const boxes = [] as { x: number; y: number; width: number; height: number }[];
       for (let i = 0; i < (await buttons.count()); i++) {
         const b = await buttons.nth(i).boundingBox();
@@ -209,7 +207,7 @@ test.describe('Issue #1348 -- vertical execution action column', () => {
 
   test('completed: the same action column shows 任務已完成 (plan item 8)', async ({ page }) => {
     await open(page, url('T003', 'project_leader', '&status=completed'));
-    await expect(page.locator('#publishActionRow')).toContainText('任務已完成');
-    await expect(page.locator('#publishActionRow')).not.toContainText('此狀態不提供發布操作');
+    await expect(page.locator('#nextStepTitle')).toContainText('任務已完成');
+    await expect(page.locator(CARD)).not.toContainText('此狀態不提供發布操作');
   });
 });

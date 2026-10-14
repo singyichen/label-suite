@@ -154,7 +154,7 @@ export async function openWithState(page: Page, taskId: string, samples: number,
 }
 
 export async function reasonTexts(page: Page): Promise<string[]> {
-  return page.locator('#publishActionRow li').allInnerTexts();
+  return page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]').allInnerTexts();
 }
 
 export function digit(n: number) {
