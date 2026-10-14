@@ -2389,6 +2389,9 @@ function renderDialogueInput(textEl, turns, allowEntityEditing, refresh) {
     function choose() {
       state.dialogueShowEntities = b[2];
       refresh();
+      /* refresh() rebuilds the DOM, so hand focus back to the rebuilt toggle */
+      var again = document.querySelector('[data-testid="' + b[0] + '"]');
+      if (again) again.focus();
     }
     btn.addEventListener('click', choose);
     btn.addEventListener('keydown', function(ev) {
