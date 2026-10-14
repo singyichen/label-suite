@@ -1,7 +1,7 @@
 ---
 功能分支: feat/1141-quality-metrics-ready-signal
 建立日期: 2026-04-24
-版本: 3.2.0
+版本: 3.2.1
 狀態: Draft
 ---
 
@@ -101,7 +101,7 @@
 - `IAA_UNCALIBRATED_TYPES = sequence_tagging`（v3.0.0 新增，FR-043；主指標可計算、但平台尚未取得足以訂定門檻之實證資料的輸出類型集合。與 `IAA_GATE_EXCLUDED_TYPES` 在 `x/y` 分母上效果相同，但語意與文案 MUST NOT 共用——前者是「永久沒有自動指標，由審核員評估」，後者是「已算出數值、暫不判定」）
 - `QUALITY_METRICS_READY_RULE`（v3.1.0 新增，FR-044）：`quality_metrics_ready` 由最新一輪試標回合的 `iaa_computation_status` 推導——`done`（含「無法計算」）或缺資料為就緒，`pending`／`failed` 為未就緒；唯一消費者為 `task-management/014-task-detail` FR-008b 第 5 項
 - `IAA_COMPOSITE_BADGE_FORMAT = "{x}/{y} 達標 · {N} 型排除"`（`N = 0` 時省略「· {N} 型排除」後綴）
-- `IAA_COMPOSITE_GATE_RULE = pass ⟺ x == y AND y > 0`（全部達標，非多數決；`y = 1` 時仍以「1/1 達標」分數形式呈現，不分岔 UI）
+- `IAA_COMPOSITE_GATE_RULE = pass ⟺ x == y AND y > 0`（全部達標，非多數決；`y = 1` 時仍以「1/1 達標」分數形式呈現，不分岔 UI；v3.2.1 釐清計數：「無法計算」（`De = 0`，FR-039 第 4 點）因沒有數值而 MUST NOT 計入 `x`，但它不屬 `IAA_GATE_EXCLUDED_TYPES` 或 `IAA_UNCALIBRATED_TYPES`，故 MUST 仍計入 `y`，例如單型任務無法計算時徽章為「0/1 達標」；此徽章維持顧問性、不阻擋任何流程（FR-039 第 1 點），且卡片狀態與徽章 MUST 取自同一個計算結果）
 - `IAA_PENDING_BADGE_FORMAT = "—/{y} 待完成 Dry Run"`（`y` 可由 `outputs[]` 靜態算出；尚無 Dry Run 資料時不得顯示 `0/{y}`）
 - `IAA_SMALL_SAMPLE_THRESHOLD = 5`（完成標記員數 `n < 5` 時顯示「小樣本估計」中性警示徽章；不阻擋閘門，點估計照常顯示）
 
@@ -666,6 +666,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 3.2.1 | 2026-10-15 | **釐清 `IAA_COMPOSITE_GATE_RULE` 對「無法計算」的計數（issue #1451，Lightweight，PATCH）**：「無法計算」（`De = 0`）不計入 `x`、仍計入 `y`（單型任務為「0/1 達標」），徽章仍為顧問性、不阻擋；卡片狀態與徽章取自同一個計算結果。未新增或移除任何 FR／AC。 |
 | 3.2.0 | 2026-10-14 | **新增 `multi_label` 階層 `LabelPath` 的計數單位（issue #1412，OpenSpec change `1412-dataset-analysis-labelpath-unit`，MINOR）**：`task-management/013-task-new` v5.0.0 將 `multi_label.label_options` 重定義為遞迴 `LabelOptionNode[]`、提交值為完整 `LabelPath[]`（`annotation/015-annotation-workspace` FR-024E／FR-024E-1 已同步），但本規格的統計與 IAA 條文仍以扁平標籤為前提。維護者於 #1412 裁定計數單位為完整 `LabelPath`。**新增**：FR-045 與 SC-038——每條提交路徑算一個標籤、類別鍵為完整路徑、不隱含祖先計次；次數／比例長條圖、共現矩陣、逐標籤 Alpha 與 `IAA_LABEL_MIN_POSITIVE`（常數值不變）皆以完整路徑計；扁平 config 視為長度 1 的 `LabelPath`；依頂層彙總不在範圍。**就地補交叉引用**（不改既有措辭與數值）：FR-009G、FR-012G、`OUTPUT_TYPE_IAA_REGISTRY` 的 `multi_label` 列、`IAA_LABEL_MIN_POSITIVE`、`MultiLabelStats`、上游相依 `task-management-013` 列。**未改動**：所有既有 FR／AC／SC 的語意；原型為扁平固定標籤夾具，無程式行為變更。判定 MINOR：新增一條 FR，補明先前未規範的階層情境，不推翻任何既有條文。 |
 | 3.1.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 3.1.1 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-003 補述操作 → 權限鍵對應——統計總覽對應 `dataset.stats.view`、品質監控對應 `dataset.quality.view`、FR-041／FR-042 匯出檔下載對應 `dataset.export`，皆在既有 `TASK_ROLES_ALLOWED` 進入條件之上判定；`invited` 等非 active membership 依 ADR-037 視同不存在。V1 種子與 `TASK_ROLES_ALLOWED` 一致，只對應鍵，不改既有進入範圍。 |
