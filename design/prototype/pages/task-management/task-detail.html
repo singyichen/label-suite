@@ -7230,7 +7230,8 @@ function getTaskTypeLabel() {
     var summaryRows = (TASK_DATA.outputs || []).map(function(out) {
       return {
         label: getOutputTypeDisplayLabel(out.type),
-        value: summarizeOutputConfigForDisplay(out.type, out.config || {}) || '-',
+        value: summarizeOutputConfigForDisplay(out.type, out.config || {}),
+        labelNodes: summarizeOutputTaxonomyNodes(out.type, out.config || {}),
         required: true,
       };
     });
@@ -7262,7 +7263,23 @@ function getTaskTypeLabel() {
 
       var valueNode = document.createElement('span');
       valueNode.className = 'kv-dl-value';
-      valueNode.textContent = row.value;
+      var hasNodes = row.labelNodes && row.labelNodes.length;
+      valueNode.textContent = row.value || (hasNodes ? '' : '-');
+      if (hasNodes) {
+        var tree = document.createElement('ul');
+        tree.setAttribute('data-testid', 'settings-label-tree');
+        tree.style.cssText = 'list-style:none;margin:0;padding:0';
+        row.labelNodes.forEach(function(node) {
+          var li = document.createElement('li');
+          li.setAttribute('data-testid', 'settings-label-node');
+          li.setAttribute('data-depth', String(node.depth));
+          li.setAttribute('data-label-path', node.path.join(' › '));
+          li.style.paddingInlineStart = 'calc(' + (node.depth - 1) + ' * var(--space-md))';
+          li.textContent = node.name;
+          tree.appendChild(li);
+        });
+        valueNode.appendChild(tree);
+      }
       rowNode.appendChild(valueNode);
 
       container.appendChild(rowNode);

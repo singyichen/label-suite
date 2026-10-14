@@ -207,12 +207,18 @@ function getOutputTypeDisplayLabel(outKey) {
   return state.lang === 'en' ? found.en : found.zh;
 }
 
+/* Flat taxonomy-tree values (no node has children) keep the comma-joined text. */
+function isHierarchicalTaxonomyField(config, field) {
+  return field.type === 'taxonomy-tree' &&
+    collectTaxonomyEntries(getOutputConfigFieldValue(config, field)).some(function(entry) { return entry.depth > 1; });
+}
+
 function summarizeOutputConfigForDisplay(outKey, config) {
   var outReg = OUTPUT_TYPE_REGISTRY[outKey];
   if (!outReg || !Array.isArray(outReg.fields)) return '';
   var parts = [];
   outReg.fields.forEach(function(field) {
-    if (field.key === 'allow_bypass') return;
+    if (field.key === 'allow_bypass' || isHierarchicalTaxonomyField(config, field)) return;
     var value = getOutputConfigFieldValue(config, field);
     if (value === undefined || value === null || value === '') return;
     if (Array.isArray(value)) {
@@ -228,6 +234,21 @@ function summarizeOutputConfigForDisplay(outKey, config) {
     }
   });
   return parts.join(' · ');
+}
+
+/* Hierarchical (registry type 'taxonomy-tree') fields are shown as a read-only
+   node list instead of text (FR-014i-1): depth-first pre-order, every node. */
+function summarizeOutputTaxonomyNodes(outKey, config) {
+  var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+  if (!outReg || !Array.isArray(outReg.fields)) return [];
+  var nodes = [];
+  outReg.fields.forEach(function(field) {
+    if (!isHierarchicalTaxonomyField(config, field)) return;
+    collectTaxonomyEntries(getOutputConfigFieldValue(config, field)).forEach(function(entry) {
+      nodes.push({ name: entry.namePath[entry.namePath.length - 1], depth: entry.depth, path: entry.namePath });
+    });
+  });
+  return nodes;
 }
 
 /* ── Event bindings for the Step 1 / Step 2 parity surfaces ────
