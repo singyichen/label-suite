@@ -165,6 +165,11 @@ Artifacts run under a strict CSP that blocks **all** external requests — `@imp
 - **Dual theme is mandatory:** keep all four token blocks (`:root`, `@media (prefers-color-scheme: dark)`, `:root[data-theme="dark"]`, `:root[data-theme="light"]`) — the viewer's theme toggle stamps `data-theme` on the root and must beat the media query in both directions. Style components only through the tokens. Values mirror the canonical `design/prototype/assets/tokens.css` (light + dark per MASTER.md §Dark Mode Tokens); if they diverge, tokens.css wins.
 - **Fonts:** rely on the system-fallback chains already in `artifact-tokens.css`; never link a webfont.
 - **Icons:** paste the inline Lucide sprite from `artifact-icons.html` and reference with `<svg class="ic"><use href="#i-name"/></svg>`. Extend it only with path data copied from lucide.dev (ADR-030) — no emoji, no hand-drawn SVGs, no vendor logos (substitute semantic Lucide equivalents). Sole exception: the Google SSO mark — inline `design/prototype/assets/google-g.svg` when the artifact shows the login/SSO UI (the design system's single full-color vendor mark).
+- **Token discipline (hard rule):** every `var(--x)` in the artifact must be defined in `artifact-tokens.css`. Never invent token names (`--ink`, `--muted`, `--card`); the implementer maps artifact tokens to `tokens.css` by name, so an invented name forces a guess. Before publishing, run this and fix every name it prints (empty output means pass):
+  ```bash
+  # bash or zsh; run from this skill's directory; ARTIFACT = path to the HTML about to be published
+  comm -23 <(/usr/bin/grep -o 'var(--[A-Za-z0-9_-]*' "$ARTIFACT" | sed 's/var(//' | sort -u) <(/usr/bin/grep -oE '(^|;) *--[A-Za-z0-9_-]+:' artifact-tokens.css | tr -d ' :;' | sort -u)
+  ```
 - **Color discipline:** emerald (`--color-cta`) is reserved for outcomes and CTA accents; indigo carries structure and navigation.
 - **Disclosure footer:** end every data-bearing artifact with a source note — where the content came from (repo paths, spec versions) — and mark anything illustrative or unverified as such (Source-Verify gate).
 
