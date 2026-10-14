@@ -1807,7 +1807,7 @@ Overview「標記設定」摘要區塊必須依當前 outputs[] 動態顯示摘�
 
 ### Requirement: FR-014k-1 基本資料編輯模式的對話串確認區載入、儲存與取消還原
 
-- **FR-014k-1**（**v12.3.0 新增**，對應 AC-3.80～AC-3.83，issue #1386）：設定分頁「基本資料」編輯模式的對話串確認區 MUST 與 `013-task-new` task-management/013-task-new FR-002c-10 同構。(1) 進入編輯模式時，確認區 MUST 以任務已儲存的 `dialogue_fields` 初始化；`dialogue_fields` 為 `null` 或缺漏時，MUST 依 013 task-management/013-task-new FR-002c-10 的偵測與預填規則決定是否提議，非對話任務 MUST NOT 顯示確認區且行為不變。(2) 儲存基本資料時，系統 MUST 將當下確認結果寫回任務設定鍵 `dialogue_fields`；使用者已取消提議或資料不是對話串時 MUST 寫入 `null`。(3) 取消編輯（含有未儲存變更時於頁內確認對話框選擇放棄）MUST 還原已儲存的 `dialogue_fields`，包含對話串開關與自動清單標題；重新進入編輯模式時 MUST 顯示已儲存狀態，不得沿用取消前的編輯或取消提議旗標。(4) 「自動」清單標題預覽 MUST 與 `annotation/015-annotation-workspace` FR-106 的 `getRecordSummaryText` 使用同一組對話串欄位得到相同摘要。確認區的文字來源 MUST 限於 Input 角色欄位（Data Fairness），且 MUST NOT 依欄位名稱硬編任務邏輯（Generalization-First）。
+- **FR-014k-1**（**v12.3.0 新增**，對應 AC-3.80～AC-3.83，issue #1386）：設定分頁「基本資料」編輯模式的對話串確認區 MUST 與 `013-task-new` FR-002c-10 同構。(1) 進入編輯模式時，確認區 MUST 以任務已儲存的 `dialogue_fields` 初始化；`dialogue_fields` 為 `null` 或缺漏時，MUST 依 013 FR-002c-10 的偵測與預填規則決定是否提議，非對話任務 MUST NOT 顯示確認區且行為不變。(2) 儲存基本資料時，系統 MUST 將當下確認結果寫回任務設定鍵 `dialogue_fields`；使用者已取消提議或資料不是對話串時 MUST 寫入 `null`。(3) 取消編輯（含有未儲存變更時於頁內確認對話框選擇放棄）MUST 還原已儲存的 `dialogue_fields`，包含對話串開關與自動清單標題；重新進入編輯模式時 MUST 顯示已儲存狀態，不得沿用取消前的編輯或取消提議旗標。(4) 「自動」清單標題預覽 MUST 與 `annotation/015-annotation-workspace` FR-106 的 `getRecordSummaryText` 使用同一組對話串欄位得到相同摘要。確認區的文字來源 MUST 限於 Input 角色欄位（Data Fairness），且 MUST NOT 依欄位名稱硬編任務邏輯（Generalization-First）。
 
 #### Scenario: AC-3.80 編輯模式的對話串確認區以已儲存值初始化
 
