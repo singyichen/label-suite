@@ -1552,11 +1552,34 @@ function dialogueUttIdOf(turn, i, cfg) {
     ? turn[cfg.utt_id] : i + 1;
 }
 
+/* Valid reply target of turn i, or null (#1378 D1): cfg.reply_to must name a sub-field whose
+   value (non-empty string or number) equals, as a string, the id of ANOTHER turn. */
+function dialogueReplyTarget(turns, i, cfg) {
+  if (!cfg.reply_to) return null;
+  var turn = turns[i];
+  var v = turn ? turn[cfg.reply_to] : null;
+  if (!((typeof v === 'string' && v !== '') || typeof v === 'number')) return null;
+  for (var j = 0; j < turns.length; j++) {
+    if (j === i) continue;
+    var id = dialogueUttIdOf(turns[j], j, cfg);
+    if (String(id) === String(v)) return id;
+  }
+  return null;
+}
+
+/* Stable hue (0-359) from the speaker string, so one speaker always gets one color (#1378 D4) */
+function dialogueAvatarHue(speaker) {
+  var h = 0;
+  for (var k = 0; k < speaker.length; k++) h = (h * 31 + speaker.charCodeAt(k)) % 360;
+  return h;
+}
+
 /* Reusable dialogue thread renderer (task-new preview and the annotation workspace):
    one row per turn. cfg = { text, speaker, utt_id }.
    Default: first 20 turns then a "more" hint. opts (all optional, #1341):
    noLimit (every turn), idPrefix (text before the turn id), fillText(txEl, text, uttId, i)
-   (replaces the plain text content, e.g. to draw highlights) */
+   (replaces the plain text content, e.g. to draw highlights), rich (avatar + header + reply
+   marking, workspace only, #1378) */
 function renderDialogueThread(container, turns, cfg, opts) {
   var MAX_TURNS = 20;
   opts = opts || {};
@@ -1570,13 +1593,14 @@ function renderDialogueThread(container, turns, cfg, opts) {
     idEl.setAttribute('data-testid', 'dialogue-utt-id');
     idEl.className = 'dialogue-utt-id';
     idEl.textContent = (opts.idPrefix || '') + String(uttId);
-    row.appendChild(idEl);
+    var spEl = null;
+    var speakerStr = '';
     if (cfg.speaker) {
-      var spEl = document.createElement('span');
+      spEl = document.createElement('span');
       spEl.setAttribute('data-testid', 'dialogue-speaker');
       spEl.className = 'dialogue-speaker';
-      spEl.textContent = turn && turn[cfg.speaker] !== undefined && turn[cfg.speaker] !== null ? String(turn[cfg.speaker]) : '';
-      row.appendChild(spEl);
+      speakerStr = turn && turn[cfg.speaker] !== undefined && turn[cfg.speaker] !== null ? String(turn[cfg.speaker]) : '';
+      spEl.textContent = speakerStr;
     }
     var txEl = document.createElement('span');
     txEl.setAttribute('data-testid', 'dialogue-text');
@@ -1584,7 +1608,39 @@ function renderDialogueThread(container, turns, cfg, opts) {
     var turnText = turn && typeof turn[cfg.text] === 'string' ? turn[cfg.text] : '';
     if (opts.fillText) opts.fillText(txEl, turnText, uttId, i);
     else txEl.textContent = turnText;
-    row.appendChild(txEl);
+    if (!opts.rich) {
+      row.appendChild(idEl);
+      if (spEl) row.appendChild(spEl);
+      row.appendChild(txEl);
+    } else {
+      if (speakerStr) {
+        var avatar = document.createElement('span');
+        avatar.setAttribute('data-testid', 'dialogue-avatar');
+        avatar.className = 'dialogue-avatar';
+        avatar.style.setProperty('--avatar-hue', String(dialogueAvatarHue(speakerStr)));
+        avatar.textContent = Array.from(speakerStr)[0];
+        row.appendChild(avatar);
+      }
+      var body = document.createElement('div');
+      body.className = 'dialogue-body';
+      var head = document.createElement('div');
+      head.className = 'dialogue-head';
+      if (spEl) head.appendChild(spEl);
+      head.appendChild(idEl);
+      var replyId = dialogueReplyTarget(turns, i, cfg);
+      if (replyId !== null) {
+        row.setAttribute('data-reply-to', String(replyId));
+        row.classList.add('dialogue-thread-row-reply');
+        var tag = document.createElement('span');
+        tag.setAttribute('data-testid', 'dialogue-reply-tag');
+        tag.className = 'dialogue-reply-tag';
+        tag.textContent = t('dialogueReplyTag').replace('{n}', String(replyId));
+        head.appendChild(tag);
+      }
+      body.appendChild(head);
+      body.appendChild(txEl);
+      row.appendChild(body);
+    }
     container.appendChild(row);
   });
   if (!opts.noLimit && turns.length > MAX_TURNS) {
@@ -2318,13 +2374,41 @@ function renderDialogueInput(textEl, turns, allowEntityEditing, refresh) {
     textEl.appendChild(det);
     return;
   }
+  var viewBar = document.createElement('div');
+  viewBar.className = 'dialogue-view-toggle';
+  [['dialogue-view-entities', 'dialogueShowEntities', true], ['dialogue-view-plain', 'dialoguePlainText', false]].forEach(function(b) {
+    /* role=button on a span, not <button>: the workspace wrapper (annotation-workspace.config.js)
+       relabels every <button> in this region as an entity-list delete button */
+    var btn = document.createElement('span');
+    btn.setAttribute('role', 'button');
+    btn.tabIndex = 0;
+    btn.className = 'dialogue-view-btn';
+    btn.setAttribute('data-testid', b[0]);
+    btn.setAttribute('aria-pressed', String((state.dialogueShowEntities !== false) === b[2]));
+    btn.textContent = t(b[1]);
+    function choose() {
+      state.dialogueShowEntities = b[2];
+      refresh();
+      /* refresh() rebuilds the DOM, so hand focus back to the rebuilt toggle */
+      var again = document.querySelector('[data-testid="' + b[0] + '"]');
+      if (again) again.focus();
+    }
+    btn.addEventListener('click', choose);
+    btn.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); choose(); }
+    });
+    viewBar.appendChild(btn);
+  });
+  textEl.appendChild(viewBar);
   renderDialogueThread(textEl, turns, cfg, {
     noLimit: true,
     idPrefix: '#',
+    rich: true,
     fillText: function(txEl, text, uttId, i) {
       txEl.setAttribute('data-turn-index', String(i));
       txEl.classList.add('dialogue-text-prewrap');
-      fillDialogueUtterance(txEl, text, uttId);
+      if (state.dialogueShowEntities === false) txEl.textContent = text;
+      else fillDialogueUtterance(txEl, text, uttId);
     }
   });
   textEl.addEventListener('mouseup', function() {

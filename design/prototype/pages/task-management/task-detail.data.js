@@ -968,17 +968,17 @@
         gold_triplets: 'output',
         incomplete_annotations: 'output'
       },
-      dialogue_fields: { text: 'text', speaker: 'speaker', utt_id: 'utt_id' },
+      dialogue_fields: { text: 'text', speaker: 'speaker', utt_id: 'utt_id', reply_to: 'reply_to' },
       datasetFileName: 'absa-va.json',
       datasetRecords: [
         {
           id: 'absa-001',
           utterances: [
-            { utt_id: 0, speaker: 'rottenrockteahouse', text: '我入手Note 10 plus第三天就退廠保修\n過熱問題嚴重！差評' },
-            { utt_id: 1, speaker: '張峯獎-f6w', text: '我已經拿了九天了就沒有這個問題你在唬爛' },
-            { utt_id: 2, speaker: 'isbonny', text: '唉！在哪裡購買的呢？這款手機才上市兩天啊～' },
-            { utt_id: 3, speaker: 'rottenrockteahouse', text: '@isbonny 澳門的代理商' },
-            { utt_id: 4, speaker: 'rottenrockteahouse', text: '我在首發當天買' }
+            { utt_id: 0, speaker: 'rottenrockteahouse', reply_to: null, text: '我入手Note 10 plus第三天就退廠保修\n過熱問題嚴重！差評' },
+            { utt_id: 1, speaker: '張峯獎-f6w', reply_to: 0, text: '我已經拿了九天了就沒有這個問題你在唬爛' },
+            { utt_id: 2, speaker: 'isbonny', reply_to: 1, text: '唉！在哪裡購買的呢？這款手機才上市兩天啊～' },
+            { utt_id: 3, speaker: 'rottenrockteahouse', reply_to: 2, text: '@isbonny 澳門的代理商' },
+            { utt_id: 4, speaker: 'rottenrockteahouse', reply_to: 0, text: '我在首發當天買' }
           ],
           text: '@rottenrockteahouse: 我入手Note 10 plus第三天就退廠保修 過熱問題嚴重！差評\n@張峯獎-f6w: 我已經拿了九天了就沒有這個問題你在唬爛\n@isbonny: 唉！在哪裡購買的呢？這款手機才上市兩天啊～\n@rottenrockteahouse: @isbonny 澳門的代理商\n@rottenrockteahouse: 我在首發當天買',
           gold_triplets: [

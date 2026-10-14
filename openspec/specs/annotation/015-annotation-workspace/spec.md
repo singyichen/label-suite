@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v12.8.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）；以及 change `exception-pool-select-then-confirm`（issue #920，**MAJOR**）之 FR-095（修訂，新增「先選取、後確認的處置互動模型」段落，廢止 AC-4.56、AC-4.57，新增 AC-4.72 ~ AC-4.75）；以及 change `filter-review-workspace-units`（issue #956）之 FR-093（修訂，新增工作區左欄依審核指派過濾與仲裁可見性段落，對應新增 AC-4.76 ~ AC-4.79）；以及 change `fix-992-decision-summary-readable`（issue #992）之 FR-016B（修訂，新增審核決策摘要顯示層中文化段落）與新增 AC-2.28；以及 change `annotation-list-summary-shared`（issue #1339）之 FR-106（新增標記清單樣本摘要，對應新增 AC-1.35 ~ AC-1.38、SC-028）；以及 change `annotation-dialogue-thread-preview`（issue #1341）之 FR-107（新增整合預覽對話串與發言內座標，對應新增 AC-2.31 ~ AC-2.35、SC-029）；以及 change `annotation-dialogue-followups`（issue #1358）之 FR-106（修訂第 3 點，依 `dialogue_fields.text` 取文字）與 FR-107（修訂，新增第 8 ~ 10 點，對應新增 AC-2.36 ~ AC-2.38）。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v12.9.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）；以及 change `exception-pool-select-then-confirm`（issue #920，**MAJOR**）之 FR-095（修訂，新增「先選取、後確認的處置互動模型」段落，廢止 AC-4.56、AC-4.57，新增 AC-4.72 ~ AC-4.75）；以及 change `filter-review-workspace-units`（issue #956）之 FR-093（修訂，新增工作區左欄依審核指派過濾與仲裁可見性段落，對應新增 AC-4.76 ~ AC-4.79）；以及 change `fix-992-decision-summary-readable`（issue #992）之 FR-016B（修訂，新增審核決策摘要顯示層中文化段落）與新增 AC-2.28；以及 change `annotation-list-summary-shared`（issue #1339）之 FR-106（新增標記清單樣本摘要，對應新增 AC-1.35 ~ AC-1.38、SC-028）；以及 change `annotation-dialogue-thread-preview`（issue #1341）之 FR-107（新增整合預覽對話串與發言內座標，對應新增 AC-2.31 ~ AC-2.35、SC-029）；以及 change `annotation-dialogue-followups`（issue #1358）之 FR-106（修訂第 3 點，依 `dialogue_fields.text` 取文字）與 FR-107（修訂，新增第 8 ~ 10 點，對應新增 AC-2.36 ~ AC-2.38）。
 
 ## Requirements
 
@@ -1678,16 +1678,19 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 
 工作區中央「整合預覽」（FR-013E、FR-024I）對 Input 欄位為物件陣列的樣本，MUST 依下列規則呈現與記錄，且 MUST NOT 依任務編號或欄位名稱硬編：
 
-1. **對話串（2-A）**：任務設定 `dialogue_fields`（`{text, speaker, utt_id}`，specs/task-management/013-task-new/spec.md FR-002c-10）非 `null` 時，整合預覽每則發言一列，顯示發言者、`#` 加發言編號與發言文字；所有發言皆可標記，不得截斷。發言編號取 `dialogue_fields.utt_id` 指向的子欄位值，未設定時為該則的位置編號（自 1 起）。
+1. **對話串（2-A）**：任務設定 `dialogue_fields`（`{text, speaker, utt_id, reply_to}`，specs/task-management/013-task-new/spec.md FR-002c-10）非 `null` 時，整合預覽每則發言一列，顯示發言者、`#` 加發言編號與發言文字；所有發言皆可標記，不得截斷。發言編號取 `dialogue_fields.utt_id` 指向的子欄位值，未設定時為該則的位置編號（自 1 起）。
 2. **座標資料契約**：在對話串內標記的實體 MUST 記為 `{text, type, utt_id, start, end}`，`start`／`end` 為**該則發言文字內**的半開區間 `[start, end)`（`end = start + text.length`），與 FR-098、FR-024A-3 同一座標語意。關係識別的三元組 MUST 於 `subjStart`／`subjEnd`／`objStart`／`objEnd` 之外攜帶 `subjUttId`、`objUttId`。
 3. **跨發言**：反白起訖落在不同則發言 MUST 被拒絕，顯示提示且不新增實體或關係選取；跨發言的關聯 MUST 以關係識別表達。
 4. **原始 JSON 後備（2-C）**：Input 為物件陣列但 `dialogue_fields` 為 `null` 時，整合預覽 MUST 以可摺疊、等寬字的原始 JSON 呈現該 Input 欄位，不得出現 `[object Object]`。
 5. **Data Fairness**：對話串與原始 JSON MUST 只渲染角色為 Input 的欄位；Output（如 `gold_triplets`）與 Evidence 不得因此路徑外露（FR-023、FR-024M-1）。
-6. **不含端點範圍**：既有非對話路徑的 offset 寫法不在本條範圍；本條新增的 `utt_id` 座標一律半開區間。
+6. **不含端點範圍**：既有非對話路徑的 offset 寫法不在本條範圍（#1341）；本條新增的 `utt_id` 座標一律半開區間。
 7. **種子合規**：任務 T013 的 `text` 欄位角色 MUST 為「不使用」、`utterances` 為唯一 Input，並設定 `dialogue_fields`（specs/task-management/013-task-new/spec.md FR-002c-2）。
 8. **不從 Output 預填**：Input 為物件陣列時，整合預覽 MUST NOT 以 Output 欄位內容（含 `entity1` 形狀與 `subj`／`rel`／`obj` 形狀的三元組）預填關係三元組；與 ABSA 三元組同一處理（AC-2.35、Data Fairness）。
 9. **定位規則**：實體已帶 `utt_id`、`start`、`end` 時 MUST 照座標定位；未帶座標時，其文字在整份對話的發言中恰出現一次才定位到該位置；出現多次或找不到時 MUST NOT 猜測（不得取第一次出現的位置），該實體不標示，並顯示「無法定位」提示與數量。
 10. **重疊實體**：同一則發言內區間重疊的實體，後者 MUST NOT 默默略過；儲存格式不變，畫面 MUST 顯示因重疊而未標示的實體數。
+11. **發言版面（草圖 2-A）**：對話串每則發言 MUST 顯示頭像、標頭行與發言文字三部分：頭像為圓形、取發言者文字的第一個字元（`dialogue_fields.speaker` 為 `null` 或該則發言者為空時不顯示頭像）；標頭行依序顯示發言者與 `#` 加發言編號；發言文字 MUST 另起一行並保留換行。頭像底色由發言者文字決定（同一發言者同一顏色），不得依發言者名稱硬編顏色。
+12. **回覆縮排與回應標記**：`dialogue_fields.reply_to` 非 `null`，且該則發言的 `reply_to` 子欄位值等於**同一樣本內另一則**發言的發言編號時，該則發言 MUST 縮排並顯示「跨發言 · 回應 #n」標記（`n` 為被回覆發言的發言編號，英文介面為 `Cross-turn · replies to #n`）。`reply_to` 為 `null`、該則的值缺漏或為空、值找不到對應發言、或值等於該則自己的發言編號時，MUST NOT 縮排也 MUST NOT 顯示標記。MUST NOT 由實體、關係或 `@名字` 文字推測回覆關係；`dialogue_fields` 缺少 `reply_to` 鍵時視同 `null`。
+13. **顯示切換**：對話串上方 MUST 提供「顯示已標實體」與「純文字」兩個按鈕（以 `aria-pressed` 表示目前模式），預設為「顯示已標實體」。「純文字」模式下發言文字不繪製實體標示與關係選取標示，已記錄的實體資料不變，反白標記仍可進行。
 
 #### Scenario: AC-2.31 對話串一則一列
 
@@ -1751,3 +1754,38 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 - **WHEN** 讀取其 `utt_id`、`start`、`end`
 - **THEN** 發言文字 `slice(start, end)` 等於該實體 `text`
 - **AND** `start`、`end` 皆不超出該則發言文字長度
+
+#### Scenario: AC-2.39 發言版面為頭像、標頭行與另起一行的文字
+
+- **GIVEN** 任務 T013，`dialogue_fields` 含 `speaker` 與 `utt_id`
+- **WHEN** 開啟 `annotation-workspace` 的整合預覽
+- **THEN** 每則發言顯示頭像（內容為發言者文字的第一個字元）、含發言者與 `#` 加發言編號的標頭行，以及另起一行的發言文字
+- **AND** 同一發言者的頭像顏色相同，`speaker` 為 `null` 的對話串不顯示頭像
+
+#### Scenario: AC-2.40 有效 reply_to 的發言縮排並顯示回應標記
+
+- **GIVEN** `dialogue_fields.reply_to` 非 `null`，某則發言的 `reply_to` 值等於同一樣本另一則的發言編號
+- **WHEN** 開啟整合預覽
+- **THEN** 該則發言縮排，並顯示「跨發言 · 回應 #n」，`n` 為被回覆發言的發言編號
+- **AND** 沒有 `reply_to` 值的發言不縮排、不顯示標記
+
+#### Scenario: AC-2.41 無效的 reply_to 不縮排也不標記
+
+- **GIVEN** 某則發言的 `reply_to` 值屬下列之一：缺漏或空值、找不到對應發言、等於該則自己的發言編號；或 `dialogue_fields` 缺少 `reply_to` 鍵
+- **WHEN** 開啟整合預覽
+- **THEN** 該則發言不縮排，也不顯示回應標記
+- **AND** 回覆關係不由實體、關係或 `@名字` 文字推測
+
+#### Scenario: AC-2.42 顯示已標實體與純文字切換
+
+- **GIVEN** 該樣本已有實體標示，兩個切換按鈕預設「顯示已標實體」為 `aria-pressed="true"`
+- **WHEN** 按下「純文字」
+- **THEN** 發言文字不再繪製實體標示，「純文字」為 `aria-pressed="true"`，且已記錄的實體資料不變
+- **AND** 再按「顯示已標實體」後標示恢復
+
+#### Scenario: AC-2.43 T013 種子宣告 reply_to 並有回覆前一則的發言
+
+- **GIVEN** 任務 T013 種子
+- **WHEN** 檢視其 `dialogue_fields` 與 `utterances`
+- **THEN** `dialogue_fields.reply_to` 非 `null`，且至少一則發言的 `reply_to` 等於前一則的發言編號
+- **AND** 所有 `reply_to` 值皆不等於該則自己的發言編號

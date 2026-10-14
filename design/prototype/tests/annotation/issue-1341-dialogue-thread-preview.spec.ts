@@ -34,7 +34,7 @@ import {
  * tasks.md: 1.1, 2.1, 3.1, 4.1. */
 
 const T013_URL = buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001' });
-const DIALOGUE_FIELDS = { text: 'text', speaker: 'speaker', utt_id: 'utt_id' };
+const DIALOGUE_FIELDS = { text: 'text', speaker: 'speaker', utt_id: 'utt_id', reply_to: 'reply_to' };
 const SPEAKERS = ['rottenrockteahouse', '張峯獎-f6w', 'isbonny', 'rottenrockteahouse', 'rottenrockteahouse'];
 
 /* Unique sentinels that appear nowhere in the Input fields, so a leak of any
