@@ -25,10 +25,10 @@ import type { Page } from '@playwright/test';
  *   - IAA met: no seeded task reaches alpha >= target, so the shared
  *     computeIaaAlpha() data function is wrapped at the data boundary
  *     (init script) to lift T014's computable alpha to 0.91.
- *   - Annotator unmet: T014 default (currentAnnotators is null until a
- *     trial round is published).
- *   - Annotator met: T001 &status=draft, then click #publishDryRunBtn, which
- *     sets currentAnnotators = minAnnotators (3).
+ *   - Annotator met: T014 / T001 seeds (issue #1402: the pill derives from
+ *     the active annotator member count, 3 vs min 3, not currentAnnotators).
+ *   - Annotator unmet: T001 with one active annotator (Alex Wang) disabled
+ *     through member management, so active (2) < min (3).
  */
 
 const URL_BASE = '/pages/task-management/task-detail.html?task_role=project_leader';
@@ -103,6 +103,20 @@ async function liftIaaAlpha(page: Page) {
   });
 }
 
+/* Drops active annotators below min (3 -> 2) via the real member-management
+   disable action, then re-renders the overview (applyLang re-runs it). */
+async function makeAnnotatorsShort(page: Page) {
+  await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+  await page.locator('#tabMemberManagement').click();
+  const row = page.locator('#memberTableBody tr').filter({ hasText: 'Alex Wang' });
+  await row.locator('button:has-text("停用")').click();
+  await page.locator('#memberActionConfirmBtn').click();
+  await expect(row).toContainText('停用');
+  await page.locator('#tabOverview').click();
+  await page.evaluate(() => (window as any).applyLang('en'));
+  await page.evaluate(() => (window as any).applyLang('zh'));
+}
+
 async function useEnglish(page: Page) {
   await page.addInitScript(() => window.localStorage.setItem('labelsuite.lang', 'en'));
 }
@@ -131,17 +145,15 @@ test.describe('stop pills carry a non-colour cue (issue #1127)', () => {
     await expectPill(page, 'stopAgreementPill', 'met', 'zh', /IAA ≥ 0\.80/);
   });
 
-  test('annotator pill unmet (T014, currentAnnotators not yet set)', async ({ page }) => {
+  test('annotator pill met (T014, 3 active annotators vs min 3)', async ({ page }) => {
     await page.goto(`${URL_BASE}&task_id=T014`);
-    await expectPill(page, 'stopAnnotatorPill', 'unmet', 'zh', /標記者 ≥ 3/);
+    await expectPill(page, 'stopAnnotatorPill', 'met', 'zh', /標記者 ≥ 3/);
   });
 
-  test('annotator pill met after publishing a trial round (T001 draft)', async ({ page }) => {
-    await page.goto(`${URL_BASE}&task_id=T001&status=draft`);
+  test('annotator pill unmet when an active annotator is disabled (T001, active 2 < min 3)', async ({ page }) => {
+    await page.goto(`${URL_BASE}&task_id=T001`);
+    await makeAnnotatorsShort(page);
     await expectPill(page, 'stopAnnotatorPill', 'unmet', 'zh', /標記者 ≥ 3/);
-    await page.locator('#publishDryRunBtn').click();
-    await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
-    await expectPill(page, 'stopAnnotatorPill', 'met', 'zh', /標記者 ≥ 3/);
   });
 
   test('IAA pill states are distinguishable without colour (data-state, word, full text)', async ({ page }) => {
@@ -168,12 +180,10 @@ test.describe('stop pills carry a non-colour cue (issue #1127)', () => {
   });
 
   test('annotator pill met and unmet differ without colour', async ({ page }) => {
-    await page.goto(`${URL_BASE}&task_id=T014`);
-    const unmet = await snapshot(page, 'stopAnnotatorPill');
-    await page.goto(`${URL_BASE}&task_id=T001&status=draft`);
-    await page.locator('#publishDryRunBtn').click();
-    await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
+    await page.goto(`${URL_BASE}&task_id=T001`);
     const met = await snapshot(page, 'stopAnnotatorPill');
+    await makeAnnotatorsShort(page);
+    const unmet = await snapshot(page, 'stopAnnotatorPill');
 
     expect(unmet.cueState).toBe('unmet');
     expect(met.cueState).toBe('met');
@@ -200,14 +210,14 @@ test.describe('stop pills carry a non-colour cue (issue #1127)', () => {
     await expectPill(page, 'stopAgreementPill', 'met', 'en', /IAA ≥ 0\.80/);
   });
 
-  test('en: annotator pill shows Not met, then Met after publishing a trial round', async ({ page }) => {
-    await useEnglish(page);
-    await page.goto(`${URL_BASE}&task_id=T001&status=draft`);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expectPill(page, 'stopAnnotatorPill', 'unmet', 'en', /annotators ≥ 3/);
-    await page.locator('#publishDryRunBtn').click();
-    await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
+  test('en: annotator pill shows Met, then Not met after disabling an active annotator', async ({ page }) => {
+    await page.goto(`${URL_BASE}&task_id=T001`);
+    await page.evaluate(() => (window as any).applyLang('en'));
     await expectPill(page, 'stopAnnotatorPill', 'met', 'en', /annotators ≥ 3/);
+    await page.evaluate(() => (window as any).applyLang('zh'));
+    await makeAnnotatorsShort(page);
+    await page.evaluate(() => (window as any).applyLang('en'));
+    await expectPill(page, 'stopAnnotatorPill', 'unmet', 'en', /annotators ≥ 3/);
   });
 
   test('switching language re-renders the state word on the same page', async ({ page }) => {
