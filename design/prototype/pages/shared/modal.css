@@ -89,3 +89,22 @@
   transition: all 150ms;
 }
 .modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }
+
+/* Solid destructive confirm (data deletion / discard), MASTER §Buttons "Danger (solid)".
+   Single definition for all pages. Text uses --color-on-cta: light #FFFFFF on #B91C1C = 6.47:1,
+   dark #1E1B4B on #F87171 = 5.78:1 (both pass AA 4.5:1). */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--color-error);
+  color: var(--color-on-cta);
+  transition: opacity 150ms;
+}
+.btn-danger:hover { opacity: .9; }

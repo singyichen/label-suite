@@ -232,10 +232,6 @@
     .taxonomy-preview-option[aria-checked="true"] .taxonomy-option-checkbox { border-color: var(--color-primary); background: var(--color-primary); color: white; }
     .taxonomy-preview-option[aria-disabled="true"] { opacity: .48; cursor: not-allowed; }
 
-    /* ── Danger button (destructive-modal confirm, per MASTER.md §Buttons) ── */
-    .btn-danger { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms; }
-    .btn-danger:hover { opacity: 0.9; }
-
     /* ── Toggle switch ── */
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
     /* Borderless variant for rows nested in an already-framed container (#1392) */

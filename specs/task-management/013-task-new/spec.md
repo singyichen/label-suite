@@ -1,7 +1,7 @@
 ---
 功能分支: feat/1378-dialogue-reply-to-config
 建立日期: 2026-04-20
-版本: 8.6.1
+版本: 8.6.2
 狀態: Draft
 ---
 
@@ -30,7 +30,7 @@
 - **v4.7.0 回歸設定卡統一**：`single_dim` 與 `multi_dim` 的維度設定使用相同卡片、欄位標籤及 min/max/step 三欄排列；單維度固定顯示一張不可新增／刪除的卡片，多維度顯示一張以上並保留新增／刪除功能。多維度不再顯示重複的外層「維度設定 *」標題。
 - **v4.8.0 實體辨識雙向選取與設定間距**：單一及混合輸出中的 `entity_recognition` 均支援「先選實體類型再圈選文字」與「先圈選文字再選實體類型」；未指定類型的圈選範圍持續反白但不顯示提示，點擊類型後完成新增並保留該類型為作用中狀態。混合式任務由多個單一輸出類型組成，每個輸出類型保留自身互動契約；`entity-list` 後方的 boolean 設定與前一欄保留 12px 群組間距。
 - **v4.9.0 關係語意類型改為選填**：`relation_identification.relation_types` 預設為空陣列且不再阻擋 Step 2；純關係與所有包含關係識別的複合任務只在欄位存在至少一個語意類型標籤時顯示三元組列的「類型」選單，空陣列時不顯示類型徽章或選單。純關係預覽移除重複的「關係識別預覽」內層標題，保留輸出類型區塊標題「關係識別」。
-- **v5.0.0 階層式多標籤 taxonomy**：`multi_label.label_options` 由扁平 `{name,color}[]` 重定義為遞迴 `LabelOptionNode[]`；Step 2 使用樹狀編輯器與可搜尋的階層選擇器，每一層節點皆可獨立勾選，branch checkbox 與展開／收合控制分離，parent selection 不連動 children。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 僅作選項身分與資料儲存。既有 flat config／資料只在匯入時正規化相容；015 Annotation Workspace 已於 FR-024E／FR-024E-1 同步階層選擇器與 `LabelPath[]` 提交 payload；014 Task Detail 設定檢視與 017 Dataset Analysis Detail 的階層統計與 IAA 契約尚未同步，延後至 #1412。
+- **v5.0.0 階層式多標籤 taxonomy**：`multi_label.label_options` 由扁平 `{name,color}[]` 重定義為遞迴 `LabelOptionNode[]`；Step 2 使用樹狀編輯器與可搜尋的階層選擇器，每一層節點皆可獨立勾選，branch checkbox 與展開／收合控制分離，parent selection 不連動 children。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 僅作選項身分與資料儲存。既有 flat config／資料只在匯入時正規化相容；015 Annotation Workspace 已於 FR-024E／FR-024E-1 同步階層選擇器與 `LabelPath[]` 提交 payload；下游同步已於 #1412 完成：014 Task Detail 設定檢視以縮排清單逐節點列出階層 `label_options`（014 FR-014i-1，v13.1.0），017 Dataset Analysis Detail 的階層統計與 IAA 以完整 `LabelPath` 為計數單位（017 FR-045）。
 - **v5.1.0 階層選擇器攤平與保持開啟**：`multi_label` 預覽選擇器清單攤平顯示全部層級（移除 branch 展開／收合控制），階層改由縮排與可存取名稱的完整路徑表達；選項不再顯示完整路徑文字；選取節點後選擇器保持開啟，直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉，期間搜尋字串、捲動位置與焦點須跨選取保留。搜尋比對節點名稱與祖先鏈；搜尋列與標題固定於選擇器頂端。
 - **v5.2.0 taxonomy 分支刪除確認 modal**：`taxonomy-tree` 刪除含子節點的 branch 改用頁內確認 modal（遵循 UXC-10），取代瀏覽器原生 `confirm`；內文載明將一併刪除的子節點數量與不可復原後果，Escape／背景點擊取消，開啟時焦點置於危險紅「刪除」鈕使 Enter 確認。無子節點的 leaf 刪除維持不需確認。
 - **v6.0.0 自由文字 Evidence 與預標記契約**：`free_text` 移除 `show_reference`、舊名 `show_reference_to_annotator` 與「顯示參考答案給標記者」設定；Step 1 指定 Evidence 時，Step 2 依「背景參考 (Evidence) → Input → 回答框」順序呈現，回答區只保留輸出卡片的「自由文字」標題。指定 Output 欄位即代表其資料為可供標記者編修的預標記，回答框以該值初始化；未指定 Output 時回答框保持空白。此 Output 預標記不得被解讀為可下發隱藏 test-set ground truth。
@@ -730,9 +730,9 @@ flowchart LR
 >
 > **v4.9.0 下游影響檢查**：已檢查 014–017。本次將 `relation_types` 放寬為可接受空陣列，並只調整 `task-new` Step 2 的預覽控制項顯示；014 已要求 Visual 編輯器沿用 013 的 registry/schema，無需重複定義；015–017 未規範 `relation_types` 非空限制，且 `outputs[]` 結構與 API 契約不變，因此無需改版。
 >
-> **v5.0.0 下游同步延後**：本次先確立 013 producer-side 的 `multi_label` Task Config、Step 2 樹編輯、preview `LabelPath` 正規化與驗收界線。現況：015 Annotation Workspace 已同步階層選擇器與 `LabelPath[]` 提交 envelope（015 FR-024E、FR-024E-1、AC-2A.2）；014 Task Detail 設定檢視對階層 `label_options` 的摘要，以及 017 Dataset Analysis Detail 的階層統計與 IAA 契約尚未同步，延後至 #1412。在 #1412 完成前不得宣稱 014 設定檢視與 017 統計／IAA 已相容階層 `multi_label`，該兩處的階層相關功能亦不得進入實作或 PR review。013 producer-side 的 prototype 迭代屬設計階段產物，不受此延後限制。
+> **v5.0.0 下游同步延後**：本次先確立 013 producer-side 的 `multi_label` Task Config、Step 2 樹編輯、preview `LabelPath` 正規化與驗收界線。現況：下游同步已完成——015 Annotation Workspace 已同步階層選擇器與 `LabelPath[]` 提交 envelope（015 FR-024E、FR-024E-1、AC-2A.2）；014 Task Detail 設定檢視已以縮排清單呈現階層 `label_options`（014 FR-014i-1，issue #1412）；017 Dataset Analysis Detail 的階層統計與 IAA 已以完整 `LabelPath` 為計數單位（017 FR-045，issue #1412）。原「在 #1412 完成前不得宣稱相容」之限制隨之解除。013 producer-side 的 prototype 迭代屬設計階段產物，不受此延後限制。
 >
-> **v6.0.0 下游影響檢查**：本次移除 `free_text.config.show_reference`，並將 Output 角色明確定義為 annotator-visible preannotation。014 Visual 編輯器與 015 Annotation Workspace 後續接上 `outputs[]` consumer contract 時不得再呈現或依賴 `show_reference`；015 必須以 `field_role_map` 區分 Evidence／Input／Output，且隱藏 test-set ground truth 仍不得下發。016／017 的評估資料需求不因移除可見性 toggle 而刪除 Output 資料。現況：`show_reference` 已不見於 014／015 正典，015 亦已依 `field_role_map` 區分 Evidence／Input／Output；仍待處理的 consumer 同步僅剩 v5.0.0 延後規則所列、延後至 #1412 的階層 `multi_label`。本次僅實作 013 producer-side prototype。
+> **v6.0.0 下游影響檢查**：本次移除 `free_text.config.show_reference`，並將 Output 角色明確定義為 annotator-visible preannotation。014 Visual 編輯器與 015 Annotation Workspace 後續接上 `outputs[]` consumer contract 時不得再呈現或依賴 `show_reference`；015 必須以 `field_role_map` 區分 Evidence／Input／Output，且隱藏 test-set ground truth 仍不得下發。016／017 的評估資料需求不因移除可見性 toggle 而刪除 Output 資料。現況：`show_reference` 已不見於 014／015 正典，015 亦已依 `field_role_map` 區分 Evidence／Input／Output；v5.0.0 延後規則所列的階層 `multi_label` consumer 同步（#1412）亦已完成，無待處理的 consumer 同步。本次僅實作 013 producer-side prototype。
 >
 > **v6.1.0 下游影響檢查**：Evidence 完整性屬 013 Step 1 producer-side 上傳驗證，不改變 `field_role_map` 結構，016／017 無需調整。`free_text.config` 新增必要的 `input_instruction`／`output_instruction`，014 Visual 編輯器與 015 Annotation Workspace 後續消費 `outputs[]` 時必須沿用兩個顯示字串且不得再依賴 v6.0.0 已退役的 `show_reference`／`show_reference_to_annotator`；本版只同步 013 prototype 與 producer contract，不宣稱 014／015 consumer 已完成相容實作。
 >
@@ -811,6 +811,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 8.6.2 | 2026-10-14 | **階層 `multi_label` 下游同步延後條文改寫為已完成（PATCH，Lightweight，issue #1412 PR-C）**：「已釐清事項」v5.0.0 項與「v5.0.0 下游同步延後」blockquote（及 v6.0.0 下游影響檢查中指向 #1412 的待辦句）由「014 設定檢視與 017 統計／IAA 尚未同步，延後至 #1412」改寫為已完成，並指名 015 FR-024E、017 FR-045（#1428）、014 FR-014i-1（v13.1.0）；解除「#1412 完成前不得宣稱相容」之限制。未增減任何 FR／AC／SC，歷史 Changelog 列逐字不動。 |
 | 8.6.1 | 2026-10-14 | **補指名延後條文的後續單號並改寫為現況（PATCH，Lightweight，issue #1384 第 1 段）**：「已釐清事項」與「下游影響檢查」中 v5.0.0／v6.2.0／v6.3.0／v6.4.2／v6.4.3 的「consumer 延後同步」十處文字，逐條對照 014／015／017 現行正典改寫——`outputs[]` 遷移已由 014 v2.0.0、015 v2.0.0、017 v2.0.0 完成；`sequence_tagging` 的 Token／`tokenization` 契約已於 v7.0.0（issue #581）整組退役，015 v6.0.0、017 v3.0.0 與 014 匯出對話框（issue #742）已承接；階層 `multi_label` 的 015 已同步（FR-024E），014 設定檢視與 017 階層統計／IAA 尚未同步者指名延後至 #1412。本版僅改寫延後敘述，未增刪任何 FR／AC，無 API 契約變更；所有 Changelog 列逐字不動。 |
 | 8.6.0 | 2026-10-14 | **`dialogue_fields` 新增選填 `reply_to` 子欄位（MINOR，issue #1378，OpenSpec change `task-new-dialogue-reply-to`）**：FR-002c-10 的 Step 1 對話串確認區新增「回覆對象欄位」（可選，預設留空），候選為值皆為字串、數字、`null` 或缺漏且至少一個非空的子欄位（不含文字欄位），沒有候選時不顯示；系統不依欄位名稱、內文 `@名字` 或實體預填；已確認的 `reply_to` 失效時只清為 `null`、其餘對應保留；任務設定鍵 `dialogue_fields` 由 `{ text, speaker, utt_id }` 擴充為 `{ text, speaker, utt_id, reply_to }`（`reply_to` 未選為 `null`，既有資料缺少時視同 `null`）。新增 AC-1.13、AC-1.14，修訂 SC-002j；回覆縮排與「跨發言 · 回應 #n」標記的顯示規則由 015 承接（#1378 PR-B1）。 |
 | 8.5.2 | 2026-10-14 | **釐清 FR-002c-9「自動」標題的摘要規則（PATCH，Lightweight，issue #1376）**：原條文僅寫「所選為『自動』時的標題摘要規則不在本條範圍」，原型因此在自動時直接顯示 `id`（如 `absa-001`），與標記工作區左欄不一致。本版改為明定「自動」時沿用 015 FR-106 的共用摘要 helper，與工作區、`annotation-list` 同源；指定欄位或 `id` 之行為（AC-1.8、AC-1.9）不變；本版僅釐清條文，未增刪任何 FR／AC，無 API 契約變更。 |
