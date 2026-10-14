@@ -79,8 +79,10 @@ test.describe('shared modal skeleton (rest): static contract (#1390 PR-B)', () =
   for (const rel of WS_SOURCES) {
     test(`${rel} no longer uses page-own image-modal-close / image-modal-header`, () => {
       const src = read(resolve(PROTO, rel));
-      expect(src.includes('image-modal-close'), 'still references image-modal-close').toBe(false);
-      expect(src.includes('image-modal-header'), 'still references image-modal-header').toBe(false);
+      // Class/selector use only: the data-testid "ws-guideline-image-modal-close" is a stable hook.
+      const asClass = (n: string) => new RegExp(String.raw`(class="([^"]*\s)?|\.)${n}(?![\w-])`);
+      expectMatch(src, asClass('image-modal-close'), false);
+      expectMatch(src, asClass('image-modal-header'), false);
     });
   }
 });
