@@ -6,6 +6,12 @@
   border-bottom: 2px solid var(--color-border);
   margin-bottom: var(--space-lg);
 }
+/* Panel modifier: tabs flush atop a flex-column side panel (annotation-workspace guideline panel, issue #1445). */
+.admin-tabs--panel {
+  margin-bottom: 0;
+  padding: 0 var(--space-md);
+  flex-shrink: 0;
+}
 .admin-tab {
   padding: 10px 20px;
   font-size: 14px;
