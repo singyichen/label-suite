@@ -1935,7 +1935,8 @@ function initPreviewState() {
   if (outputVal) { try { outputParsed = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
 
   var dataEnts = Array.isArray(rawRow.entities) ? rawRow.entities : [];
-  if (dataEnts.length === 0 && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].text) {
+  /* #1371 Data Fairness: object-array (dialogue) Input never prefills entities from the Output column */
+  if (dataEnts.length === 0 && !getObjectArrayInput() && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].text) {
     dataEnts = outputParsed;
   }
   if (dataEnts.length > 0) {
@@ -2440,7 +2441,7 @@ function renderDialogueInput(textEl, turns, allowEntityEditing, refresh) {
       /* Fall back to a text search only when the match is unambiguous (#1358) */
       var first = utterance.indexOf(selText);
       if (first < 0 || utterance.indexOf(selText, first + 1) >= 0) {
-        state.dialogueMsg = t('dialogueLocateFailHint').replace('{n}', 1);
+        state.dialogueMsg = t('dialogueSelectionAmbiguousHint');
         sel.removeAllRanges();
         refresh();
         return;

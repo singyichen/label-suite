@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.3.2
+版本: 2.3.3
 狀態: In Progress
 ---
 
@@ -364,7 +364,7 @@ flowchart LR
 | 016 | Dataset Analysis List | `outputs[].type` 多 tag、8 類 membership 篩選、13 筆 prototype 基線與 `limit`／`offset` |
 | 017 | Dataset Quality | 任務清單入口與 task context 導入 |
 
-> **v2.0.1 下游同步界線**：016 Dataset Analysis List 已同步 `outputs[].type` 的展示、搜尋、篩選與分頁契約；014 Task Detail、015 Annotation Workspace 與 017 Dataset Analysis Detail 仍有舊固定任務類型或未完成的 consumer contract，依既有產品決策延後同步。本版不得將 016 列表相容性延伸解讀為這些 detail／workspace consumer 已相容所有 `outputs[]` 組合。
+> **v2.0.1 下游同步界線**：016 Dataset Analysis List 已同步 `outputs[].type` 的展示、搜尋、篩選與分頁契約；014 Task Detail（v2.0.0）、015 Annotation Workspace（v2.0.0）與 017 Dataset Analysis Detail（v2.0.0）其後已各自完成 `outputs[]` 遷移，原先「仍有舊固定任務類型或未完成的 consumer contract」之延後不再適用；僅階層 `multi_label` 的 014 設定檢視與 017 統計／IAA 仍待 #1412。
 
 ---
 
@@ -423,6 +423,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.3 | 2026-10-14 | Issue #1384 第 1 段（Lightweight，PATCH）：「v2.0.1 下游同步界線」blockquote 的 014／015／017 consumer 延後敘述改寫為現況——三者已各自完成 `outputs[]` 遷移（014 v2.0.0、015 v2.0.0、017 v2.0.0），僅階層 `multi_label` 的 014 設定檢視與 017 統計／IAA 延後至 #1412；條文未增減，無 API 契約變更，Changelog 列逐字不動。 |
 | 2.3.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 2.3.1 | 2026-10-13 | Issue #1270：FR-010e 補釐清句——`task.delete` 已於 admin-007 v1.3.0 登錄（已登錄、待啟用），啟用前依未知鍵拒絕，刪除既有閘門與 `super_admin` 路徑不變；「42 列」改讀為 56 列；依賴表同步。條文未增減，純 PATCH。 |
 | 2.3.0 | 2026-10-06 | Issue #1160 D-9：依 ADR-037 加入 `task.list.view` 矩陣條件，保留 membership／全平台資料範圍；明列任務刪除尚無 V1 專用鍵，不能借用其他鍵，新增 SC-016。規劃契約尚未實作 runtime。 |
