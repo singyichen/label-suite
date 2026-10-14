@@ -173,6 +173,18 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    /* FR-106 clause 6: count tags beside the dialogue summary (existing tokens only). */
+    .sample-summary-tag {
+      display: inline-block;
+      margin: 2px 4px 0 0;
+      padding: 0 6px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--color-text-soft);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+    }
     .sample-group.has-active .sample-group-id { color: var(--color-primary); }
 
     /* Reviewer-only: names the review unit the entry stands for by its
