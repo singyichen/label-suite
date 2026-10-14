@@ -1,3 +1,4 @@
+@import url("../shared/metric.css");
     /* ── Design Tokens ───────────────────────────────────────────
        Color/radius/shadow/spacing tokens come from ../../assets/tokens.css;
        only page-local layout variables live here. */
@@ -361,30 +362,6 @@
 
     .metrics.metrics-readable-labels {
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    }
-
-    .metric {
-      padding: var(--space-md);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-    }
-
-    .metric span {
-      display: block;
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--color-ink-muted);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .metric strong {
-      display: block;
-      font-size: 1.35rem;
-      font-weight: 700;
-      line-height: 1.2;
     }
 
     /* Spacing only -- muted colour and type scale come from .controls-hint,
