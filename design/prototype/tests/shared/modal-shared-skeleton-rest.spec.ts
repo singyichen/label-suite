@@ -1,15 +1,19 @@
 /*
- * Traceability: issue #1390 PR-B — shared modal skeleton (pages/shared/modal.css)
+ * Traceability: issue #1446 PR-A (retires the #1390 PR-B `.hidden` contract) —
+ * shared modal skeleton (pages/shared/modal.css).
  * Pages in scope: user-management, role-settings, annotation-workspace.
- * These pages keep their `hidden`-class JS, so the visibility contract is:
- * shared modal.css hides `.modal-overlay` by default and each page adds ONE
- * local `.modal-overlay:not(.hidden) { display: flex }` rule.
- * PR-A (task-list / task-new / task-detail) is covered by modal-shared-skeleton.spec.ts.
+ * Visibility contract: shared modal.css hides `.modal-overlay` by default and
+ * `.show` opens it. Pages carry NO local `.modal-overlay:not(.hidden)` rule and
+ * their overlays carry no `hidden` class; JS toggles `.show`. The workspace's
+ * four modals reuse the shared `.modal-header` / `.modal-close` (no page-own
+ * `.image-modal-header` / `.image-modal-close`).
+ * PR-A of #1390 (task-list / task-new / task-detail) is covered by modal-shared-skeleton.spec.ts.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
+import { buildWorkspaceUrl, dismissGuidelineModal } from '../annotation/_workspace-helpers';
 
 const PROTO = resolve(__dirname, '../..');
 const MODAL_CSS = resolve(PROTO, 'pages/shared/modal.css');
@@ -65,11 +69,18 @@ test.describe('shared modal skeleton (rest): static contract (#1390 PR-B)', () =
       expect(read(resolve(PROTO, rel)).includes('modal-card'), 'markup still uses modal-card').toBe(false);
     });
 
-    test(`${name} adds exactly one local .modal-overlay:not(.hidden) visibility rule`, () => {
+    test(`${name} inline <style> has no local .modal-overlay:not(.hidden) rule`, () => {
       const style = inlineStyles(read(resolve(PROTO, rel)));
-      const rules = [...style.matchAll(/\.modal-overlay:not\(\.hidden\)\s*\{([^}]*)\}/g)];
-      expect(rules.length, 'expected exactly one .modal-overlay:not(.hidden) rule').toBe(1);
-      expectMatch(rules[0][1], /display:\s*flex/, true);
+      expectMatch(style, /\.modal-overlay:not\(\.hidden\)/, false);
+    });
+  }
+
+  const WS_SOURCES = [PAGES['annotation-workspace'], 'pages/annotation/annotation-workspace.config.js'];
+  for (const rel of WS_SOURCES) {
+    test(`${rel} no longer uses page-own image-modal-close / image-modal-header`, () => {
+      const src = read(resolve(PROTO, rel));
+      expect(src.includes('image-modal-close'), 'still references image-modal-close').toBe(false);
+      expect(src.includes('image-modal-header'), 'still references image-modal-header').toBe(false);
     });
   }
 });
@@ -99,12 +110,13 @@ const TARGETS: Target[] = [
   { page: 'annotation-workspace', url: WS_URL, modal: '#wsReviewFlowDrawer' },
 ];
 
-async function setHidden(page: Page, t: Target, hidden: boolean) {
+/** open = add `.show`; closed = remove `.show` (the shared modal.css contract). */
+async function setOpen(page: Page, t: Target, open: boolean) {
   await page.goto(t.url);
   await page.locator(t.modal).waitFor({ state: 'attached' });
   await page.evaluate(
-    ([sel, h]) => document.querySelector(sel as string)!.classList.toggle('hidden', h as boolean),
-    [t.modal, hidden],
+    ([sel, o]) => document.querySelector(sel as string)!.classList.toggle('show', o as boolean),
+    [t.modal, open],
   );
 }
 
@@ -118,18 +130,27 @@ test.describe('shared modal skeleton (rest): computed styles (#1390 PR-B)', () =
   for (const t of TARGETS) {
     test.describe(`${t.page} ${t.modal}`, () => {
       test('modal.css is the stylesheet that supplies the skeleton', async ({ page }) => {
-        await setHidden(page, t, false);
+        await setOpen(page, t, true);
         const hrefs = await page.evaluate(() => [...document.styleSheets].map((s) => s.href ?? ''));
         expect(hrefs.some((h) => h.endsWith('/pages/shared/modal.css'))).toBe(true);
       });
 
-      test('closed (hidden) overlay computes display:none', async ({ page }) => {
-        await setHidden(page, t, true);
+      test('markup carries neither `hidden` nor `show` on first paint', async ({ page }) => {
+        await page.goto(t.url);
+        await page.locator(t.modal).waitFor({ state: 'attached' });
+        const cls = await page.locator(t.modal).evaluate((el) => [...el.classList]);
+        expect(cls).not.toContain('hidden');
+        // the workspace guideline modal may auto-open on load; every other overlay starts closed
+        if (t.modal !== '#wsGuidelineModal') expect(cls).not.toContain('show');
+      });
+
+      test('closed (no .show) overlay computes display:none', async ({ page }) => {
+        await setOpen(page, t, false);
         await expect(page.locator(t.modal)).toHaveCSS('display', 'none');
       });
 
       test('open overlay is fixed flex, z-index 300, rgba(0, 0, 0, 0.5), blur(4px)', async ({ page }) => {
-        await setHidden(page, t, false);
+        await setOpen(page, t, true);
         const cs = await page.locator(t.modal).evaluate((el) => {
           const s = getComputedStyle(el);
           return { position: s.position, zIndex: s.zIndex, bg: s.backgroundColor, display: s.display, blur: s.backdropFilter };
@@ -147,7 +168,7 @@ test.describe('shared modal skeleton (rest): computed styles (#1390 PR-B)', () =
       // (.rv-flow-drawer) intentionally squares the right corners.
       const radiusTest = t.modal === '#wsReviewFlowDrawer' ? test.skip : test;
       radiusTest('.modal radius equals --radius-xl', async ({ page }) => {
-        await setHidden(page, t, false);
+        await setOpen(page, t, true);
         const token = await page.evaluate(() =>
           getComputedStyle(document.documentElement).getPropertyValue('--radius-xl').trim(),
         );
@@ -156,9 +177,17 @@ test.describe('shared modal skeleton (rest): computed styles (#1390 PR-B)', () =
         expect(radius).toBe(token);
       });
 
+      if (t.modal.startsWith('#wsGuideline') && t.modal !== '#wsGuidelineModal' || t.modal === '#wsReviewFlowDrawer') {
+        test('header is the shared .modal-header holding a button.modal-close', async ({ page }) => {
+          await page.goto(t.url);
+          await page.locator(t.modal).waitFor({ state: 'attached' });
+          await expect(page.locator(`${t.modal} .modal-header button.modal-close`)).toHaveCount(1);
+        });
+      }
+
       if (t.footer) {
         test('footer is right-aligned flex with --space-sm gap and secondary left of primary', async ({ page }) => {
-          await setHidden(page, t, false);
+          await setOpen(page, t, true);
           const gapToken = await page.evaluate(() =>
             getComputedStyle(document.documentElement).getPropertyValue('--space-sm').trim(),
           );
@@ -181,11 +210,52 @@ test.describe('shared modal skeleton (rest): computed styles (#1390 PR-B)', () =
   test('footer computed values are identical across all three pages (single source)', async ({ page }) => {
     const seen: string[] = [];
     for (const t of TARGETS.filter((x) => x.footer)) {
-      await setHidden(page, t, false);
+      await setOpen(page, t, true);
       seen.push(JSON.stringify(await footerStyle(page, t.footer!)));
     }
     expect(seen.length).toBe(5);
     expect(new Set(seen).size).toBe(1);
     expect(JSON.parse(seen[0]).justifyContent).toBe('flex-end');
+  });
+});
+
+test.describe('shared modal skeleton (rest): .show open/close behavior (#1446)', () => {
+  test('workspace guideline image modal gains .show on open and loses it on close', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+    await dismissGuidelineModal(page);
+    const modal = page.getByTestId('ws-guideline-image-modal');
+    await expect(modal).not.toHaveClass(/\bshow\b/);
+    await page.getByTestId('ws-guideline-file-item').first().click();
+    await expect(modal).toHaveClass(/\bshow\b/);
+    await expect(modal).toBeVisible();
+    await page.getByTestId('ws-guideline-image-modal-close').click();
+    await expect(modal).not.toHaveClass(/\bshow\b/);
+    await expect(modal).toBeHidden();
+  });
+
+  test('user-management addModal gains .show on open and loses it on cancel', async ({ page }) => {
+    await page.goto('/pages/admin/user-management.html');
+    const modal = page.locator('#addModal');
+    await expect(modal).not.toHaveClass(/\bshow\b/);
+    await page.locator('#addUserBtn').click();
+    await expect(modal).toHaveClass(/\bshow\b/);
+    await expect(modal).toBeVisible();
+    await page.locator('#addCancelBtn').click();
+    await expect(modal).not.toHaveClass(/\bshow\b/);
+    await expect(modal).toBeHidden();
+  });
+
+  test('role-settings dirtyModal gains .show on dirty cancel and loses it on keep-editing', async ({ page }) => {
+    await page.goto('/pages/admin/role-settings.html');
+    const modal = page.locator('#dirtyModal');
+    await expect(modal).not.toHaveClass(/\bshow\b/);
+    await page.locator('#editBtn').click();
+    await page.locator('[data-key="task.create"][data-role="user"]').uncheck();
+    await page.locator('#cancelBtn').click();
+    await expect(modal).toHaveClass(/\bshow\b/);
+    await expect(modal).toBeVisible();
+    await modal.getByText('繼續編輯').click();
+    await expect(modal).not.toHaveClass(/\bshow\b/);
+    await expect(modal).toBeHidden();
   });
 });
