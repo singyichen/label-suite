@@ -236,6 +236,15 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     proposal="$change_dir/proposal.md"
     relative_proposal="${proposal#"$repo_root"/}"
     if [ ! -r "$proposal" ]; then add_error ACTIVE_CHANGE_SPEC "${change_dir#"$repo_root"/}" 'active change is missing a readable proposal.md'; continue; fi
+    # Issue #1379: a sketch artifact link needs the element table; deferral wording in ADDED/MODIFIED deltas needs `#N`.
+    if grep -Fq 'claude.ai/artifact/' "$proposal" && ! strip_markdown_fences "$proposal" | grep -Fqx '## 草圖元素對照表'; then add_error PROPOSAL_SKETCH_TABLE "$relative_proposal" 'proposal links a claude.ai/artifact/ sketch but has no "## 草圖元素對照表" heading'; fi
+    while IFS= read -r delta_file; do
+        strip_markdown_fences "$delta_file" | awk '
+            /^##[[:space:]]/ { inside = ($0 == "## ADDED Requirements" || $0 == "## MODIFIED Requirements"); next }
+            inside && /(不在本條範圍|另案|延後)/ && $0 !~ /#[0-9]+/ { found = 1 }
+            END { exit !found }
+        ' && add_error DEFERRAL_WITHOUT_ISSUE "${delta_file#"$repo_root"/}" 'ADDED/MODIFIED clause says 不在本條範圍/另案/延後 without a follow-up issue (#N)'
+    done < <(find "$change_dir/specs" -type f -name spec.md -print 2>/dev/null | LC_ALL=C sort)
     refs="$tmp_dir/refs.$(basename "$change_dir")"; grep -E '^對應 Spec:[[:space:]]*specs/[[:alnum:]-]+/[0-9][0-9][0-9]-[[:alnum:]_.-]+/spec\.md[[:space:]]*$' "$proposal" | sed 's/^對應 Spec:[[:space:]]*//; s/[[:space:]]*$//' >"$refs" || true
     declaration_count="$(grep -Ec '^對應 Spec:' "$proposal" || true)"; ref_count="$(wc -l <"$refs" | tr -d ' ')"
     if [ "$declaration_count" -ne 1 ] || [ "$ref_count" -ne 1 ]; then add_error ACTIVE_CHANGE_SPEC "$relative_proposal" 'proposal must reference exactly one canonical spec'; continue; fi
