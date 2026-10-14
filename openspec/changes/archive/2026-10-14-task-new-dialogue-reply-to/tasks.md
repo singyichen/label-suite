@@ -56,5 +56,5 @@
 
 > **產品檔案（0）**：只執行 specs／openspec 寫回。**最終群組**：否（堆疊 PR 的第一個 change；archive 因維護者派工裁定隨本 change 完成，PR-B 以另一個 change 堆疊其上）。
 
-- [ ] 5.1 Source-Verify 預掃，衍生檢視每一則正典引用皆可 grep 定位。 [@main]
-- [ ] 5.2 執行 openspec archive，正典 013 寫回 8.5.2 至 8.6.0（MINOR）並新增 Changelog，同步衍生檢視 Purpose 版號，STATUS.md 只改自己那列。 [@main]
+- [x] 5.1 Source-Verify 預掃，衍生檢視每一則正典引用皆可 grep 定位。 [@main]
+- [x] 5.2 執行 openspec archive，正典 013 寫回 8.5.2 至 8.6.0（MINOR）並新增 Changelog，同步衍生檢視 Purpose 版號，STATUS.md 只改自己那列。 [@main]
