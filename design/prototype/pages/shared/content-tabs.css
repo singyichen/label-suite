@@ -1,0 +1,38 @@
+/* Desktop Content Tabs (.admin-tabs / .admin-tab) — single definition (issue #1393).
+   Spec: design/system/MASTER.md "Desktop Content Tabs". Pages link this file and
+   must not redefine these selectors. */
+.admin-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: var(--space-lg);
+}
+.admin-tab {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-soft);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+  text-decoration: none;
+  display: inline-block;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  white-space: nowrap;
+}
+.admin-tab:hover { color: var(--color-primary); }
+.admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+
+/* Narrow viewport: stay on one row and scroll horizontally (scrollbar hidden). */
+@media (max-width: 768px) {
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tab { flex: 0 0 auto; }
+}

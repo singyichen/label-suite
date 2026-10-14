@@ -303,7 +303,7 @@
       "states": ["default", "載入中（Skeleton）", "找不到任務（TASK_NOT_FOUND）", "唯讀（reviewer）"],
       "reactOwnership": "features/task-management",
       "components": ["sidebar", "breadcrumb", "content-tabs", "table", "pagination", "chip", "task-type-badge", "color-dot", "skeleton", "modal", "mini-button", "card", "status-badge", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "empty-state", "progress-bar", "tooltip"],
-      "note": "5 個 fetch partials（task-detail.panels/）；Table 具 expandable rows"
+      "note": "6 個 fetch partials（task-detail.panels/）；Table 具 expandable rows"
     },
     {
       "id": "10",
@@ -416,7 +416,7 @@
       ]
     },
     "09": {
-      "heading": "任務詳情 `task-management/task-detail.html`（5 tabs + 角色）",
+      "heading": "任務詳情 `task-management/task-detail.html`（6 tabs + 角色）",
       "views": [
         { "id": "V09", "name": "標記進度", "params": "`?tab=annotation-progress`", "note": "進度表格 + Pagination" },
         { "id": "V10", "name": "標記結果", "params": "`?tab=annotation-results`", "note": "Expandable rows、VA scoring chips" },
