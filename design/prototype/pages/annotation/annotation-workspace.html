@@ -944,15 +944,7 @@
     .md-modal { max-width: 720px; width: 92vw; }
     .md-modal .guideline-md-preview { max-height: 70vh; overflow: auto; }
     .image-modal { max-width: 720px; }
-    .image-modal-header { display: flex; align-items: center; justify-content: space-between; }
-    .image-modal-close {
-      border: none;
-      background: transparent;
-      color: var(--color-text-soft);
-      cursor: pointer;
-      display: inline-flex;
-      padding: 4px;
-    }
+    .image-modal .modal-header { align-items: center; }
     .image-modal-preview { display: block; width: 100%; height: auto; max-height: 520px; object-fit: contain; border-radius: var(--radius-sm); }
     .pdf-modal { max-width: 860px; width: 92vw; }
     .pdf-modal-preview { display: block; width: 100%; height: 70vh; border: 0; border-radius: var(--radius-sm); background: var(--color-surface, #fff); }
@@ -1004,8 +996,6 @@
     }
 
     /* ── Modal ───────────────────────────────────────────────── */
-    /* hidden-class visibility contract: these pages open modals by removing .hidden (issue #1390) */
-    .modal-overlay:not(.hidden) { display: flex; }
     .modal-overlay > .modal {
       display: flex;
       flex-direction: column;
@@ -1154,7 +1144,7 @@
 </script>
 
 <!-- Guideline modal (first-visit force-read gate) -->
-<div class="modal-overlay hidden" id="wsGuidelineModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineModalTitleText" data-testid="ws-guideline-modal">
+<div class="modal-overlay" id="wsGuidelineModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineModalTitleText" data-testid="ws-guideline-modal">
   <div class="modal">
     <h2 class="modal-title" id="wsGuidelineModalTitleText"></h2>
     <div class="guideline-md-preview" id="wsGuidelineModalBody" data-testid="ws-guideline-modal-body"></div>
@@ -1166,11 +1156,11 @@
 
 <!-- Guideline image preview modal (spec 015 v2.0.0 AC-5.3 / SC-005B):
      three closing paths -- close button, backdrop click, Esc key. -->
-<div class="modal-overlay hidden" id="wsGuidelineImageModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineImageModalTitleText" data-testid="ws-guideline-image-modal">
+<div class="modal-overlay" id="wsGuidelineImageModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineImageModalTitleText" data-testid="ws-guideline-image-modal">
   <div class="modal image-modal">
-    <div class="image-modal-header">
+    <div class="modal-header">
       <h2 class="modal-title" id="wsGuidelineImageModalTitleText"></h2>
-      <button class="image-modal-close" type="button" id="wsGuidelineImageModalClose" data-testid="ws-guideline-image-modal-close" aria-label="關閉圖片預覽">
+      <button class="modal-close" type="button" id="wsGuidelineImageModalClose" data-testid="ws-guideline-image-modal-close" aria-label="關閉圖片預覽">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
@@ -1181,11 +1171,11 @@
 <!-- Guideline PDF preview modal (spec 015 AC-5.3 / SC-005C, issue #353):
      mirrors the image modal's closing paths -- close button, backdrop
      click, Esc key (Esc via the LabelSuiteModalFocus trap). -->
-<div class="modal-overlay hidden" id="wsGuidelinePdfModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelinePdfModalTitleText" data-testid="ws-guideline-pdf-modal">
+<div class="modal-overlay" id="wsGuidelinePdfModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelinePdfModalTitleText" data-testid="ws-guideline-pdf-modal">
   <div class="modal image-modal pdf-modal">
-    <div class="image-modal-header">
+    <div class="modal-header">
       <h2 class="modal-title" id="wsGuidelinePdfModalTitleText"></h2>
-      <button class="image-modal-close" type="button" id="wsGuidelinePdfModalClose" data-testid="ws-guideline-pdf-modal-close" aria-label="關閉 PDF 預覽">
+      <button class="modal-close" type="button" id="wsGuidelinePdfModalClose" data-testid="ws-guideline-pdf-modal-close" aria-label="關閉 PDF 預覽">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
@@ -1197,11 +1187,11 @@
      same closing paths as the PDF modal -- close button, backdrop click,
      Esc key (Esc via the LabelSuiteModalFocus trap). Body receives the
      output of renderMarkdown() (config.js), never raw file content. -->
-<div class="modal-overlay hidden" id="wsGuidelineMdModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineMdModalTitleText" data-testid="ws-guideline-md-modal">
+<div class="modal-overlay" id="wsGuidelineMdModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineMdModalTitleText" data-testid="ws-guideline-md-modal">
   <div class="modal image-modal md-modal">
-    <div class="image-modal-header">
+    <div class="modal-header">
       <h2 class="modal-title" id="wsGuidelineMdModalTitleText"></h2>
-      <button class="image-modal-close" type="button" id="wsGuidelineMdModalClose" data-testid="ws-guideline-md-modal-close" aria-label="關閉 Markdown 預覽">
+      <button class="modal-close" type="button" id="wsGuidelineMdModalClose" data-testid="ws-guideline-md-modal-close" aria-label="關閉 Markdown 預覽">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
@@ -1214,15 +1204,15 @@
      `pending` -- every unreviewed unit's default and the state with the least
      to say -- paid the most vertical space for it. The track moved here
      verbatim; nothing about it was reduced. Reuses `.modal-overlay` so the
-     backdrop, `--z-modal` and the `.hidden` (display:none) removal from the
+     backdrop, `--z-modal` and the default `display:none` from the
      accessibility tree stay one implementation; `.rv-flow-overlay` only
      re-anchors the panel to the right edge. Esc / focus trap / focus return
      come from the LabelSuiteModalFocus trap, same as the guideline modals. -->
-<div class="modal-overlay rv-flow-overlay hidden" id="wsReviewFlowDrawer" role="dialog" aria-modal="true" aria-labelledby="wsReviewFlowDrawerTitle" data-testid="ws-review-flow-drawer">
+<div class="modal-overlay rv-flow-overlay" id="wsReviewFlowDrawer" role="dialog" aria-modal="true" aria-labelledby="wsReviewFlowDrawerTitle" data-testid="ws-review-flow-drawer">
   <div class="modal rv-flow-drawer">
-    <div class="image-modal-header">
+    <div class="modal-header">
       <h2 class="modal-title" id="wsReviewFlowDrawerTitle"></h2>
-      <button class="image-modal-close" type="button" id="wsReviewFlowDrawerClose" data-testid="ws-review-flow-drawer-close">
+      <button class="modal-close" type="button" id="wsReviewFlowDrawerClose" data-testid="ws-review-flow-drawer-close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
