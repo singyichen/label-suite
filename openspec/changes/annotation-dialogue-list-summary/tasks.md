@@ -10,7 +10,7 @@
 
 **故事目標**（SC-028，AC-1.39）：流程狀態檔反映本 change 對 annotation-015 的 in-flight 狀態。
 
-- [ ] 0.1 修改 `specs/STATUS.md`，於 annotation-015 列追加本 change 的 in-flight 說明（append-only，只改本列）。 [@main]
+- [x] 0.1 修改 `specs/STATUS.md`，於 annotation-015 列追加本 change 的 in-flight 說明（append-only，只改本列）。 [@main]
 
 ## 1. 資料層前綴與標籤（FR-106 第 6 點、AC-1.35、AC-1.39 ~ AC-1.41）
 
@@ -18,8 +18,8 @@
 
 > **產品檔案（1）**：`design/prototype/pages/annotation/annotation-workspace.data.js`
 
-- [ ] 1.1 新增 `design/prototype/tests/annotation/issue-1378-dialogue-list-summary.spec.ts` 的 Red：T013 摘要為「發言者：第 1 筆文字」、標籤為 `5 則發言` 與 `3 位發言者`（英文 `5 turns`、`3 speakers`）；`dialogue_fields` 為 `null` 時無前綴、無標籤；`speaker` 為 `null` 時無前綴、僅有發言數標籤；搜尋字串不含前綴；不讀 Output 欄位。同時更新既有規格中對 T013 摘要的精確比對。 [@senior-qa]
-- [ ] 1.2 （Green）修改 `annotation-workspace.data.js`：前綴與 `getRecordSummaryTags`，共用選欄邏輯（design.md D1、D2）。 [@senior-frontend]
+- [x] 1.1 新增 `design/prototype/tests/annotation/issue-1378-dialogue-list-summary.spec.ts` 的 Red：T013 摘要為「發言者：第 1 筆文字」、標籤為 `5 則發言` 與 `3 位發言者`（英文 `5 turns`、`3 speakers`）；`dialogue_fields` 為 `null` 時無前綴、無標籤；`speaker` 為 `null` 時無前綴、僅有發言數標籤；搜尋字串不含前綴；不讀 Output 欄位。同時更新既有規格中對 T013 摘要的精確比對。 [@senior-qa]
+- [x] 1.2 （Green）修改 `annotation-workspace.data.js`：前綴與 `getRecordSummaryTags`，共用選欄邏輯（design.md D1、D2）。 [@senior-frontend]
 
 ## 2. 左欄顯示與樣式（FR-106 第 6 點、AC-1.39）
 
@@ -28,8 +28,8 @@
 > **產品檔案（2）**：`design/prototype/pages/annotation/annotation-workspace.config.js`、`design/prototype/pages/annotation/annotation-workspace.html`
 > **相依**：群組 1。
 
-- [ ] 2.1 修改 `design/prototype/tests/annotation/issue-1378-dialogue-list-summary.spec.ts`，補 Red：annotator 左欄項目、reviewer 分組表頭、例外池分組表頭皆出現 `ws-summary-tag`；`annotation-list` 摘要帶前綴但無標籤。 [@senior-qa]
-- [ ] 2.2 （Green）修改 `annotation-workspace.config.js` 渲染標籤，`annotation-workspace.html` 補標籤樣式（design.md D3）。 [@senior-frontend]
+- [x] 2.1 修改 `design/prototype/tests/annotation/issue-1378-dialogue-list-summary.spec.ts`，補 Red：annotator 左欄項目、reviewer 分組表頭、例外池分組表頭皆出現 `ws-summary-tag`；`annotation-list` 摘要帶前綴但無標籤。 [@senior-qa]
+- [x] 2.2 （Green）修改 `annotation-workspace.config.js` 渲染標籤，`annotation-workspace.html` 補標籤樣式（design.md D3）。 [@senior-frontend]
 
 ## 3. 回歸與審查
 
@@ -37,8 +37,8 @@
 
 > **產品檔案（0）**：只執行驗證與審查。
 
-- [ ] 3.1 執行 typecheck、test:node 與範圍限定的 Playwright（新 spec，以及所有引用摘要的既有規格），皆 exit 0。 [@main]
-- [ ] 3.2 senior-code-reviewer 獨立審查 Generalization-First、Data Fairness 與 Principle X。 [@senior-code-reviewer]
+- [x] 3.1 執行 typecheck、test:node 與範圍限定的 Playwright（新 spec，以及所有引用摘要的既有規格），皆 exit 0。 [@main]
+- [x] 3.2 senior-code-reviewer 獨立審查 Generalization-First、Data Fairness 與 Principle X。 [@senior-code-reviewer]
 
 ## 4. Source-Verify 與 archive
 

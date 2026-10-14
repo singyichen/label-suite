@@ -2472,19 +2472,6 @@
     );
   }
 
-  /* Reviewer-only sample group wrapper (issue #455). One review unit per
-     row (FR-056) means a 3-annotator sample renders three rows whose ONLY
-     difference is the annotator account -- the record snippet above it is
-     byte-identical three times over, and in a 256px column it is the
-     snippet that wins the reviewer's attention. Hoisting the sample
-     identity plus the shared snippet into one header per sample lets each
-     row below it carry only what actually differs (annotator + review
-     state), and gives the sample boundary a structural marker instead of
-     asking the reviewer to diff three lines of small print.
-     `role="group"` + `aria-label` is the ARIA-sanctioned way to partition a
-     listbox, so the grouping is exposed to AT rather than being purely
-     visual (the annotation-list counterpart, FR-067, only had table rows to
-     work with and had to settle for a border + de-emphasis). */
   /* FR-106 clause 6: one small tag per getRecordSummaryTags() entry, beside the summary. */
   function appendSummaryTags(container, record) {
     window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryTags(
@@ -2502,6 +2489,19 @@
     });
   }
 
+  /* Reviewer-only sample group wrapper (issue #455). One review unit per
+     row (FR-056) means a 3-annotator sample renders three rows whose ONLY
+     difference is the annotator account -- the record snippet above it is
+     byte-identical three times over, and in a 256px column it is the
+     snippet that wins the reviewer's attention. Hoisting the sample
+     identity plus the shared snippet into one header per sample lets each
+     row below it carry only what actually differs (annotator + review
+     state), and gives the sample boundary a structural marker instead of
+     asking the reviewer to diff three lines of small print.
+     `role="group"` + `aria-label` is the ARIA-sanctioned way to partition a
+     listbox, so the grouping is exposed to AT rather than being purely
+     visual (the annotation-list counterpart, FR-067, only had table rows to
+     work with and had to settle for a border + de-emphasis). */
   function buildSampleGroup(record, recordId, unitCount) {
     var group = document.createElement('div');
     group.className = 'sample-group';

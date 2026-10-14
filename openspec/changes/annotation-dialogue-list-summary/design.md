@@ -23,3 +23,7 @@
 ### D5 錯誤情境
 
 無新增錯誤情境。
+
+### D6 其他消費端
+
+task-new 的清單標題預覽（`task-config.engine.js` 的 `listTitleText`）同樣呼叫共用的 `getRecordSummaryText`，因此摘要自然帶發言者前綴；該處不顯示標籤。這符合「單一 helper」，不另行處理。
