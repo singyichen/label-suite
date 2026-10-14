@@ -226,7 +226,7 @@ Page-scoped feature 在進入 `/opsx:propose` 前必須逐項通過下列檢查�
 | [3] prototype | 🗣️ | 主 agent + `senior-qa` Red／實作 agent Green（+ senior-uiux 選用） | static shell + Red/Green Playwright 證據 + page design | shell 後先有已提交的預期 Red；Green 全綠；data-testid 契約建立；MASTER.md 遵循 |
 | [4] clarify（選用） | 🗣️ | 主 agent | 釐清問答 + spec 回修 | prototype/page design 暴露模糊點時回寫正典 spec，並重走受影響的 Gate |
 | [3d] Frontend Ready Gate | ⚙️ | 主 agent | page readiness evidence | [4] clarify 已完成或不適用後，九項 page-scoped 檢查均通過、明示 N/A 與理由，或記為缺口並附追蹤 issue；紀錄寫入該 change 的 `proposal.md` `## Why`（見 Frontend Ready Gate） |
-| [5] propose | 🗣️ | 主 agent | change 四件套（繁中） | OpenSpec schema validation 與 Project SDD lint 分別通過；派工標籤齊備；憲章檢查段落存在；issue 或使用者提供 artifact／prototype 連結時，`proposal.md` 附 `## 草圖元素對照表`，每個元素對應 FR/AC ID、標「不做」附理由，或寫「延後至 #N」；page-scoped feature 的 `design.md` API 契約涵蓋 Frontend Ready Gate 第 6 項列出的欄位、enum 與錯誤情境 |
+| [5] propose | 🗣️ | 主 agent | change 四件套（繁中） | OpenSpec schema validation 與 Project SDD lint 分別通過；派工標籤齊備；憲章檢查段落存在；issue 或使用者提供 artifact／prototype 連結時，`proposal.md` 附 `## 草圖元素對照表`，每個元素對應 FR/AC ID、標「不做」並附理由，或寫「延後至 #N」；page-scoped feature 的 `design.md` API 契約涵蓋 Frontend Ready Gate 第 6 項列出的欄位、enum 與錯誤情境 |
 | [6] apply | 🗣️ | 主 agent 派工 + 實作/品質 subagents | 分離的 Red/Green task、程式、測試與 `[x]` | Red 預期失敗與 Green 驗證均有證據；每 PR 群組過 ③a–e 審查並取得使用者明確確認 |
 | [7] archive | 🗣️ | 主 agent（final PR group） | derived view + 正典回寫 | 第 1–3 層與 Source-Verify evidence 先完成；僅 final PR 內成功 write-back 後才完成第 4 層 |
 | [8] pr-flow | 🗣️ | 主 agent | intermediate 或 final PR → merge | intermediate PR 不 archive；final PR merge 後更新 STATUS 並將 spec 移至 `_archive/` |
@@ -371,7 +371,7 @@ prototype Playwright Red tests。只有 Red evidence 成立後，才加入 data-
 /opsx:propose 依 <spec> 建立 change <change>。範圍：<一句話；有既定計畫文件時附路徑>。
 ```
 
-有 artifact／prototype 連結時（issue 內文或使用者提供），proposal 另須附固定標題 `## 草圖元素對照表`：逐項列出草圖元素，每項對應 FR/AC ID、標「不做」並附理由，或寫「延後至 #N」；不得只寫「以草圖為準」。`openspec/config.yaml` 的 `rules.proposal` 只是注入層，衝突時以本文件為準。proposal 中任何延後項目一律寫成 `延後至 #N`。
+有 artifact／prototype 連結時（issue 內文或使用者提供），proposal 另須附固定標題 `## 草圖元素對照表`：逐項列出草圖元素，每項對應 FR/AC ID、標「不做」並附理由，或寫「延後至 #N」；不得只寫「以草圖為準」。`openspec/config.yaml` 的 `rules.proposal` 只是注入層，衝突時以本文件為準。proposal 中任何延後項目一律寫成 `延後至 #N`（不得只寫「延後」或「另案」）；spec delta 條文寫「不在本條範圍」「另案」或「延後」時，同樣必須在該條文內寫 `延後至 #N`。
 
 實例（foundation-000）：
 
