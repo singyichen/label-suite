@@ -2103,13 +2103,14 @@
         </nav>
       </header>
 
+      <!-- #1362: tabs stay aria-disabled until init() binds their handlers, so early clicks wait instead of being lost -->
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
-        <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-controls="overviewPanel" aria-selected="true" tabindex="0">概覽</button>
-        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-controls="settingsPanel" aria-selected="false" tabindex="-1">設定</button>
-        <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-controls="memberManagementPanel" aria-selected="false">成員管理</button>
-        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-controls="annotationProgressPanel" aria-selected="false">標記進度</button>
-        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-controls="annotationResultsPanel" aria-selected="false">標記結果</button>
-        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-controls="workLogPanel" aria-selected="false">工時紀錄</button>
+        <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-disabled="true" aria-controls="overviewPanel" aria-selected="true" tabindex="0">概覽</button>
+        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-disabled="true" aria-controls="settingsPanel" aria-selected="false" tabindex="-1">設定</button>
+        <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-disabled="true" aria-controls="memberManagementPanel" aria-selected="false">成員管理</button>
+        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-disabled="true" aria-controls="annotationProgressPanel" aria-selected="false">標記進度</button>
+        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-disabled="true" aria-controls="annotationResultsPanel" aria-selected="false">標記結果</button>
+        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-disabled="true" aria-controls="workLogPanel" aria-selected="false">工時紀錄</button>
       </div>
 
       <div id="loadingSkeleton" class="skeleton-stack" aria-live="polite" aria-busy="true">
@@ -11970,6 +11971,10 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
         applyLang(state.lang);
         bindEvents();
         bindTaskConfigEvents();
+        // #1362: handlers are bound now; release the tabs disabled in static HTML.
+        document.querySelectorAll('.admin-tabs [role="tab"]').forEach(function(tabEl) {
+          tabEl.removeAttribute('aria-disabled');
+        });
         showOverviewWithSkeleton();
 
         if (window.LabelSuiteAnalytics) {
