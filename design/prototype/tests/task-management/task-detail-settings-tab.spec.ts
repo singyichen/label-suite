@@ -336,7 +336,7 @@ test.describe('task-detail settings tab G2 review follow-ups (FR-026 (1)(2), FR-
     expect(rowGap).toBe('10px');
 
     const muted = await tokenValue(page, 'borderTopColor', '--color-border-muted');
-    const sep = await page.locator('#basicInfoView .kv-dl-row .kv-dl-key').first().evaluate((el) => {
+    const sep = await page.locator('#basicInfoView .kv-dl-row').first().evaluate((el) => {
       const cs = getComputedStyle(el);
       return { width: cs.borderBottomWidth, color: cs.borderBottomColor };
     });
