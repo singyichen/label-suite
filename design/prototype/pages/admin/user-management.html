@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 使用者管理</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
@@ -183,34 +184,10 @@
     }
 
     /* ── Modal ──────────────────────────────────────────────────── */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px); z-index: 300;
-      display: flex; align-items: center; justify-content: center; padding: var(--space-lg);
-    }
-    .modal-overlay.hidden { display: none !important; }
-    .modal {
-      background: var(--color-white); border-radius: var(--radius-xl);
-      padding: var(--space-xl); box-shadow: var(--shadow-xl);
-      max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
-    }
-    .modal-header {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; gap: var(--space-md); margin-bottom: var(--space-lg);
-    }
-    .modal-title {
-      font-family: var(--font-serif-display);
-      font-size: 22px; font-weight: 700; color: var(--color-ink);
-    }
-    .modal-close {
-      display: flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border-radius: var(--radius-md);
-      border: 1px solid var(--color-border); background: transparent;
-      color: var(--color-ink-muted); cursor: pointer; flex-shrink: 0; transition: all 150ms;
-    }
-    .modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }
-    .modal-footer {
-      display: flex; justify-content: flex-end; gap: var(--space-sm);
+    /* hidden-class visibility contract: these pages open modals by removing .hidden (issue #1390) */
+    .modal-overlay:not(.hidden) { display: flex; }
+    .modal-overlay .modal { max-height: 90vh; overflow-y: auto; }
+    .modal-overlay .modal-footer {
       margin-top: var(--space-lg); padding-top: var(--space-lg);
       border-top: 1px solid var(--color-border);
     }
