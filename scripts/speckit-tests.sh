@@ -2795,6 +2795,68 @@ test_check_sdd_fails_for_duplicate_fr_id() {
 }
 
 
+# --- Sketch table and deferral lint (issue #1379 PR-3) -----------------------
+append_artifact_link() {
+    printf '\n草圖：https://claude.ai/artifact/abc123\n' >> "$1/openspec/changes/project-sdd-lint/proposal.md"
+}
+
+append_delta_clause() {
+    local repo="$1" section="$2" clause="$3"
+    printf '\n## %s Requirements\n\n### Requirement: Fixture clause\n\n%s\n' "$section" "$clause" \
+        >> "$repo/openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
+}
+
+test_check_sdd_fails_for_artifact_link_without_sketch_table() {
+    local repo
+    repo="$(make_sdd_repo)"
+    append_artifact_link "$repo"
+
+    assert_command_fails_with "$repo" 1 "PROPOSAL_SKETCH_TABLE" "openspec/changes/project-sdd-lint/proposal.md"
+}
+
+test_check_sdd_accepts_artifact_link_with_sketch_table() {
+    local repo
+    repo="$(make_sdd_repo)"
+    append_artifact_link "$repo"
+    printf '\n## 草圖元素對照表\n\n| 元素 | 對應 |\n| --- | --- |\n| 按鈕 | FR-001 |\n' \
+        >> "$repo/openspec/changes/project-sdd-lint/proposal.md"
+
+    assert_command_succeeds "$repo" --not-rule PROPOSAL_SKETCH_TABLE
+}
+
+test_check_sdd_accepts_prototype_path_without_sketch_table() {
+    local repo
+    repo="$(make_sdd_repo)"
+    printf '\n原型：design/prototype/pages/dataset/list.html\n' >> "$repo/openspec/changes/project-sdd-lint/proposal.md"
+
+    assert_command_succeeds "$repo" --not-rule PROPOSAL_SKETCH_TABLE
+}
+
+test_check_sdd_fails_for_deferral_without_issue_number() {
+    local repo
+    repo="$(make_sdd_repo)"
+    append_delta_clause "$repo" ADDED '匯出格式不在本條範圍。'
+
+    assert_command_fails_with "$repo" 1 "DEFERRAL_WITHOUT_ISSUE" "openspec/changes/project-sdd-lint/specs/foundation/001-project-sdd-lint/spec.md"
+}
+
+test_check_sdd_accepts_deferral_with_issue_number() {
+    local repo
+    repo="$(make_sdd_repo)"
+    append_delta_clause "$repo" MODIFIED '匯出格式延後至 #1379。'
+
+    assert_command_succeeds "$repo" --not-rule DEFERRAL_WITHOUT_ISSUE
+}
+
+test_check_sdd_ignores_deferral_wording_outside_added_or_modified() {
+    local repo
+    repo="$(make_sdd_repo)"
+    append_delta_clause "$repo" REMOVED '匯出格式另案處理。'
+
+    assert_command_succeeds "$repo" --not-rule DEFERRAL_WITHOUT_ISSUE
+}
+
+
 # --- User path map freshness checker (issue #665 Stage 1) -------------------
 # Stage 1 fixtures only pin the fail-closed CLI surface. They must never supply
 # or guess the authoritative source metadata contract owned by issue #645.
@@ -3483,6 +3545,12 @@ test_check_sdd_accepts_ac_id_referenced_in_prose_after_single_definition
 test_check_sdd_accepts_same_ac_id_in_two_different_spec_files
 test_check_sdd_fails_for_duplicate_ac_id
 test_check_sdd_fails_for_duplicate_fr_id
+test_check_sdd_fails_for_artifact_link_without_sketch_table
+test_check_sdd_accepts_artifact_link_with_sketch_table
+test_check_sdd_accepts_prototype_path_without_sketch_table
+test_check_sdd_fails_for_deferral_without_issue_number
+test_check_sdd_accepts_deferral_with_issue_number
+test_check_sdd_ignores_deferral_wording_outside_added_or_modified
 test_path_map_freshness_help_documents_issue_645_dependency
 test_path_map_freshness_rejects_unsupported_argument
 test_path_map_freshness_rejects_extra_positional_argument
