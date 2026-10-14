@@ -155,7 +155,8 @@ test.describe('Issue #1376 — regression guards (must keep passing)', () => {
         { id: 'ID-BBB', text: 'second sample' },
         { id: 'ID-CCC', text: 'third sample' },
       ],
-      { id: 'output' },
+      // every non-id column is Output too, so no field yields Input text
+      { id: 'output', text: 'output' },
     );
     await expect(items(page)).toHaveCount(3);
     await expect(items(page).nth(0)).toHaveText('1');

@@ -244,11 +244,12 @@ test.describe('Issue #1338 — Step 1 list title revert (AC-1.9)', () => {
     await expect(page.getByTestId('list-title-preview-item').first()).toContainText('alpha one');
 
     // alpha_text does not exist in the new source: revert to auto + notice,
-    // and the preview follows the new rows (auto placeholder shows the id)
+    // and the preview follows the new rows (#1376: auto shows the first Input
+    // field's text, not the id)
     await sourceSelect.selectOption('$.altRecords');
     expect(await selectedLabel(page)).toBe(AUTO_LABEL_ZH);
     await expect(page.getByTestId('list-title-revert-notice')).toBeVisible();
-    await expect(page.getByTestId('list-title-preview-item').first()).toContainText('b1');
+    await expect(page.getByTestId('list-title-preview-item').first()).toContainText('beta one');
   });
 });
 
