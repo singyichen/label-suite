@@ -738,7 +738,7 @@ flowchart LR
 >
 > **v6.2.0 下游同步延後**：本次只完成 013 Task New producer-side 的 `sequence_tagging` config、language-aware Token 預覽、scheme 選擇與資料對齊驗證。現況：本版的 `tagging_scheme` 與 Token 契約已於 v7.0.0（issue #581）整組退役，原列的 consumer 延後項不再適用——015 已改為字元 offset span 工作區（015 v6.0.0，FR-024A-1）、017 已改為 span-level 指標與匯出層 BIO 推導（017 v3.0.0）、014 匯出對話框已提供方案與單位選擇（014 AC-1.10、AC-1.11，issue #742）。
 >
-> **v6.3.0 下游同步延後**：本次新增的 `tokenization.unit` 與字／詞切分只同步 013 Task New 設定和預覽。現況：`tokenization.unit` 已於 v7.0.0（issue #581）移除，015 不再建立正式 Token 或凍結 production tokenizer（見 015 spec 第 348 行說明，ADR-031 的後端權威 Token 邊界契約已作廢）；單位只在匯出時由 014 匯出對話框選擇（AC-1.10、AC-1.11，issue #742），017 的統計與品質指標改為 span-level（017 v3.0.0），原列的 consumer 延後項不再適用。
+> **v6.3.0 下游同步延後**：本次新增的 `tokenization.unit` 與字／詞切分只同步 013 Task New 設定和預覽。現況：`tokenization.unit` 已於 v7.0.0（issue #581）移除，015 不再建立正式 Token 或凍結 production tokenizer（見 015 使用者故事 2A 的 `sequence_tagging` span 說明，ADR-031 的後端權威 Token 邊界契約已作廢）；單位只在匯出時由 014 匯出對話框選擇（AC-1.10、AC-1.11，issue #742），017 的統計與品質指標改為 span-level（017 v3.0.0），原列的 consumer 延後項不再適用。
 >
 > **v6.4.2 列表消費語意**：010 Task List 與 016 Dataset Analysis List 均直接逐項顯示 `outputs[].type`，並以單一 `output_type` membership 語意篩選。`docs/product/example-data/` 的 13 份 fixture 只提供 prototype 驗收基線，不限制 `OUTPUT_TYPE_REGISTRY` 可建立的任務數量或合法組合；014 Task Detail（v2.0.0）、015 Annotation Workspace（v2.0.0）與 017 Dataset Analysis Detail（v2.0.0）其後已各自完成 `outputs[]` 遷移並共用 `OUTPUT_TYPE_REGISTRY`，原先的 consumer 延後不再適用；僅階層 `multi_label` 的 014 設定檢視與 017 統計／IAA 仍待 #1412。
 >
