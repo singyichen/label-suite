@@ -332,7 +332,7 @@
       "roles": ["annotator", "reviewer"],
       "states": ["default", "唯讀（已定稿）", "提交驗證錯誤", "空審核單元"],
       "reactOwnership": "features/annotation",
-      "components": ["sidebar", "chip", "mini-button", "modal", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "progress-bar", "empty-state", "tooltip", "review-status-track"],
+      "components": ["sidebar", "content-tabs", "chip", "mini-button", "modal", "language-toggle", "button", "navbar", "workspace-tab", "notification-bell", "bottom-tab-bar", "progress-bar", "empty-state", "tooltip", "review-status-track"],
       "note": "閱讀面板使用 Atkinson Hyperlegible；標記面板為 config-driven，涵蓋 8 種 output type（ADR-029）"
     },
     {
