@@ -6069,7 +6069,8 @@ function interpolate(template, payload) {
       }
     }
     if (stopStdPill) stopStdPill.classList.add('hidden');
-    if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
+    /* #1402 / FR-010t: count active annotator members, the same derivation as getMembershipGapMessages(). */
+    if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', getActiveAnnotatorMembers().length >= Number(TASK_DATA.minAnnotators));
     /* issue #1127: non-colour cue (icon + state word) so met / unmet /
        not-computable stay distinguishable without relying on colour. */
     appendStopPillCue(stopAgreementPill, stopAgreementPill && (stopAgreementPill.classList.contains('not-computable') ? 'not-computable' : stopAgreementPill.classList.contains('passed') ? 'met' : 'unmet'));
