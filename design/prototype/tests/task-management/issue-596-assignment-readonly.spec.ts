@@ -123,9 +123,9 @@ test.describe('Review assignment read-only + publish gate (issue #596)', () => {
 
     await page.locator('#tabOverview').click();
     await expect(page.locator('#overviewPanel')).not.toHaveClass(/hidden/);
-    await page.locator('#publishDryRunBtn').click();
-
-    await expect(page.locator('#toastMsg')).toContainText('審核員還差 1 位');
+    await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="reviewers"][data-status="unmet"]')).toContainText('審核員還差 1 位');
+    await expect(page.locator('#publishDryRunBtn')).toHaveAttribute('aria-describedby', /nextStepCond-reviewers/);
     await expect(page.locator('#statusBadge')).toHaveText('草稿');
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(0);
   });

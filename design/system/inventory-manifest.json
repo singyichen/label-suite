@@ -142,7 +142,7 @@
         "has", "hidden", "hide", "high", "history", "iaa", "inactive", "initial", "inline",
         "insufficient", "invite", "is-loading", "is-active", "is-dark", "is-on", "is-settings", "is-integrated", "isolation", "item-pair", "kv-dl", "kv-item", "kv-key", "kv-value", "kv-sub", "last", "layout", "leader", "legend",
         "loading", "locked", "login", "logout", "main", "match", "matrix", "md-id", "md-text", "md-time", "member", "metrics",
-        "mod-rate", "module", "mono", "na-cell", "normal", "not", "note", "notice", "open", "output", "overview",
+        "mod-rate", "module", "mono", "na-cell", "next", "normal", "not", "note", "notice", "open", "output", "overview",
         "page", "panel", "pass", "passed", "perm", "phase", "preference", "preview", "quality", "re-preview",
         "readonly", "ready", "register", "regression", "rel-sel", "required", "resend", "review", "reviewer",
         "risk", "role", "round", "rv-btn", "rv-choice", "rv-answer", "rv-correction", "rv-review", "rv-decision", "rv-section", "rv-merged", "rv-finalized", "rv-unit", "rv-flow", "rv-submit", "s2-primary", "s2-preview", "s2-layout", "s2-visual", "s2-settings", "s2-code", "sa-col", "sample", "sampling", "saved", "schema", "search",

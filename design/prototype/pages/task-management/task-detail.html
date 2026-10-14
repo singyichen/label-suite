@@ -1670,15 +1670,6 @@
       gap: 10px;
       margin-bottom: 12px;
     }
-    .exec-stop-row {
-      margin-bottom: var(--space-md);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .exec-stop-main { display: flex; flex-direction: column; gap: 8px; min-width: 120px; flex: 1; }
     /* issue #1348 (Plan A): vertical execution action column; scoped to #publishActionRow so global .btn / .status-hint stay untouched */
     #publishActionRow { display: flex; flex-direction: column; align-items: stretch; gap: 8px; max-width: 420px; }
     #publishActionRow .exec-action-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
@@ -1708,35 +1699,18 @@
     #publishActionRow .exec-action-done { margin: 0; font-size: 13px; color: var(--color-text-soft); text-align: right; }
     #publishActionRow .exec-action-done { text-align: left; padding: 10px 12px; border: 1px solid var(--color-success-border); border-radius: var(--radius-md); background: var(--color-success-bg); color: var(--color-success); }
     #publishActionRow .exec-action-done::before { content: "\2713 "; font-weight: 700; }
-    .exec-stop-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-    .exec-stop-actions { display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; }
-    .stop-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--color-border);
-      color: var(--color-text-soft);
-      background: var(--color-white);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .stop-pill-cue { width: 12px; height: 12px; flex-shrink: 0; }
-    .stop-pill.passed {
-      border-color: var(--color-success-border);
-      color: var(--color-success);
-      background: var(--color-success-bg);
-    }
-    /* issue #491: a third, distinct state for "not enough marked data to
-       compute IAA yet" -- must never look like the default (which already
-       reads as "not met") or like .passed, or a viewer would misread
-       "cannot compute" as one of those two states. */
-    .stop-pill.not-computable {
-      border-color: var(--color-warning-border);
-      color: var(--color-warning);
-      background: var(--color-warning-bg);
-    }
+    /* issue #1403 (FR-027(4)): the "next step" card -- header (state sentence + actions) over a condition list */
+    .next-step-card { margin-bottom: var(--space-md); padding: 14px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); display: flex; flex-direction: column; gap: 12px; }
+    .next-step-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .next-step-head-text { flex: 1; min-width: 200px; }
+    .next-step-title { margin: 0; font-size: 16px; line-height: 1.3; color: var(--color-ink); }
+    .next-step-desc { margin: 4px 0 0; }
+    .next-step-title:empty, .next-step-desc:empty { display: none; }
+    .next-step-actions { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+    .next-step-conditions { display: flex; flex-direction: column; gap: 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .next-step-conditions:empty { display: none; }
+    .next-step-group-title { margin: 0 0 4px; font-weight: 600; color: var(--color-ink); }
+    .next-step-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
     .round-history-panel {
       margin-bottom: var(--space-md);
     }
@@ -1899,16 +1873,13 @@
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
       .exec-stage-banner { flex-direction: column; }
-      .exec-stop-row,
-      .exec-stop-actions { align-items: flex-start; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
     }
 
     @media (max-width: 640px) {
-      .exec-stop-row { flex-direction: column; align-items: stretch; }
-      .exec-stop-actions { width: 100%; }
+      .next-step-actions { width: 100%; align-items: stretch; }
       #publishActionRow { max-width: none; width: 100%; }
       #publishActionRow .exec-action-buttons { flex-wrap: nowrap; }
       #publishActionRow .exec-action-buttons .btn,
@@ -2280,13 +2251,30 @@
       noPublishAction: '此狀態不提供發布操作。',
       noPublishActionDone: '任務已完成，無待執行動作',
       readonlySuffix: '（唯讀）',
-      execReasonsDraftTitle: '發布前需要處理',
       execReasonsCompleteTitle: '以下完成後才能標記完成',
       execReasonsBothTitle: '兩個動作都需要',
-      execReasonsOfficialTitle: '「開始正式標記」另外需要',
       execReasonsOfficialOnlyTitle: '「開始正式標記」需要',
       iaaComputationPendingReason: 'IAA 計算中，完成後才能繼續',
       publishUndeterminedNote: 'R{round} 的 IAA 無法判定是否達標，可直接開始正式標記，或再試標一回合',
+      nextStepTitleDraft: '下一步：新增試標回合 R1',
+      nextStepTitleDryRun: '下一步：完成本回合',
+      nextStepTitleWaiting: '下一步：開始正式標記，或再試標一回合',
+      nextStepTitleOfficial: '下一步：完成正式標記',
+      nextStepDescDraft: '發布前請確認以下條件都已滿足。',
+      nextStepDescWaiting: '依最新回合的結果，選擇開始正式標記，或再新增一個試標回合。',
+      nextStepGroupRequired: '這個動作需要',
+      nextStepGroupReminder: '提醒',
+      nextStepCondPool: '正式標記池有剩餘',
+      nextStepPoolLeftTpl: '剩餘 {count} 筆',
+      nextStepCondAnnotatorsTpl: '啟用中標記者 ≥ {count}',
+      nextStepCondReviewers: '啟用中審核員 ≥ 1',
+      nextStepMemberCountTpl: '目前 {count} 位',
+      nextStepCondIaaLater: 'IAA 提醒',
+      nextStepIaaLaterValue: '第一回合結束後才會計算，不阻擋發布',
+      nextStepCondIaaComputed: 'IAA 計算完成',
+      nextStepCondIaaAdvisory: 'IAA 未達目標',
+      nextStepIaaAdvisoryTpl: 'IAA {alpha}，低於目標 {target}；只是提醒，不阻擋任何動作',
+      nextStepCondIaaUndetermined: 'IAA 無法判定',
       reviewerHint: '僅 project leader 可操作',
       officialRunDisabled: '開始正式標記（唯讀）',
       dryRunNextRoundReason: '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合',
@@ -2830,13 +2818,30 @@
       noPublishAction: 'No publish action is available in this status.',
       noPublishActionDone: 'Task completed; no pending action',
       readonlySuffix: ' (Read-only)',
-      execReasonsDraftTitle: 'To handle before publishing',
       execReasonsCompleteTitle: 'Finish these before marking complete',
       execReasonsBothTitle: 'Needed for both actions',
-      execReasonsOfficialTitle: '"Start official run" also needs',
       execReasonsOfficialOnlyTitle: '"Start official run" needs',
       iaaComputationPendingReason: 'IAA computation is in progress; you can continue once it finishes',
       publishUndeterminedNote: 'R{round} IAA cannot determine whether the target is met. You can start the official run directly, or add another trial round',
+      nextStepTitleDraft: 'Next step: add trial round R1',
+      nextStepTitleDryRun: 'Next step: finish this round',
+      nextStepTitleWaiting: 'Next step: start the official run, or add another trial round',
+      nextStepTitleOfficial: 'Next step: finish the official run',
+      nextStepDescDraft: 'Confirm the conditions below are met before publishing.',
+      nextStepDescWaiting: 'Based on the latest round, start the official run or add another trial round.',
+      nextStepGroupRequired: 'This action needs',
+      nextStepGroupReminder: 'Reminder',
+      nextStepCondPool: 'Official pool has items left',
+      nextStepPoolLeftTpl: '{count} left',
+      nextStepCondAnnotatorsTpl: 'Active annotators ≥ {count}',
+      nextStepCondReviewers: 'Active reviewers ≥ 1',
+      nextStepMemberCountTpl: '{count} now',
+      nextStepCondIaaLater: 'IAA reminder',
+      nextStepIaaLaterValue: 'Computed after the first round ends; does not block publishing',
+      nextStepCondIaaComputed: 'IAA computation finished',
+      nextStepCondIaaAdvisory: 'IAA below target',
+      nextStepIaaAdvisoryTpl: 'IAA {alpha} is below the target {target}; reminder only, nothing is blocked',
+      nextStepCondIaaUndetermined: 'IAA cannot be determined',
       reviewerHint: 'Only project leader can perform this action',
       officialRunDisabled: 'Start official run (Read-only)',
       dryRunNextRoundReason: 'Finish this round\'s annotation, required review and required arbitration before adding the next round',
@@ -5903,45 +5908,6 @@ function interpolate(template, payload) {
         : 'Create the first trial round to validate agreement before deciding whether to start official work.');
     }
 
-    var STOP_PILL_CUE_PATHS = {
-      'met': '<polyline points="20 6 9 17 4 12"/>',
-      'unmet': '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
-      'not-computable': '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
-    };
-    var STOP_PILL_STATE_KEYS = { 'met': 'stopPillStateMet', 'unmet': 'stopPillStateUnmet', 'not-computable': 'stopPillStateNotComputable' };
-    function appendStopPillCue(pill, state) {
-      if (!pill) return;
-      pill.insertAdjacentHTML('beforeend',
-        '<svg class="stop-pill-cue" data-stop-pill-cue data-state="' + state + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + STOP_PILL_CUE_PATHS[state] + '</svg>' +
-        '<span class="stop-pill-state"></span>');
-      pill.querySelector('.stop-pill-state').textContent = t(STOP_PILL_STATE_KEYS[state]);
-    }
-
-    setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(getPrimaryTargetAgreement()).toFixed(2) }));
-    setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
-
-    var stopAgreementPill = document.getElementById('stopAgreementPill');
-    var stopStdPill = document.getElementById('stopStdPill');
-    var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
-    /* issue #491: 3-state pill. Number(null) === 0 previously made
-       "cannot compute yet" render as "not met", which reads as a stronger
-       (and wrong) claim than "we don't have an answer yet". */
-    if (stopAgreementPill) {
-      var primaryIaaForPill = getPrimaryIaaResult();
-      stopAgreementPill.classList.remove('passed', 'not-computable');
-      if (!primaryIaaForPill.computable) {
-        stopAgreementPill.classList.add('not-computable');
-      } else if (primaryIaaForPill.alpha >= Number(getPrimaryTargetAgreement())) {
-        stopAgreementPill.classList.add('passed');
-      }
-    }
-    if (stopStdPill) stopStdPill.classList.add('hidden');
-    /* #1402 / FR-010t: count active annotator members, the same derivation as getMembershipGapMessages(). */
-    if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', getActiveAnnotatorMembers().length >= Number(TASK_DATA.minAnnotators));
-    /* issue #1127: non-colour cue (icon + state word) so met / unmet /
-       not-computable stay distinguishable without relying on colour. */
-    appendStopPillCue(stopAgreementPill, stopAgreementPill && (stopAgreementPill.classList.contains('not-computable') ? 'not-computable' : stopAgreementPill.classList.contains('passed') ? 'met' : 'unmet'));
-    appendStopPillCue(stopAnnotatorPill, stopAnnotatorPill && (stopAnnotatorPill.classList.contains('passed') ? 'met' : 'unmet'));
     renderSplitVisualization(
       (function() {
         var rounds = getTrialRounds();
@@ -6108,6 +6074,72 @@ function interpolate(template, payload) {
     warning.classList.toggle('hidden', !shouldShow);
   }
 
+  /* issue #1403 (FR-027(4)): next-step card rows come from existing sources only -- never the task type or annotation answers. */
+  function nextStepRow(key, status, label, value, id, extraHtml) {
+    return { key: key, status: status, label: label, value: value, extraHtml: extraHtml || '',
+      id: status === 'met' ? '' : (id || 'nextStepCond-' + key) };
+  }
+
+  function nextStepGroup(key, rows) {
+    var titleKeys = { required: 'nextStepGroupRequired', both: 'execReasonsBothTitle', 'official-only': 'execReasonsOfficialOnlyTitle', reminder: 'nextStepGroupReminder' };
+    return { key: key, title: t(titleKeys[key]), rows: rows };
+  }
+
+  function nextStepGroupsHtml(groups) {
+    var iconGlyphs = { met: '✓', unmet: '○', info: 'ⓘ' };
+    return groups.map(function(group) {
+      return '<div class="next-step-group" data-group="' + group.key + '"><p class="next-step-group-title">' + group.title + '</p><ul>' +
+        group.rows.map(function(row) {
+          return '<li class="next-step-cond" data-cond="' + row.key + '" data-status="' + row.status + '"' + (row.id ? ' id="' + row.id + '"' : '') + '>' +
+            '<span class="next-step-cond-icon">' + iconGlyphs[row.status] + '</span> ' +
+            '<span class="next-step-cond-label">' + row.label + '</span> ' +
+            '<span class="next-step-cond-value">' + row.value + '</span> ' + row.extraHtml + '</li>';
+        }).join('') + '</ul></div>';
+    }).join('');
+  }
+
+  function nextStepUnmetIds(groups, groupKeys) {
+    var ids = [];
+    groups.forEach(function(group) {
+      if (groupKeys.indexOf(group.key) === -1) return;
+      group.rows.forEach(function(row) { if (row.status === 'unmet') ids.push(row.id); });
+    });
+    return ids;
+  }
+
+  function nextStepGateAttrs(ids, forceDisabled) {
+    return (ids.length || forceDisabled ? ' disabled' : '') + (ids.length ? ' aria-describedby="' + ids.join(' ') + '"' : '');
+  }
+
+  /* waiting_iaa_confirmation rows (FR-010o-3 / FR-010o-4 / FR-022): IAA never blocks except while computing or failed. */
+  function getWaitingGroups() {
+    var currentRound = getCurrentTrialRound();
+    var computationStatus = getRoundComputationStatus(currentRound);
+    var officialPoolKey = getPublishPoolBlockKey('official');
+    var groups = [];
+    if (computationStatus !== 'done') {
+      var isPending = computationStatus === 'pending';
+      groups.push(nextStepGroup('both', [nextStepRow('iaa-computed', 'unmet', t('nextStepCondIaaComputed'),
+        t(isPending ? 'iaaComputationPendingReason' : 'iaaComputationFailedReason'), 'publishIaaReason',
+        isPending ? '' : '<button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>')]));
+    }
+    groups.push(nextStepGroup('official-only', [officialPoolKey
+      ? nextStepRow('pool', 'unmet', t('nextStepCondPool'), t(officialPoolKey), 'publishPoolReason')
+      : nextStepRow('pool', 'met', t('nextStepCondPool'), interpolate(t('nextStepPoolLeftTpl'), { count: getOfficialPoolCount() }))]));
+    if (computationStatus === 'done') {
+      var iaa = getPrimaryIaaResult();
+      var target = Number(getPrimaryTargetAgreement());
+      if (currentRound && currentRound.result === 'in_progress') {
+        groups.push(nextStepGroup('reminder', [nextStepRow('iaa-undetermined', 'info', t('nextStepCondIaaUndetermined'),
+          interpolate(t('publishUndeterminedNote'), { round: currentRound.round }), 'publishUndeterminedNote')]));
+      } else if (iaa.computable && iaa.alpha < target) {
+        groups.push(nextStepGroup('reminder', [nextStepRow('iaa-advisory', 'info', t('nextStepCondIaaAdvisory'),
+          interpolate(t('nextStepIaaAdvisoryTpl'), { alpha: Number(iaa.alpha).toFixed(2), target: target.toFixed(2) }))]));
+      }
+    }
+    return groups;
+  }
+
   /* issue #1348 (Plan A): the execution control cell is a vertical column --
      .exec-action-buttons on top, then one light "still missing" block whose items
      belong to the button(s) above. Each reason is rendered exactly once. */
@@ -6126,6 +6158,16 @@ function interpolate(template, payload) {
     if (!actionRow) return;
     renderPublishArbiterWarning();
     var nextRound = getTrialRounds().length + 1;
+    var stateKeys = {
+      draft: ['nextStepTitleDraft', 'nextStepDescDraft'],
+      dry_run_in_progress: ['nextStepTitleDryRun', ''],
+      waiting_iaa_confirmation: ['nextStepTitleWaiting', 'nextStepDescWaiting'],
+      official_run_in_progress: ['nextStepTitleOfficial', '']
+    }[TASK_DATA.status];
+    setText('nextStepTitle', stateKeys ? t(stateKeys[0]) : '');
+    setText('nextStepDesc', stateKeys && stateKeys[1] ? t(stateKeys[1]) : '');
+    var conditions = document.getElementById('nextStepConditions');
+    if (conditions) conditions.innerHTML = '';
 
     if (state.taskRole === 'reviewer') {
       /* issue #1348 D4: the label follows the state like project_leader's; the title tooltip and a visible note keep it read-only (FR-027(6)). */
@@ -6144,16 +6186,20 @@ function interpolate(template, payload) {
 
     if (TASK_DATA.status === 'draft') {
       var draftPoolKey = getPublishPoolBlockKey('dry');
-      /* FR-022(3): the member gap (FR-010t) is its own item next to the pool reason. */
-      var draftGaps = draftPoolKey ? getMembershipGapMessages() : [];
-      var draftDescribedBy = 'publishPoolReason' + (draftGaps.length ? ' publishMemberGapReason' : '');
-      var draftGapHtml = draftGaps.length
-        ? '<li id="publishMemberGapReason">' + t('toastPublishBlockedMembers') + draftGaps.join(t('memberGapJoiner')) + '</li>'
-        : '';
-      actionRow.innerHTML = draftPoolKey
-        ? execColumnHtml('<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled aria-describedby="' + draftDescribedBy + '">' + t('publishDryRun') + ' R1</button>', '',
-            execReasonsGroupHtml(t('execReasonsDraftTitle'), poolReasonHtml(draftPoolKey) + draftGapHtml))
-        : execColumnHtml('<button class="btn btn-primary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>', '', '');
+      var annotatorGaps = getMembershipGapMessages('annotator');
+      var reviewerGaps = getMembershipGapMessages('reviewer');
+      groups = [nextStepGroup('required', [
+        draftPoolKey
+          ? nextStepRow('pool', 'unmet', t('nextStepCondPool'), t(draftPoolKey), 'publishPoolReason')
+          : nextStepRow('pool', 'met', t('nextStepCondPool'), interpolate(t('nextStepPoolLeftTpl'), { count: getReserveAfterSampling(Number(TASK_DATA.samplingValue) || 0) })),
+        nextStepRow('annotators', annotatorGaps.length ? 'unmet' : 'met', interpolate(t('nextStepCondAnnotatorsTpl'), { count: TASK_DATA.minAnnotators }),
+          annotatorGaps.length ? annotatorGaps.join(t('memberGapJoiner')) : interpolate(t('nextStepMemberCountTpl'), { count: getActiveAnnotatorMembers().length })),
+        nextStepRow('reviewers', reviewerGaps.length ? 'unmet' : 'met', t('nextStepCondReviewers'),
+          reviewerGaps.length ? reviewerGaps.join(t('memberGapJoiner')) : interpolate(t('nextStepMemberCountTpl'), { count: getEffectiveReviewerIds(TASK_DATA.reviewerIds).length }))
+      ]), nextStepGroup('reminder', [nextStepRow('iaa-later', 'info', t('nextStepCondIaaLater'), t('nextStepIaaLaterValue'))])];
+      buttonsHtml = '<button class="btn btn-primary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['required'])) + '>' + t('publishDryRun') + ' R1</button>';
+      actionRow.innerHTML = execColumnHtml(buttonsHtml, '', '');
+      if (conditions) conditions.innerHTML = nextStepGroupsHtml(groups);
       return;
     }
 
@@ -6169,37 +6215,12 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'waiting_iaa_confirmation') {
-      /* issue #783 (FR-010o-4(5)/(6)): neither the "start official run" nor
-         the "add next trial round" transition may proceed while the latest
-         round's IAA computation has not finished -- disable both with a
-         visible reason (issue #791 D4). The retry control (FR-010o-4(3)) is
-         project_leader-only; the reviewer branch above returns before this
-         point for these statuses. */
-      var currentRound = getCurrentTrialRound();
-      var computationStatus = getRoundComputationStatus(currentRound);
-      /* FR-022: the pool reason is its own item, never merged into the IAA reason. */
-      var officialPoolKey = getPublishPoolBlockKey('official');
-      var poolItemHtml = officialPoolKey ? poolReasonHtml(officialPoolKey) : '';
-      if (computationStatus !== 'done') {
-        var isPending = computationStatus === 'pending';
-        var iaaItemHtml = '<li id="publishIaaReason">' + t(isPending ? 'iaaComputationPendingReason' : 'iaaComputationFailedReason') +
-          (isPending ? '' : ' <button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>') + '</li>';
-        actionRow.innerHTML = execColumnHtml(
-          '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled aria-describedby="publishIaaReason' + (officialPoolKey ? ' publishPoolReason' : '') + '">' + t('publishOfficialRun') + '</button>' +
-          '<button class="btn btn-secondary" type="button" id="publishDryRunBtn" disabled aria-describedby="publishIaaReason">' + t('publishDryRun') + ' R' + nextRound + '</button>', '',
-          execReasonsGroupHtml(t('execReasonsBothTitle'), iaaItemHtml) +
-          (officialPoolKey ? execReasonsGroupHtml(t('execReasonsOfficialTitle'), poolItemHtml) : ''));
-        return;
-      }
-      /* issue #1348 D3: IAA computed but the verdict is "cannot determine" -- both buttons stay enabled, so say what pressing them means. */
-      var undeterminedHtml = currentRound && currentRound.result === 'in_progress'
-        ? '<p class="exec-action-note" id="publishUndeterminedNote">' + interpolate(t('publishUndeterminedNote'), { round: currentRound.round }) + '</p>'
-        : '';
+      /* issue #783 (FR-010o-4(5)/(6)): both transitions wait for the latest round's IAA computation. */
+      var groups = getWaitingGroups();
       actionRow.innerHTML = execColumnHtml(
-        '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + (officialPoolKey ? ' disabled aria-describedby="publishPoolReason"' : '') + '>' + t('publishOfficialRun') + '</button>' +
-        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>',
-        undeterminedHtml,
-        officialPoolKey ? execReasonsGroupHtml(t('execReasonsOfficialOnlyTitle'), poolItemHtml) : '');
+        '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['both', 'official-only'])) + '>' + t('publishOfficialRun') + '</button>' +
+        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['both'])) + '>' + t('publishDryRun') + ' R' + nextRound + '</button>', '', '');
+      if (conditions) conditions.innerHTML = nextStepGroupsHtml(groups);
       return;
     }
 
@@ -8008,12 +8029,13 @@ function getTaskTypeLabel() {
      (min_reviewers is retired: a review unit always has exactly one
      reviewer). Returns one interpolated "還差 N 位" message per short-handed
      role so canPublish() can surface every gap at once. */
-  function getMembershipGapMessages() {
+  function getMembershipGapMessages(role) {
     var messages = [];
     var annotatorGap = Number(TASK_DATA.minAnnotators) - getActiveAnnotatorMembers().length;
-    if (annotatorGap > 0) {
+    if (annotatorGap > 0 && role !== 'reviewer') {
       messages.push(interpolate(t('memberGapAnnotatorTpl'), { count: annotatorGap }));
     }
+    if (role === 'annotator') return messages;
     var activeReviewerIds = getEffectiveReviewerIds(TASK_DATA.reviewerIds);
     var reviewerGap = 1 - activeReviewerIds.length;
     if (reviewerGap > 0) {
@@ -11365,7 +11387,8 @@ function getTaskTypeLabel() {
       });
     }
 
-    document.getElementById('publishActionRow').addEventListener('click', function(e) {
+    /* issue #1403: delegated on the card so the retry button inside the iaa-computed row is covered too. */
+    document.getElementById('nextStepCard').addEventListener('click', function(e) {
       if (e.target.id === 'publishDryRunBtn') {
         trackEvent('prototype_cta_clicked', { cta: 'publish_dry_run' });
         if (isTrialRoundCreationBlocked()) return;
