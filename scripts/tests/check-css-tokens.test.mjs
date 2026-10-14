@@ -157,3 +157,69 @@ test('files under node_modules, tests and tests-node are not scanned', () => {
   const { status, out } = run(root);
   assert.equal(status, 0, out);
 });
+
+// ---- Review follow-ups (H1, H2, M1, M2) ----
+
+test('html: var() in html comments, script and prose is not scanned (M1)', () => {
+  const root = makeRoot({
+    'design/prototype/pages/a/page.html':
+      '<!-- var(--in-comment) -->\n<p>text var(--in-prose)</p>\n<script>\n// var(--in-js)\nconst s = "var(--in-str)";\n</script>\n',
+  });
+  const { status, out } = run(root);
+  assert.equal(status, 0, out);
+});
+
+test('html: <style> block and style attribute are still scanned (M1)', () => {
+  const root = makeRoot({
+    'design/prototype/pages/a/page.html':
+      '<style>\n.a { color: var(--in-style); }\n</style>\n<div style="color: var(--in-attr)"></div>\n',
+  });
+  const { status, out } = run(root);
+  assert.equal(status, 1, out);
+  assert.match(out, /page\.html:2: undefined token --in-style/);
+  assert.match(out, /page\.html:4: undefined token --in-attr/);
+});
+
+test('a commented-out declaration does not define the token (H2)', () => {
+  const root = makeRoot({
+    'design/prototype/pages/a/page.html':
+      '<!-- --ghost: 1 -->\n<script>const x = "--ghost: 2";</script>\n<style>.a { color: var(--ghost); }</style>\n',
+  });
+  const { status, out } = run(root);
+  assert.equal(status, 1, out);
+  assert.match(out, /undefined token --ghost/);
+});
+
+test('uppercase VAR and multi-line var( are detected (M2)', () => {
+  const root = makeRoot({
+    'design/prototype/pages/a/a.css': '.a { color: VAR(--upper); }\n.b {\n  color: var(\n    --multi\n  );\n}\n',
+  });
+  const { status, out } = run(root);
+  assert.equal(status, 1, out);
+  assert.match(out, /a\.css:1: undefined token --upper/);
+  assert.match(out, /a\.css:4: undefined token --multi/);
+});
+
+test('stale allowlist entry (never matched) fails (H1)', () => {
+  const root = makeRoot({ 'design/prototype/pages/a/a.css': '.a { color: var(--color-primary); }\n' });
+  const { status, out } = run(root, [
+    { file: 'design/prototype/pages/a/a.css', token: '--gone', reason: 'was needed once' },
+  ]);
+  assert.equal(status, 1, out);
+  assert.match(out, /stale allowlist entry/);
+});
+
+test('duplicate allowlist entry fails (H1)', () => {
+  const root = makeRoot({ 'design/prototype/pages/a/a.css': '.a { color: var(--missing); }\n' });
+  const entry = { file: 'design/prototype/pages/a/a.css', token: '--missing', reason: 'host page declares it' };
+  const { status, out } = run(root, [entry, entry]);
+  assert.equal(status, 1, out);
+  assert.match(out, /duplicate allowlist entry/);
+});
+
+test('allowlist entry missing file or token fails cleanly (H1)', () => {
+  const root = makeRoot({});
+  const { status, out } = run(root, [{ token: '--x', reason: 'r' }]);
+  assert.equal(status, 1, out);
+  assert.match(out, /file/);
+});
