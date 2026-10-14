@@ -37,11 +37,12 @@ test.describe('Task detail disabled .btn token (#1129)', () => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002&task_role=reviewer`);
     const btn = page.locator('#publishActionRow .btn:disabled').first();
     await expect(btn).toBeAttached({ timeout: PANEL_LOAD_TIMEOUT });
+    /* #1368: the skeleton-timer re-render rebuilds the publish row, so wait for it to settle. */
+    await expect(page.locator('#loadingSkeleton')).toBeHidden({ timeout: PANEL_LOAD_TIMEOUT });
 
-    const style = await disabledStyle(btn);
-    expect.soft(style.opacity).toBe('1');
-    expect.soft(style.pointerEvents).toBe('none');
-    expect(style.cursor).toBe('not-allowed');
+    await expect.poll(() => disabledStyle(btn).then((s) => s.opacity)).toBe('1');
+    await expect.poll(() => disabledStyle(btn).then((s) => s.pointerEvents)).toBe('none');
+    await expect.poll(() => disabledStyle(btn).then((s) => s.cursor)).toBe('not-allowed');
   });
 
   test('a real .btn forced into :disabled state gets the same token', async ({ page }) => {
@@ -49,11 +50,16 @@ test.describe('Task detail disabled .btn token (#1129)', () => {
     await openSettingsSection(page, 'labeling');
     const editBtn = page.locator('#settingsEditBtn');
     await expect(editBtn).toBeEnabled({ timeout: PANEL_LOAD_TIMEOUT });
+    /* #1368: init() finishes with a 560 ms skeleton timer whose callback re-runs
+       renderOverview() -> renderSettingsEditState(), which resets editBtn.disabled. Forcing
+       the state before that render lands is overwritten (CI saw opacity 1 / pointer-events
+       auto), so wait for the skeleton to be gone first. */
+    await expect(page.locator('#loadingSkeleton')).toBeHidden({ timeout: PANEL_LOAD_TIMEOUT });
     await editBtn.evaluate((el) => ((el as HTMLButtonElement).disabled = true));
+    await expect(editBtn).toBeDisabled();
 
-    const style = await disabledStyle(editBtn);
-    expect.soft(style.opacity).toBe('0.4');
-    expect.soft(style.pointerEvents).toBe('none');
+    await expect.poll(() => disabledStyle(editBtn).then((s) => s.opacity)).toBe('0.4');
+    await expect.poll(() => disabledStyle(editBtn).then((s) => s.pointerEvents)).toBe('none');
   });
 
   test('.mini-btn:disabled keeps opacity 0.45 (out of scope for #1129)', async ({ page }) => {
@@ -61,12 +67,14 @@ test.describe('Task detail disabled .btn token (#1129)', () => {
     await page.locator('#tabMemberManagement').click();
     const mini = page.locator('.mini-btn').first();
     await expect(mini).toBeAttached({ timeout: PANEL_LOAD_TIMEOUT });
+    /* #1368: same skeleton-timer re-render race as the forced-.btn test above. */
+    await expect(page.locator('#loadingSkeleton')).toBeHidden({ timeout: PANEL_LOAD_TIMEOUT });
     await mini.evaluate((el) => ((el as HTMLButtonElement).disabled = true));
+    await expect(mini).toBeDisabled();
 
-    const style = await disabledStyle(mini);
-    expect(style.opacity).toBe('0.45');
-    expect(style.pointerEvents).toBe('none');
-    expect(style.cursor).toBe('not-allowed');
+    await expect.poll(() => disabledStyle(mini).then((s) => s.opacity)).toBe('0.45');
+    await expect.poll(() => disabledStyle(mini).then((s) => s.pointerEvents)).toBe('none');
+    await expect.poll(() => disabledStyle(mini).then((s) => s.cursor)).toBe('not-allowed');
   });
 
   test('reviewer disabled CTA stays hoverable for its tooltip (AC-3.72): hit element or ancestor carries the button title', async ({ page }) => {
