@@ -5785,7 +5785,8 @@ function renderListTitleBlock() {
 }
 
 /* ── Dialogue fields (#1340): detect an Input object-array column, prefill and confirm ──
-   Enabled only on hosts that seed state.dialogueFields (task-new); undefined = off. */
+   Enabled only on hosts that seed state.dialogueFields (task-new; task-detail seeds it from the
+   task's stored dialogue_fields); undefined = off. */
 var DIALOGUE_FIELD_NAME_HINTS = {
   text: ['text', 'utterance', 'content', 'message', 'sentence'],
   speaker: ['speaker', 'role', 'author', 'user', 'name'],
