@@ -22,3 +22,16 @@
   font-weight: 700;
   line-height: 1.2;
 }
+
+/* Optional description line under the value (issue #1453); defaults only, no new tokens. */
+.metric .metric-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-soft);
+  margin-top: 2px;
+}
+
+/* Hero size for a single standalone KPI (issue #1453). */
+.metric-lg strong {
+  font-size: 2.5rem;
+}
