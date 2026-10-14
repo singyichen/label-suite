@@ -222,3 +222,61 @@ test.describe('Issue #1403 -- next-step card: draft condition list (tasks 2.1)',
     }
   });
 });
+
+/** Every unmet row has an id and the disabled button points at exactly those ids (FR-027(4), FR-013(8)). */
+async function expectDescribedByEveryUnmetRow(page: Page, button: Locator) {
+  const unmetIds = await page
+    .locator(`${CARD} li.next-step-cond[data-status="unmet"]`)
+    .evaluateAll((els) => els.map((e) => e.id));
+  expect(unmetIds.length, 'at least one unmet row').toBeGreaterThan(0);
+  for (const id of unmetIds) expect(id, 'unmet row has an id').not.toBe('');
+  expect((await describedIds(button)).sort()).toEqual([...unmetIds].sort());
+}
+
+test.describe('Issue #1403 -- next-step card: dry_run_in_progress and official_run_in_progress (tasks 3.1)', () => {
+  test('dry_run_in_progress: description is the AC-3.14 reason; rows are the FR-008a four and never a pool row', async ({ page }) => {
+    await open(page, url('T014'));
+    await expect(page.locator('#nextStepDesc')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
+    expect(await condKeys(page)).toEqual(['submission', 'review', 'dispute', 'exception-pool']);
+    await expect(cond(page, 'pool')).toHaveCount(0);
+    for (const k of ['annotators', 'reviewers', 'iaa-computed', 'iaa-advisory', 'iaa-undetermined', 'iaa-later', 'quality-metrics']) {
+      await expect(cond(page, k), k).toHaveCount(0);
+    }
+  });
+
+  test('dry_run_in_progress: 新增試標回合 is disabled and described by every unmet row (AC-3.14)', async ({ page }) => {
+    await open(page, url('T014'));
+    const buttons = page.locator(`${CARD} #publishActionRow button`);
+    await expect(buttons).toHaveCount(1);
+    const btn = page.locator('#publishDryRunBtn');
+    await expect(btn).toContainText('新增試標回合 R2');
+    await expect(btn).toBeDisabled();
+    await expectDescribedByEveryUnmetRow(page, btn);
+  });
+
+  test('official_run_in_progress: rows are the FR-008b five, without annotators or iaa rows (AC-3.9)', async ({ page }) => {
+    await open(page, url('T016'));
+    expect(await condKeys(page)).toEqual(['submission', 'review', 'dispute', 'exception-pool', 'quality-metrics']);
+    for (const k of ['pool', 'annotators', 'reviewers', 'iaa-computed', 'iaa-advisory', 'iaa-undetermined', 'iaa-later']) {
+      await expect(cond(page, k), k).toHaveCount(0);
+    }
+  });
+
+  test('official_run_in_progress (T016 seed): dispute and exception-pool rows are unmet, 標記完成 is disabled and described by them (AC-3.9, SC-037)', async ({ page }) => {
+    await open(page, url('T016'));
+    await expect(cond(page, 'submission')).toHaveAttribute('data-status', 'met');
+    await expect(cond(page, 'dispute')).toHaveAttribute('data-status', 'unmet');
+    await expect(cond(page, 'exception-pool')).toHaveAttribute('data-status', 'unmet');
+    await expect(cond(page, 'dispute').locator('.next-step-cond-value')).toContainText(/\d/);
+    const btn = page.locator('#publishCompleteBtn');
+    await expect(btn).toBeDisabled();
+    await expectDescribedByEveryUnmetRow(page, btn);
+  });
+
+  test('official_run_in_progress with every dispute resolved: all five rows are met and 標記完成 is enabled (FR-008b)', async ({ page }) => {
+    await openGateSatisfiedT016(page, BASE);
+    await expect(page.locator(CARD)).toBeVisible();
+    expect(await page.locator(`${CARD} li.next-step-cond[data-status="met"]`).count()).toBe(5);
+    await expect(page.locator(`${CARD} li.next-step-cond[data-status="unmet"]`)).toHaveCount(0);
+  });
+});
