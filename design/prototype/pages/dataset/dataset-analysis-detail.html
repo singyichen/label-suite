@@ -1365,13 +1365,7 @@ function computeCompositeBadge(taskMeta) {
   counted.forEach(function(type) {
     var d = iaaData[type];
     if (!d) { hasPending = true; return; }
-    // #1451: single_label counts the card's computed state (uncomputable => not in x, still in y).
-    var pass = d.pass;
-    if (type === 'single_label') {
-      var computed = getSingleLabelIaaState();
-      if (computed) pass = computed.pass;
-    }
-    if (pass) x += 1;
+    if (d.pass) x += 1;
   });
   if (hasPending) return { state: 'pending', x: null, y: y, excludedCount: excludedCount };
   return { state: x === y ? 'pass' : 'fail', x: x, y: y, excludedCount: excludedCount };
@@ -1642,7 +1636,16 @@ function updateSummaryBadge() {
   // SC-006B: entity_recognition's partial-overlap F1 display toggle (S.seqMode) is
   // display-only and must never change the composite gate state — strict Span F1 is
   // the only metric that gates pass/fail (iaaData.pass is fixed regardless of S.seqMode).
-  var result = computeCompositeBadge(taskMeta);
+  // #1451: computeCompositeBadge stays pure; the page feeds it the card's computed single_label
+  // state (uncomputable => not in x, still in y) so the badge and the card share one computation.
+  var effective = Object.assign({}, taskMeta);
+  var computed = getSingleLabelIaaState();
+  if (computed && taskMeta.iaaData && taskMeta.iaaData.single_label) {
+    effective.iaaData = Object.assign({}, taskMeta.iaaData, {
+      single_label: Object.assign({}, taskMeta.iaaData.single_label, { pass: computed.pass })
+    });
+  }
+  var result = computeCompositeBadge(effective);
   var cssState = (result.state === 'pending' || result.state === 'not_applicable') ? 'neutral' : result.state;
   badge.className = 'badge iaa-summary-badge badge-' + cssState;
   badge.textContent = compositeBadgeText(result);

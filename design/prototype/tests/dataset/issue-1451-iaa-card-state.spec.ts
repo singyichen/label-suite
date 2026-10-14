@@ -66,9 +66,26 @@ test.describe('Issue #1451: IAA card state is derived, not hardcoded', () => {
   });
 
   // No seeded single_label task is computable AND >= threshold (T014 is the only computable
-  // one, alpha 0.59). The card-pass + x-count path therefore cannot be asserted in the prototype
-  // fixtures; the card-fail test above plus the non-single_label mirror test below cover state
-  // derivation, and the pass branch is covered by the mirror test on T013/T007 pass cards.
+  // one, alpha 0.59), so the pass path is exercised on an injected card instead. Regression
+  // guard only: syncIaaCardStates already exists, so this passes without new implementation.
+  test('syncIaaCardStates: an injected card with a pass value becomes card-pass and drops stale card-fail/card-warn', async ({ page }) => {
+    await gotoQuality(page, 'T014');
+    await page.evaluate(() => {
+      const mount = document.getElementById('qualityPanelMount') as HTMLElement;
+      const card = document.createElement('div');
+      card.id = 'injectedPassCard';
+      card.className = 'iaa-score-card card-fail card-warn';
+      const value = document.createElement('div');
+      value.className = 'iaa-card-value pass';
+      card.appendChild(value);
+      mount.appendChild(card);
+      (window as unknown as { syncIaaCardStates: (root: HTMLElement) => void }).syncIaaCardStates(mount);
+    });
+    const injected = page.locator('#injectedPassCard');
+    await expect(injected).toHaveClass(/\bcard-pass\b/);
+    await expect(injected).not.toHaveClass(/\bcard-fail\b/);
+    await expect(injected).not.toHaveClass(/\bcard-warn\b/);
+  });
 
   test('source guard: no quality-*.html partial hardcodes a card state class', () => {
     const offenders: string[] = [];
