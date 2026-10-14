@@ -68,7 +68,8 @@ function digit(n: number) {
 }
 
 async function reasonTexts(page: Page): Promise<string[]> {
-  return page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]').allInnerTexts();
+  // The icon glyph is aria-hidden (#1438), so it is not part of the accessible description: strip it.
+  return (await page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]').allInnerTexts()).map((text) => text.replace(/^[✓○ⓘ]\s*/, ''));
 }
 
 function pick(texts: string[], accept: RegExp, reject?: RegExp) {

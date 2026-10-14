@@ -154,7 +154,8 @@ export async function openWithState(page: Page, taskId: string, samples: number,
 }
 
 export async function reasonTexts(page: Page): Promise<string[]> {
-  return page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]').allInnerTexts();
+  // The icon glyph is aria-hidden (#1438), so it is not part of the accessible description: strip it.
+  return (await page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]').allInnerTexts()).map((text) => text.replace(/^[✓○ⓘ]\s*/, ''));
 }
 
 export function digit(n: number) {
