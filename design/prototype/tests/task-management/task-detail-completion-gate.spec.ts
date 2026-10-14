@@ -21,7 +21,7 @@
  *
  * Contract for Green (structure pinned; WORDING is not):
  *   - While any FR-008b condition is unmet, #publishCompleteBtn is natively `disabled` and
- *     each unmet condition is ONE visible `li` inside #publishActionRow (not hover/colour
+ *     each unmet condition is ONE visible `li.next-step-cond[data-status=unmet]` inside #nextStepCard (not hover/colour
  *     only). The button's aria-describedby points at that list so screen readers get the
  *     same text (toHaveAccessibleDescription).
  *   - Reason categories are told apart by keyword only: submission = /提交/ (not mixed with
@@ -68,7 +68,7 @@ function digit(n: number) {
 }
 
 async function reasonTexts(page: Page): Promise<string[]> {
-  return page.locator('#publishActionRow li').allInnerTexts();
+  return page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]').allInnerTexts();
 }
 
 function pick(texts: string[], accept: RegExp, reject?: RegExp) {
@@ -181,7 +181,7 @@ test.describe('Official completion gate (FR-008b, AC-3.9, SC-037)', () => {
     // The exception pool is empty for T015, so it must not be listed as a reason.
     expect(pick(texts, POOL.accept)).toHaveLength(0);
     for (const reason of texts) {
-      await expect(page.locator('#publishActionRow li', { hasText: reason }).first()).toBeVisible();
+      await expect(page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]', { hasText: reason }).first()).toBeVisible();
     }
   });
 

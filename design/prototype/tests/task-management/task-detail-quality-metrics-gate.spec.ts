@@ -6,7 +6,7 @@
  *
  * Contract: on an official_run_in_progress task whose FR-008b conditions 1-4 are all satisfied,
  *   - latest round `pending` / `failed`: #publishCompleteBtn is natively disabled, ONE visible
- *     `li` in #publishActionRow explains the quality-metrics problem in Traditional Chinese
+ *     unmet `li.next-step-cond` row in #nextStepCard explains the quality-metrics problem in Traditional Chinese
  *     (computing vs failed told apart by keyword), the button's accessible description carries
  *     it, and publishComplete() (direct call, or `disabled` removed + click) leaves the status
  *     official_run_in_progress.
@@ -35,7 +35,7 @@ const IDENTITY = { annotatorId: 'kioleemg12' };
 type LatestRound = { status?: 'pending' | 'failed' | 'done'; notComputable?: boolean };
 
 async function reasonTexts(page: Page): Promise<string[]> {
-  return page.locator('#publishActionRow li').allInnerTexts();
+  return page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]').allInnerTexts();
 }
 
 async function persistedStatus(page: Page) {
@@ -102,7 +102,7 @@ test.describe('Quality-metrics completion gate (FR-008b(5), issue #1141)', () =>
     expect(texts[0]).toMatch(/品質指標/);
     expect(texts[0]).toMatch(/計算中|尚在計算|進行中/);
     expect(texts[0]).not.toMatch(/失敗/);
-    await expect(page.locator('#publishActionRow li', { hasText: '品質指標' }).first()).toBeVisible();
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="quality-metrics"][data-status="unmet"]', { hasText: '品質指標' }).first()).toBeVisible();
     await expect(page.locator('#publishCompleteBtn')).toHaveAttribute('aria-describedby', /\S+/);
     await expect(page.locator('#publishCompleteBtn')).toHaveAccessibleDescription(/品質指標/);
   });
@@ -117,7 +117,7 @@ test.describe('Quality-metrics completion gate (FR-008b(5), issue #1141)', () =>
     expect(texts).toHaveLength(1);
     expect(texts[0]).toMatch(/品質指標/);
     expect(texts[0]).toMatch(/失敗/);
-    await expect(page.locator('#publishActionRow li', { hasText: '品質指標' }).first()).toBeVisible();
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="quality-metrics"][data-status="unmet"]', { hasText: '品質指標' }).first()).toBeVisible();
   });
 
   test('latest round pending: a direct publishComplete() call keeps official_run_in_progress and persists nothing (FR-008b(5))', async ({
