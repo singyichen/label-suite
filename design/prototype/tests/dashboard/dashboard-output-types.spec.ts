@@ -118,6 +118,7 @@ type DashboardWindow = Window & {
  * any workspace-internal global (e.g. the old SAMPLES/state.currentIdx). */
 type TaskDetailProfile = {
   fieldRoleMap: Record<string, string>;
+  dialogue_fields?: { text?: string };
   datasetRecords: Array<Record<string, unknown>>;
 };
 
@@ -350,14 +351,18 @@ test.describe('Dashboard output-type task summaries', () => {
             );
             let value: unknown = stringField ? record[stringField] : undefined;
             if (typeof value !== 'string') {
-              // issue #1341: T013's only Input is the structured `utterances`
-              // array, rendered as a dialogue thread; its first turn's text is
-              // what must surface in ws-input-content.
+              // issue #1341/#1358: T013's only Input is the structured
+              // `utterances` array, rendered as a dialogue thread; its first
+              // turn's text must surface in ws-input-content. Read the text
+              // sub-field named by dialogue_fields.text, mirroring the
+              // production getRecordSummaryText (objectTextField); no
+              // dialogue_fields.text -> no guessed key.
+              const textKey = profile.dialogue_fields?.text;
               for (const field of inputFields) {
                 const turns = record[field];
                 const first = Array.isArray(turns) ? turns[0] : undefined;
-                if (first && typeof first === 'object' && typeof (first as Record<string, unknown>)['text'] === 'string') {
-                  value = (first as Record<string, unknown>)['text'];
+                if (textKey && first && typeof first === 'object' && typeof (first as Record<string, unknown>)[textKey] === 'string') {
+                  value = (first as Record<string, unknown>)[textKey];
                   break;
                 }
               }

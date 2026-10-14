@@ -243,8 +243,8 @@ test.describe('FR-098 §3, §7(a) — gold plain-string shape stays null (task-n
   });
 });
 
-test.describe('FR-098 §3, §7(b) — built-in demo string-concatenation shape stays null (T013/absa-001)', () => {
-  test('the ABSA demo triples leave every offset field null', async ({ page }) => {
+test.describe('FR-098 §3, §7(b) — T013 flat-text seed string-concatenation shape stays null (T013/absa-001)', () => {
+  test('the ABSA triples of the T013 flat-text seed leave every offset field null', async ({ page }) => {
     /* issue #1341: T013 now seeds a dialogue Input (utterances) and the dialogue panel does
      * not seed flat-string ABSA triples from the output column. This test pins that flat
      * shape's serialization, so run it on the pre-#1341 flat-text seed. */

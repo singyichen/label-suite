@@ -113,20 +113,20 @@
   /* FR-106 (issue #1339): the single sample-summary helper shared by the
      workspace left rail and annotation-list. Never reads an output-role field
      (Data Fairness); never emits "[object Object]"; does not truncate. */
-  function objectTextField(obj) {
-    if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
-    if (typeof obj.text === 'string') return obj.text;
-    return Object.keys(obj).map(function (k) { return obj[k]; }).find(function (v) {
-      return typeof v === 'string';
-    });
+  /* The text of one object-array element, read only from the sub-field the task's
+     dialogue_fields.text names (#1358); no such field -> undefined (no guessing). */
+  function objectTextField(obj, dialogueFields) {
+    var key = dialogueFields && dialogueFields.text;
+    if (!key || obj === null || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
+    return typeof obj[key] === 'string' ? obj[key] : undefined;
   }
 
-  function valueToSummaryText(value, lang) {
+  function valueToSummaryText(value, lang, dialogueFields) {
     if (value === undefined || value === null || value === '') return '';
     if (Array.isArray(value)) {
       if (value.length === 0) return '';
-      if (value.every(function (el) { return objectTextField(el) !== undefined; })) {
-        return objectTextField(value[0]);
+      if (value.every(function (el) { return objectTextField(el, dialogueFields) !== undefined; })) {
+        return objectTextField(value[0], dialogueFields);
       }
       return lang === 'en' ? value.length + ' items' : value.length + ' 筆資料';
     }
@@ -138,18 +138,18 @@
     return String(value);
   }
 
-  function getRecordSummaryText(record, fieldRoleMap, listTitleField, lang) {
+  function getRecordSummaryText(record, fieldRoleMap, listTitleField, lang, dialogueFields) {
     if (!record) return '';
     var roles = fieldRoleMap || {};
     var explicitOk = listTitleField != null && (
       roles[listTitleField] === 'input' || roles[listTitleField] === 'evidence' ||
       (listTitleField === 'id' && roles.id !== 'output')
     );
-    var text = explicitOk ? valueToSummaryText(record[listTitleField], lang) : '';
+    var text = explicitOk ? valueToSummaryText(record[listTitleField], lang, dialogueFields) : '';
     if (!text) {
       Object.keys(roles).some(function (key) {
         if (roles[key] !== 'input') return false;
-        text = valueToSummaryText(record[key], lang);
+        text = valueToSummaryText(record[key], lang, dialogueFields);
         return !!text;
       });
     }
@@ -160,7 +160,7 @@
   /* List search string: the text of EVERY input-role field (never output or
      evidence — Data Fairness), reusing valueToSummaryText's rules but joining
      all elements of an object array instead of only the first. */
-  function getRecordSearchText(record, fieldRoleMap, lang) {
+  function getRecordSearchText(record, fieldRoleMap, lang, dialogueFields) {
     if (!record) return '';
     var roles = fieldRoleMap || {};
     return Object.keys(roles).filter(function (key) {
@@ -168,11 +168,11 @@
     }).map(function (key) {
       var value = record[key];
       if (Array.isArray(value) && value.length > 0 && value.every(function (el) {
-        return objectTextField(el) !== undefined;
+        return objectTextField(el, dialogueFields) !== undefined;
       })) {
-        return value.map(objectTextField).join(' ');
+        return value.map(function (el) { return objectTextField(el, dialogueFields); }).join(' ');
       }
-      return valueToSummaryText(value, lang);
+      return valueToSummaryText(value, lang, dialogueFields);
     }).filter(Boolean).join(' ');
   }
 

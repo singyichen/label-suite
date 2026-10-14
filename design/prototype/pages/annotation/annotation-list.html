@@ -916,6 +916,7 @@
       outputTypes: listEntry.outputTypes || [],
       fieldRoleMap: detailProfile.fieldRoleMap || {},
       listTitleField: detailProfile.list_title_field ?? null,
+      dialogueFields: detailProfile.dialogue_fields ?? null,
       guidelineFiles: detailProfile.guidelineFiles || [],
       datasetRecords: detailProfile.datasetRecords || [],
       materializedRuns: detailProfile.materializedRuns || null
@@ -936,16 +937,16 @@
   }
 
   /* FR-106: delegates to the helper shared with the workspace left rail. */
-  function getRecordSnippet(record, fieldRoleMap, listTitleField) {
+  function getRecordSnippet(record, fieldRoleMap, listTitleField, dialogueFields) {
     if (!record) return '-';
     return window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
-      record, fieldRoleMap, listTitleField, CURRENT_LANG
+      record, fieldRoleMap, listTitleField, CURRENT_LANG, dialogueFields
     ) || '-';
   }
 
-  function getRecordSearchText(record, fieldRoleMap) {
+  function getRecordSearchText(record, fieldRoleMap, dialogueFields) {
     return window.LabelSuiteAnnotationWorkspaceData.getRecordSearchText(
-      record, fieldRoleMap, CURRENT_LANG
+      record, fieldRoleMap, CURRENT_LANG, dialogueFields
     );
   }
 
@@ -1761,8 +1762,8 @@
         status: status,
         statusLabel: statusText(status),
         completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
-        text: getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField),
-        searchText: getRecordSearchText(record, profile.fieldRoleMap)
+        text: getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField, profile.dialogueFields),
+        searchText: getRecordSearchText(record, profile.fieldRoleMap, profile.dialogueFields)
       };
     });
   }
@@ -1784,8 +1785,8 @@
     profile.datasetRecords.forEach(function (record, index) {
       var recordId = getRecordId(record, index);
       var mockRows = getMockRows(context, recordId);
-      var text = getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField);
-      var searchText = getRecordSearchText(record, profile.fieldRoleMap);
+      var text = getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField, profile.dialogueFields);
+      var searchText = getRecordSearchText(record, profile.fieldRoleMap, profile.dialogueFields);
       mockRows.forEach(function (mockRow, rowIdx) {
         var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };
         var status = data.getReviewUnitStatus(
