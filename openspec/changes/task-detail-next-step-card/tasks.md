@@ -49,8 +49,8 @@
 > **產品檔案（1）**：`task-detail.html`
 > **相依**：群組 2。
 
-- [ ] 3.1 修改 `design/prototype/tests/task-management/issue-1403-next-step-card.spec.ts` 補 Red：`dry_run_in_progress` 的 `#nextStepDesc` 為 AC-3.14 原因句，列為 `submission`、`review`、`dispute`、`exception-pool`，不含 `pool`；`official_run_in_progress` 列為 FR-008b 五項，不含 `annotators`／`iaa-*` 列；未完成列 unmet、`#publishCompleteBtn` 停用。 [@senior-qa]
-- [ ] 3.2 （Green）兩個分支改由同一個 reducer 的條件產生 met／unmet 列。 [@senior-frontend]
+- [x] 3.1 修改 `design/prototype/tests/task-management/issue-1403-next-step-card.spec.ts` 補 Red：`dry_run_in_progress` 的 `#nextStepDesc` 為 AC-3.14 原因句，列為 `submission`、`review`、`dispute`、`exception-pool`，不含 `pool`；`official_run_in_progress` 列為 FR-008b 五項，不含 `annotators`／`iaa-*` 列；未完成列 unmet、`#publishCompleteBtn` 停用。 [@senior-qa]
+- [x] 3.2 （Green）兩個分支改由同一個 reducer 的條件產生 met／unmet 列。 [@senior-frontend]
 
 ## 4. reviewer、completed 與停用樣式（AC-3.72、FR-027(6)）
 
@@ -59,8 +59,8 @@
 > **產品檔案（1）**：`task-detail.html`
 > **相依**：群組 3。
 
-- [ ] 4.1 修改 `design/prototype/tests/task-management/issue-1403-next-step-card.spec.ts` 補 Red：`reviewer` 卡片按鈕停用、可見「僅 project leader 可操作」、無任何條件列；`completed` 的 `#nextStepTitle` 為「任務已完成，無待執行動作」、無按鈕與條件列；卡片內停用按鈕 opacity 為 1、文字色為 `--color-text-soft`、背景色不是 `--color-cta`、邊框不是 dashed；圖示顏色 met／unmet／info 分別等於 `--color-success`／`--color-ink-muted`／`--color-warning`；卡片文字不含 ✗。 [@senior-qa]
-- [ ] 4.2 （Green）卡片範圍內的停用樣式與圖示配色，只用既有 token，不改全站 `.btn:disabled`。 [@senior-frontend]
+- [x] 4.1 修改 `design/prototype/tests/task-management/issue-1403-next-step-card.spec.ts` 補 Red：`reviewer` 卡片按鈕停用、可見「僅 project leader 可操作」、無任何條件列；`completed` 的 `#nextStepTitle` 為「任務已完成，無待執行動作」、無按鈕與條件列；卡片內停用按鈕 opacity 為 1、文字色為 `--color-text-soft`、背景色不是 `--color-cta`、邊框不是 dashed；圖示顏色 met／unmet／info 分別等於 `--color-success`／`--color-ink-muted`／`--color-warning`；卡片文字不含 ✗。 [@senior-qa]
+- [x] 4.2 （Green）卡片範圍內的停用樣式與圖示配色，只用既有 token，不改全站 `.btn:disabled`。 [@senior-frontend]
 
 ## 5. 既有規格改目標
 
@@ -69,7 +69,7 @@
 > **產品檔案（0）**：只改測試。
 > **相依**：群組 1～4 的 Red。
 
-- [ ] 5.1 改寫或改目標 proposal「Impact／測試」列出的既有 task-detail 規格，以及其他引用 `execStopRow`、`stop-pill`、`exec-action-reasons`、`publishMemberGapReason` 的規格；每個被刪除或改寫的斷言要在 commit body 說明由哪個新斷言承接。 [@senior-qa]
+- [x] 5.1 改寫或改目標 proposal「Impact／測試」列出的既有 task-detail 規格，以及其他引用 `execStopRow`、`stop-pill`、`exec-action-reasons`、`publishMemberGapReason` 的規格；每個被刪除或改寫的斷言要在 commit body 說明由哪個新斷言承接。 [@senior-qa]
 
 ## 6. 回歸與審查
 
