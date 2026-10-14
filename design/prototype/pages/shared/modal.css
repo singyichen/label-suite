@@ -89,3 +89,12 @@
   transition: all 150ms;
 }
 .modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }
+
+/* Solid destructive confirm (data deletion / discard), MASTER §Modals footer rules. */
+.btn-danger {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: var(--color-on-cta);
+  transition: opacity 150ms;
+}
+.btn-danger:hover { opacity: .9; }
