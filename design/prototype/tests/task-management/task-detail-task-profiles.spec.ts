@@ -60,7 +60,7 @@ const TASK_PROFILES: TaskProfile[] = [
     type: '多標籤',
     datasetSummary: '5 筆',
     outputCount: 1,
-    settings: ['cfg-t003-v1.0.0', '情緒, 照護情境'],
+    settings: ['cfg-t003-v1.0.0', '情緒', '悲傷', '照護情境', '需要說明'],
   },
   {
     id: 'T004',
