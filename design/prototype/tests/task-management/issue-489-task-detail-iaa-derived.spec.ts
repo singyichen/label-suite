@@ -42,13 +42,6 @@ test.describe('task-detail derives T014 IAA from marks (issue #489/#491)', () =>
     await expect(page.locator('#currentAgreementValue')).toHaveText(alpha.alpha.toFixed(2));
   });
 
-  test('marks the IAA pill not-met, and never as passed', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
-    const pill = page.locator('#stopAgreementPill');
-    await expect(pill).not.toHaveClass(/passed/);
-    await expect(pill).not.toHaveClass(/not-computable/);
-  });
-
   test('keeps the official-run action enabled despite the miss (FR-039 advisory)', async ({ page }) => {
     /* T014 ships as dry_run_in_progress, where the action row legitimately
        offers "start trial round R2" and no official-run button exists at all
@@ -90,7 +83,9 @@ test.describe('task-detail derives T014 IAA from marks (issue #489/#491)', () =>
     );
     await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014&status=waiting_iaa_confirmation`);
     await expect(page.locator('#currentAgreementValue')).toHaveText('0.59');
-    await expect(page.locator('#stopAgreementPill')).not.toHaveClass(/passed/);
+    /* #1403: the IAA pill is gone; the miss is an info advisory row (never a met row, never "cannot determine"). */
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="iaa-advisory"]')).toHaveAttribute('data-status', 'info');
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="iaa-undetermined"]')).toHaveCount(0);
     const pool = Number(await page.locator('#officialPoolValue').textContent());
     expect(pool).toBeGreaterThan(0);
     const btn = page.locator('#publishOfficialRunBtn');

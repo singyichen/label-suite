@@ -2,7 +2,9 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v12.3.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v13.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
+
+change `task-detail-next-step-card`（issue #1403）修訂 FR-027／FR-013／FR-010o-4：概覽執行控制改為單一「下一步」卡片，移除達標條件 pill。
 
 change `mvp-export-snapshot-isolation-correction`（issue #1160）補充 FR-010b／FR-010c 的跨 run 隔離語意，以及 FR-010i-1／FR-010i-2／FR-021 的請求接受時間與結果快照時間契約。
 
@@ -386,15 +388,15 @@ Overview MUST 在「抽樣設定」之後提供獨立「審核設定」區塊。
 
 ### Requirement: FR-013 執行控制按鈕依任務狀態顯示，新增試標回合僅自待 IAA 確認狀態發起
 
-Overview「任務狀態與執行控制」的執行控制按鈕 MUST 與任務狀態一一對應，且按鈕 MUST 與「達標條件」位於同一操作列：
+Overview「任務狀態與執行控制」的執行控制按鈕 MUST 與任務狀態一一對應，且按鈕 MUST 位於「下一步」卡片卡頭右側（FR-027(4)，v13.0.0 改寫，issue #1403；原「與『達標條件』位於同一操作列」已隨達標條件 pill 移除）：
 
 | 任務狀態 | 顯示的執行控制按鈕 |
 |----------|--------------------|
 | `draft` | `新增試標回合 R1` |
-| `dry_run_in_progress` | `新增試標回合 R{trial_round+1}` 以**停用**狀態顯示，並於按鈕旁以可見文字顯示原因「本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合」 |
+| `dry_run_in_progress` | `新增試標回合 R{trial_round+1}` 以**停用**狀態顯示，並以可見文字顯示原因「本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合」 |
 | `waiting_iaa_confirmation` | `開始正式標記` 與 `新增試標回合 R{trial_round+1}` 兩者並列 |
 | `official_run_in_progress` | `標記完成` |
-| `completed` | 不顯示執行控制按鈕，只顯示狀態 badge 與說明文字 |
+| `completed` | 不顯示執行控制按鈕，只顯示說明文字「任務已完成，無待執行動作」 |
 
 **(1) 回合必須先結束才能開下一回合**。`dry_run_in_progress` 表示目前回合仍在進行；此狀態下 `新增試標回合 R{trial_round+1}` MUST 維持可見但停用，點擊 MUST NOT 建立回合、MUST NOT 改變任務狀態，原因文字 MUST 以可見文字呈現（MUST NOT 只放在 tooltip）。下一個回合只能在目前回合依 FR-008a 完成、任務自動進入 `waiting_iaa_confirmation` 之後發起。此停用的依據是「本回合尚未結束」，與 IAA 是否達標無關，因此不違反 FR-010o-3。
 
@@ -410,6 +412,8 @@ Overview「任務狀態與執行控制」的執行控制按鈕 MUST 與任務狀
 
 **(7) 回溯轉換不是跳階（釐清，維護者 2026-09-18 裁定）**。正典使用者故事 3 行為規則「狀態轉換必須符合 `TASK_STATUSES` 順序，不允許跳階」與 SC-004「任務狀態轉換遵循定義順序」的「順序」，MUST 以 `docs/adr/022-task-state-machine-location.md` 的轉換表判定：合法轉換以 ADR-022 轉換表為準；表列的回溯轉換（含本需求新增的 `waiting_iaa_confirmation → dry_run_in_progress`）不視為跳階。gate 4 回寫時於該行為規則與 SC-004 原地補上此句，不新增任何 FR／AC／SC 編號。
 
+**(8) 原因呈現方式（v13.0.0 改寫，issue #1403；取代 v12.2.4 直向動作欄）**。停用按鈕的原因 MUST 呈現在同一張「下一步」卡片卡身的條件清單（FR-027(4)），每個條件只出現一次（同一條件被兩顆按鈕共用時放在「兩個動作都需要」分組），各停用按鈕的 `aria-describedby` MUST 指向其所屬的每一個未滿足條件列；`dry_run_in_progress` 的原因句為卡頭說明，未完成的各項逐列列於條件清單。`waiting_iaa_confirmation` 且 IAA 已完成計算、結果為無法判定時，卡片 MUST 有一句可見提醒（可直接開始正式標記，或再試標一回合），兩顆按鈕仍可點擊。僅改變呈現方式，不改變任何發布阻擋條件與狀態轉移；`draft` 成員人數不足（FR-010t）改以停用按鈕加條件列呈現，發布 handler 內的 FR-010t 檢查維持不變。
+
 **本次修訂（issue #1120，BREAKING）**：第 (1) 點之停用原因文字自「本回合全部提交並完成 IAA 後才能新增下一回合」改為涵蓋審核與仲裁——`dry_run_in_progress` 下 `新增試標回合 R{trial_round+1}` MUST 維持可見但停用，其可見原因文字 MUST 說明本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合。該停用依據仍為「本回合尚未結束」，與 IAA 是否達標無關，MUST NOT 被視為違反 FR-010o-3。其餘各點文字不變。
 
 #### Scenario: AC-3.12 自待 IAA 確認新增第二回合須先填修訂紀錄
@@ -423,14 +427,14 @@ Overview「任務狀態與執行控制」的執行控制按鈕 MUST 與任務狀
 
 - **GIVEN** 任務處於 `dry_run_in_progress`（不論目前是 R1 或其後任一回合）
 - **WHEN** `project_leader` 檢視 Overview「任務狀態與執行控制」
-- **THEN** 操作列顯示停用狀態的 `新增試標回合 R{trial_round+1}`，按鈕旁可見原因文字「本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合」，且不出現其他執行控制按鈕
+- **THEN** 「下一步」卡片顯示停用狀態的 `新增試標回合 R{trial_round+1}`，卡片內可見原因文字「本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合」，且不出現其他執行控制按鈕
 - **AND** 點擊該按鈕不建立任何回合，任務狀態維持 `dry_run_in_progress`
 
 #### Scenario: 待 IAA 確認同時提供開始正式標記與新增試標回合
 
 - **GIVEN** 任務處於 `waiting_iaa_confirmation` 且已完成 R1，最新回合 IAA 未達目標門檻
 - **WHEN** `project_leader` 檢視 Overview「任務狀態與執行控制」
-- **THEN** 操作列同時顯示 `開始正式標記` 與 `新增試標回合 R2`，兩者皆可點擊
+- **THEN** 卡頭同時顯示 `開始正式標記` 與 `新增試標回合 R2`，兩者皆可點擊
 - **AND** IAA 未達標只以警示樣式呈現，不停用或隱藏任一按鈕（FR-010o-3）
 
 #### Scenario: 新回合建立後在任何提交前不會自動轉回待確認
@@ -442,15 +446,15 @@ Overview「任務狀態與執行控制」的執行控制按鈕 MUST 與任務狀
 #### Scenario: SC-047 每個試標回合都經過待確認決策點
 
 - **GIVEN** `TASK_STATUSES` 五種任務狀態各一個以 `project_leader` 開啟的任務
-- **WHEN** 逐一檢視 Overview「任務狀態與執行控制」操作列
+- **WHEN** 逐一檢視 Overview「任務狀態與執行控制」的卡頭按鈕
 - **THEN** 可點擊的 `新增試標回合` 按鈕恰只出現在 `draft`（顯示 R1）與 `waiting_iaa_confirmation`（顯示 R{trial_round+1}）兩種狀態，`dry_run_in_progress` 只出現停用狀態的該按鈕並附原因文字，五種狀態逐一比對 5／5 符合 FR-013 對照表
 - **AND** 任一任務自 `draft` 起經歷 N 個試標回合（N >= 2），每一個 R{n}（`n >= 2`）的建立都恰對應一次 `waiting_iaa_confirmation → dry_run_in_progress` 轉換，不存在任何在 `dry_run_in_progress` 期間建立的回合
 
 #### Scenario: 停用原因涵蓋審核與仲裁
 
 - **GIVEN** 一個 `dry_run_in_progress` 任務，其標註已全數提交但仍有審核或仲裁未完成
-- **WHEN** `project_leader` 檢視執行控制操作列
-- **THEN** `新增試標回合` 按鈕可見且停用，旁側可見原因文字提及必要審核與必要仲裁
+- **WHEN** `project_leader` 檢視「下一步」卡片
+- **THEN** `新增試標回合` 按鈕可見且停用，卡片內可見原因文字提及必要審核與必要仲裁，未完成的審核或仲裁列為 ○
 - **AND** 點擊該按鈕不建立任何回合，任務狀態維持 `dry_run_in_progress`
 
 ### Requirement: FR-010o-1 IAA 計算方式唯讀，目標門檻僅限已校準輸出類型覆寫
@@ -491,28 +495,28 @@ IAA 為非同步計算。任務依 FR-008a 進入 `waiting_iaa_confirmation` 時
 
 **(1) 計算狀態欄位**。`TrialRound` MUST 具備 `iaa_computation_status`，值域恰為 `pending | done | failed`：回合建立時為 `pending`；該回合每一個需計算 IAA 的輸出類型都得到確定結果時為 `done`；計算執行錯誤時為 `failed`。「確定結果」指一個數值，或 `dataset/017-dataset-analysis-detail` FR-039 第 4 點定義的「無法計算」（`De = 0`）；後者 MUST 記為 `done`（與該規格 AC-3.16「不阻擋使用者進入正式標記」一致）。`IAA_GATE_EXCLUDED_TYPES` 不需計算，不列入判斷。本欄位只描述計算是否結束，MUST NOT 承載達標與否。
 
-**(2) 計算中**。最新回合為 `pending` 時，Overview「任務狀態與執行控制」MUST 顯示「IAA 計算中」狀態；達標條件 pills 的 IAA 項、判定 banner 與試標回合歷程 MUST NOT 顯示任何 IAA 數值或達標／未達標判定。
+**(2) 計算中**。最新回合為 `pending` 時，Overview「任務狀態與執行控制」MUST 顯示「IAA 計算中」狀態；「下一步」卡片的條件清單與提醒列（FR-027(4)，v13.0.0 改寫，issue #1403；原為「達標條件 pills 的 IAA 項」）、判定 banner 與試標回合歷程 MUST NOT 顯示任何 IAA 數值或達標／未達標判定。
 
 **(3) 計算失敗與重試**。最新回合為 `failed` 時，同一區塊 MUST 顯示計算失敗狀態並提供「重試計算」操作；該操作 MUST 只提供給 `project_leader`。重試後該回合 MUST 回到 `pending` 並重新排入計算；重試 MUST NOT 改變任務狀態、MUST NOT 建立新回合。
 
 **(4) 計算未結束不是 IAA 未達標**。`pending` 與 `failed` MUST NOT 以 IAA 未達標的方式呈現（MUST NOT 使用未達標警示樣式、MUST NOT 顯示「R{n} 未通過」類判定標題），亦 MUST NOT 被任何邏輯當作未達標處理。FR-010o-3 的顧問性警示只適用於 `done` 且得到數值的結果。
 
-**(5) 開始正式標記的前置條件**。最新回合不為 `done` 時，`開始正式標記` MUST 以停用狀態顯示，並於按鈕旁以可見文字說明原因（計算中或計算失敗），系統 MUST NOT 執行 `waiting_iaa_confirmation → official_run_in_progress`（`docs/adr/022-task-state-machine-location.md` Transition Table）。最新回合為 `done` 後，`開始正式標記` 依 FR-010o-3 不因 IAA 未達標而停用；此處的停用依據是「計算尚未結束」，不屬於 FR-010o-3 所禁止的「因 IAA 未達標停用」。
+**(5) 開始正式標記的前置條件**。最新回合不為 `done` 時，`開始正式標記` MUST 以停用狀態顯示，並以同一張「下一步」卡片的條件列可見說明原因（計算中或計算失敗），系統 MUST NOT 執行 `waiting_iaa_confirmation → official_run_in_progress`（`docs/adr/022-task-state-machine-location.md` Transition Table）。最新回合為 `done` 後，`開始正式標記` 依 FR-010o-3 不因 IAA 未達標而停用；此處的停用依據是「計算尚未結束」，不屬於 FR-010o-3 所禁止的「因 IAA 未達標停用」。
 
-**(6) 新增試標回合的前置條件**。最新回合不為 `done` 時，`waiting_iaa_confirmation` 狀態下的 `新增試標回合 R{trial_round+1}` 同樣 MUST 以停用狀態顯示，並於按鈕旁以可見文字說明原因（計算中或計算失敗）；系統 MUST NOT 執行 `waiting_iaa_confirmation → dry_run_in_progress`（`docs/adr/022-task-state-machine-location.md` Transition Table）。停用依據同樣是「計算尚未結束」，與 IAA 是否達標無關；最新回合為 `done` 後，該按鈕依 FR-013 第 (2) 點可點擊。
+**(6) 新增試標回合的前置條件**。最新回合不為 `done` 時，`waiting_iaa_confirmation` 狀態下的 `新增試標回合 R{trial_round+1}` 同樣 MUST 以停用狀態顯示，並以同一張「下一步」卡片的條件列可見說明原因（計算中或計算失敗）；系統 MUST NOT 執行 `waiting_iaa_confirmation → dry_run_in_progress`（`docs/adr/022-task-state-machine-location.md` Transition Table）。停用依據同樣是「計算尚未結束」，與 IAA 是否達標無關；最新回合為 `done` 後，該按鈕依 FR-013 第 (2) 點可點擊。
 
 #### Scenario: IAA 計算中不呈現為未達標且暫不能開始正式標記
 
 - **GIVEN** 任務處於 `waiting_iaa_confirmation`，最新試標回合 `iaa_computation_status = pending`
 - **WHEN** `project_leader` 檢視 Overview「任務狀態與執行控制」
-- **THEN** 畫面顯示「IAA 計算中」，IAA 項不顯示任何數值、不顯示未達標警示或「未通過」判定
-- **AND** `開始正式標記` 為停用狀態，按鈕旁可見說明計算中的原因文字，點擊後任務狀態維持 `waiting_iaa_confirmation`
+- **THEN** 畫面顯示「IAA 計算中」，條件清單與提醒列不顯示任何 IAA 數值、不顯示未達標警示或「未通過」判定
+- **AND** `開始正式標記` 為停用狀態，卡片內可見說明計算中的條件列，點擊後任務狀態維持 `waiting_iaa_confirmation`
 
 #### Scenario: IAA 計算失敗可由專案負責人重試
 
 - **GIVEN** 任務處於 `waiting_iaa_confirmation`，最新試標回合 `iaa_computation_status = failed`
 - **WHEN** `project_leader` 檢視 Overview「任務狀態與執行控制」並點擊「重試計算」
-- **THEN** 點擊前畫面顯示計算失敗狀態與「重試計算」操作，且不以未達標樣式呈現
+- **THEN** 點擊前畫面顯示計算失敗狀態，「重試計算」位於「IAA 計算完成」條件列右側，且不以未達標樣式呈現
 - **AND** 點擊後該回合回到 `pending`、畫面改為「IAA 計算中」，任務狀態維持 `waiting_iaa_confirmation`，試標回合數不變
 
 #### Scenario: 無法計算視為計算已結束，不阻擋開始正式標記
@@ -526,7 +530,7 @@ IAA 為非同步計算。任務依 FR-008a 進入 `waiting_iaa_confirmation` 時
 
 - **GIVEN** 任務處於 `waiting_iaa_confirmation` 且已完成 R1，最新試標回合 `iaa_computation_status` 為 `pending` 或 `failed`
 - **WHEN** `project_leader` 檢視 Overview「任務狀態與執行控制」
-- **THEN** `新增試標回合 R2` 為停用狀態，按鈕旁可見說明計算中或計算失敗的原因文字
+- **THEN** `新增試標回合 R2` 為停用狀態，「兩個動作都需要」分組可見說明計算中或計算失敗的條件列
 - **AND** 點擊該按鈕不建立任何回合，任務狀態維持 `waiting_iaa_confirmation`
 
 ### Requirement: FR-007c 工時篩選列單一日期區間選擇器
@@ -1741,26 +1745,67 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 
 ### Requirement: FR-027 概覽分頁沿用原區塊樣式並精簡內容
 
-`概覽` 分頁 MUST 沿用原「任務狀態與執行控制」區塊的視覺樣式，使其與其他頁面一致（2026-10-08 維護者裁定：外觀還原、內容留新版），由上而下依序呈現：流程 stepper（SC-019）、判定框、數字卡、樣本池分配、達標條件與主要 CTA、試標回合表；MUST NOT 再包含已移至設定分頁的五個設定區塊。
+`概覽` 分頁 MUST 沿用原「任務狀態與執行控制」區塊的視覺樣式，使其與其他頁面一致（2026-10-08 維護者裁定：外觀還原、內容留新版），由上而下依序呈現：流程 stepper（SC-019）、判定框、數字卡、樣本池分配、「下一步」卡片、試標回合表；MUST NOT 再包含已移至設定分頁的五個設定區塊。
 
-**(1) 視覺樣式**。區塊外層為白色卡片容器；判定標題與說明置於原判定框；數字以原摘要卡樣式呈現；樣本池分配沿用原分配條與圖例 chip；達標條件沿用原 pill 呈現。所有顏色 MUST 取自 design token。
+**(1) 視覺樣式**。區塊外層為白色卡片容器；判定標題與說明置於原判定框；數字以原摘要卡樣式呈現；樣本池分配沿用原分配條與圖例 chip。所有顏色 MUST 取自 design token。**v13.0.0 移除**（issue #1403）：原「達標條件沿用原 pill 呈現」規定已移除，概覽 MUST NOT 再顯示達標條件 pill（IAA、標準差、最少標記者）。
 
 **(2) 數字卡**。四張：目前回合、最新 IAA、已用試標、正式標記池，值使用等寬數字（`tabular-nums`）。「已用試標」的值為「已用試標筆數 / 資料總筆數」（例如 `20 / 100`）。**刻意移除**原摘要卡中的「已完成試標回合」；其資訊由標頭狀態文字與試標回合表承擔。
 
 **(3) 樣本池分配**。沿用 `dataSplitBar` 資料；配色規則沿用 FR-010p，MUST NOT 變更。
 
-**(4) 達標條件與主要 CTA**。達標條件 pill 與主要 CTA 位於同一橫列，CTA 在右側（desktop 右對齊，mobile 可換行但仍屬同一區塊），沿用 `publishActionRow` 與既有防連點機制（issue #198）。主要 CTA MUST 使用全站 `btn-primary` 樣式（`--color-cta`，與 `MASTER.md` 一致）；同一狀態有多個執行按鈕時 MUST 只有一個主要 CTA：`waiting_iaa_confirmation` 時為「開始正式標記」（`publishOfficialRunBtn`），其餘按鈕使用次要樣式。
+**(4) 「下一步」卡片與主要 CTA（v13.0.0 改寫，issue #1403）**。執行控制 MUST 以單一張「下一步」卡片呈現，取代原「達標條件 pill 與主要 CTA 同列」的版面：
+
+- **卡頭**：左側為「下一步：…」狀態句與一行說明；右側為該狀態的執行按鈕，沿用 `publishActionRow` 與既有防連點機制（issue #198）。同一時間 MUST 最多兩顆按鈕，只有 `waiting_iaa_confirmation` 有兩顆；主要 CTA MUST 使用全站 `btn-primary` 樣式（`--color-cta`，與 `MASTER.md` 一致），且同一狀態 MUST 只有一個主要 CTA：`waiting_iaa_confirmation` 時為「開始正式標記」（`publishOfficialRunBtn`），其餘按鈕使用次要樣式。
+- **卡身**：「這個動作需要」條件清單，每列為「圖示＋條件＋目前值」，目前值 MUST 由實際資料推導，MUST NOT 顯示佔位值。圖示 MUST 只使用三種，且皆附可見文字、不只靠顏色：✓ 已滿足（`--color-success`）、○ 未滿足（`--color-ink-muted`）、ⓘ 提醒（`--color-warning`）；MUST NOT 使用紅色 ✗ 或 `--color-error` 表示未滿足。任一「需要」列未滿足時，對應按鈕 MUST 停用，且其 `aria-describedby` MUST 指向每一個未滿足的列；提醒列 MUST NOT 使任何按鈕停用。
+- **各狀態的條件清單**（列的判定一律沿用既有推導來源，MUST NOT 另建第二份判定）：
+  - `draft`：發布 R1 需要「抽樣後正式標記池有剩餘」（FR-022(3)、FR-010f-3）、「啟用中標記者 ≥ `min_annotators`」與「啟用中審核員 ≥ 1」（FR-010t，未滿足時目前值 MUST 含「還差 N 位」）。IAA 只以底部提醒列呈現，寫明第一回合結束後才會計算。
+  - `dry_run_in_progress`：卡頭說明 MUST 為「本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合」；新增下一回合需要的列 MUST 沿用 FR-008a 的同一個判定來源（標註全部提交、必要審核完成、必要仲裁完成、最終例外池已處置）。不列資料池：下一回合的池限制由 FR-010d、FR-010e 於發布當下驗證，FR-022 不適用於此狀態。
+  - `waiting_iaa_confirmation`：最新回合 IAA 計算中或計算失敗時，MUST 有「兩個動作都需要」分組，列出「IAA 計算完成」；計算失敗時「重試計算」MUST 位於該列右側（FR-010o-4(3)）。「『開始正式標記』另外需要」分組 MUST 列出「正式標記池有剩餘」（FR-022）。IAA 未達標 MUST 只以琥珀色提醒列呈現並寫明「不阻擋」，MUST NOT 放進任何「需要」分組（FR-010o-3）；IAA 已計算但結果為無法判定時，以提醒列說明兩個按鈕各自的意義（FR-013(8)）。計算中 MUST NOT 顯示任何 IAA 數值或達標判定（FR-010o-4(2)）。
+  - `official_run_in_progress`：「標記完成」需要的列 MUST 沿用 FR-008b 的同一個判定來源（作業全數提交、審核單位全部定稿、爭議都已仲裁、最終例外池都已處置、品質指標就緒）；MUST NOT 列出試標的 IAA 或標記者人數條件。
+  - `completed`：見第 (6) 點。
 
 **(5) 試標回合表**。試標回合歷程以表格呈現，欄位依序為回合、筆數、標記者、IAA、Std、結果、完成時間，每個回合一列；結果欄以文字色區分（通過 `--color-success`、未通過 `--color-error`）。每回合備註不在表格中顯示。`draft` 狀態 MUST NOT 顯示任何回合列。
 
-**(6) 權限與狀態**。執行控制的狀態對應與權限（FR-013、`reviewer` 顯示 disabled 並附 tooltip「僅 project leader 可操作」）MUST 維持不變。
+**(6) 權限與狀態**。執行控制的狀態對應與權限（FR-013、`reviewer` 顯示 disabled 並附 tooltip「僅 project leader 可操作」）MUST 維持不變。`reviewer` 的卡片結構與 `project_leader` 相同，按鈕名稱跟隨任務狀態並標示唯讀、全部停用，按鈕下方有可見的同句說明「僅 project leader 可操作」，MUST NOT 顯示條件清單。`completed` 狀態卡片 MUST 顯示「任務已完成，無待執行動作」，MUST NOT 顯示條件清單或按鈕。停用按鈕 MUST 使用中性灰底與 `--color-text-soft` 文字，MUST NOT 降低透明度，主要按鈕停用時 MUST NOT 保留 `--color-cta` 綠色；此停用樣式 MUST 只限這張卡片的動作區，MUST NOT 改動全站 `.btn:disabled`。
 
 #### Scenario: 主要 CTA 與達標條件同列且為全站主要按鈕樣式
 
-- **GIVEN** 任務處於 `waiting_iaa_confirmation`
+> 情境標題沿用既有名稱，供 archive 對應同一情境（OpenSpec MODIFIED 不允許以改名方式丟棄既有情境）；內容依 v13.0.0 改寫為下一步卡片（AC-3.69，issue #1403），已不再有達標條件 pill。
+
+- **GIVEN** 任務處於 `waiting_iaa_confirmation`，最新回合 IAA 已計算完成
 - **WHEN** `project_leader` 開啟概覽分頁
-- **THEN** 達標條件 pill 與執行按鈕位於同一橫列，按鈕在右側
-- **AND** 只有「開始正式標記」使用 `--color-cta` 背景，其餘執行按鈕為次要樣式
+- **THEN** 「下一步」卡片的卡頭左側為「下一步：…」狀態句與說明，右側恰有兩顆執行按鈕
+- **AND** 只有「開始正式標記」使用 `--color-cta` 背景，另一顆為次要樣式
+- **AND** 畫面不存在達標條件 pill
+
+#### Scenario: 草稿卡片列出發布 R1 需要的條件
+
+- **GIVEN** 一個 `draft` 任務，`min_annotators = 3` 但只有 2 位啟用中標記者
+- **WHEN** `project_leader` 開啟概覽分頁
+- **THEN** 條件清單列出正式標記池剩餘、啟用中標記者與啟用中審核員三列，標記者列為 ○ 且目前值含「還差 1 位」
+- **AND** `新增試標回合 R1` 為停用，`aria-describedby` 指向標記者列
+- **AND** IAA 只以 ⓘ 提醒列呈現，寫明第一回合結束後才會計算
+
+#### Scenario: IAA 未達標只是提醒，不放進需要分組
+
+- **GIVEN** 任務處於 `waiting_iaa_confirmation`，最新回合 IAA 已計算完成但未達目標門檻，正式標記池有剩餘
+- **WHEN** `project_leader` 開啟概覽分頁
+- **THEN** IAA 以 ⓘ 琥珀色提醒列呈現並寫明「不阻擋」，且不在任何「需要」分組中
+- **AND** 兩顆執行按鈕皆可點擊
+
+#### Scenario: 正式標記卡片列出標記完成需要的條件
+
+- **GIVEN** 任務處於 `official_run_in_progress`，仍有審核單位未定稿
+- **WHEN** `project_leader` 開啟概覽分頁
+- **THEN** 條件清單依 FR-008b 列出提交、定稿、仲裁、最終例外池與品質指標各列，未定稿列為 ○
+- **AND** 不出現試標 IAA 或標記者人數的列，`標記完成` 為停用
+
+#### Scenario: 停用樣式為中性灰底且不使用紅色 ✗
+
+- **GIVEN** 任一狀態下卡片內有停用的執行按鈕
+- **WHEN** 檢視該按鈕與條件清單
+- **THEN** 按鈕為中性灰底、`--color-text-soft` 文字、不透明度為 1，主要按鈕停用時不是 `--color-cta` 綠色
+- **AND** 條件清單沒有紅色 ✗，全站其他位置的 `.btn:disabled` 樣式不變
 
 #### Scenario: 數字卡四張且不含已完成試標回合
 
@@ -1781,7 +1826,15 @@ FR-008a MUST 原地改寫為：當任務本回合滿足 `DRY_RUN_COMPLETION_RULE
 
 - **GIVEN** `task_role = reviewer`
 - **WHEN** 開啟概覽分頁
-- **THEN** 執行按鈕為 disabled 並附 tooltip「僅 project leader 可操作」
+- **THEN** 執行按鈕為 disabled 並附 tooltip「僅 project leader 可操作」，按鈕下方有同句可見說明
+- **AND** 卡片不顯示條件清單
+
+#### Scenario: 已完成任務的卡片無待執行動作
+
+- **GIVEN** 任務處於 `completed`
+- **WHEN** `project_leader` 開啟概覽分頁
+- **THEN** 卡片顯示「任務已完成，無待執行動作」
+- **AND** 不顯示條件清單或任何執行按鈕
 
 ### Requirement: FR-014i 標記設定摘要依 outputs 動態顯示
 

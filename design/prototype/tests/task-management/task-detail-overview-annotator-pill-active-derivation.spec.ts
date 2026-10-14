@@ -1,6 +1,7 @@
 /*
  * Issue #1402 (Traceability: specs/task-management/014-task-detail/spec.md
- * FR-010t, AC-3.10): the Overview #stopAnnotatorPill must judge "annotators
+ * FR-010t, AC-3.10): the Overview annotators condition (originally #stopAnnotatorPill, now the
+ * `li.next-step-cond[data-cond="annotators"]` row of #nextStepCard, issue #1403) must judge "annotators
  * >= min" from the same derivation the FR-010t publish gate uses -- the count
  * of active annotator members (membership_status = active, task_role =
  * annotator) -- not from TASK_DATA.currentAnnotators, which
@@ -31,34 +32,39 @@ async function rerenderOverview(page: Page) {
   await page.evaluate(() => (window as any).applyLang('zh'));
 }
 
-test.describe('annotator stop pill follows active annotator members (issue #1402)', () => {
-  test('T014 (3 active annotators vs min 3) shows the annotator pill as met', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
-    const pill = page.locator('#stopAnnotatorPill');
-    await expect(pill).toContainText('標記者 ≥ 3');
-    await expect(pill).toHaveClass(/\bpassed\b/);
-    await expect(pill.locator('[data-stop-pill-cue]')).toHaveAttribute('data-state', 'met');
-    await expect(pill.locator('.stop-pill-state')).toHaveText('已達標');
+test.describe('annotators condition row follows active annotator members (issue #1402, retargeted by issue #1403)', () => {
+  test('T001 draft (3 active annotators vs min 3) shows the annotators row as met', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
+    const row = page.locator('#nextStepCard li.next-step-cond[data-cond="annotators"]');
+    await expect(row).toHaveAttribute('data-status', 'met');
+    await expect(row.locator('.next-step-cond-icon')).toHaveText('✓');
+    await expect(row).toContainText('3');
   });
 
-  test('disabling an active annotator (active < min) flips the pill to unmet and matches the FR-010t gap', async ({ page }) => {
+  test('disabling an active annotator (active < min) flips the row to unmet and matches the FR-010t gap', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T001`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
 
     await rerenderOverview(page);
-    const pill = page.locator('#stopAnnotatorPill');
-    await expect(pill).toHaveClass(/\bpassed\b/);
+    const row = page.locator('#nextStepCard li.next-step-cond[data-cond="annotators"]');
+    await expect(row).toHaveAttribute('data-status', 'met');
 
     // T001 seed: 3 active annotators vs min 3; disabling one opens a gap of 1.
     await disableMember(page, 'Alex Wang');
     await rerenderOverview(page);
 
-    await expect(pill).not.toHaveClass(/\bpassed\b/);
-    await expect(pill.locator('[data-stop-pill-cue]')).toHaveAttribute('data-state', 'unmet');
-    await expect(pill.locator('.stop-pill-state')).toHaveText('未達標');
+    await expect(row).toHaveAttribute('data-status', 'unmet');
+    await expect(row.locator('.next-step-cond-icon')).toHaveText('○');
+    await expect(row.locator('.next-step-cond-value')).toContainText('還差 1 位');
 
-    // The FR-010t publish gate agrees with the pill.
-    await page.locator('#publishDryRunBtn').click();
+    // The FR-010t publish gate agrees with the row. The button is now disabled up front (FR-027(4)), so
+    // force the native click through to prove the handler's own check (kept unchanged) reports the same gap.
+    const btn = page.locator('#publishDryRunBtn');
+    await expect(btn).toBeDisabled();
+    await btn.evaluate((el) => {
+      (el as HTMLButtonElement).disabled = false;
+      (el as HTMLButtonElement).click();
+    });
     await expect(page.locator('#toastMsg')).toContainText('標記員還差 1 位');
   });
 });

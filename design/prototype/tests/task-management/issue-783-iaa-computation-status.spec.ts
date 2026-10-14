@@ -65,7 +65,7 @@ test.describe('Issue #783 -- IAA computation status on waiting_iaa_confirmation 
 
     await expect(page.locator('#publishOfficialRunBtn')).toBeDisabled();
     await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
-    await expect(page.locator('#publishActionRow')).toContainText('IAA 計算失敗，請重試計算');
+    await expect(page.locator('#nextStepCard #nextStepConditions li.next-step-cond[data-cond="iaa-computed"][data-status="unmet"]')).toContainText('IAA 計算失敗，請重試計算');
   });
 
   test('retrying a failed computation moves it back to pending without changing task status or round count (FR-010o-4(3))', async ({
@@ -86,8 +86,8 @@ test.describe('Issue #783 -- IAA computation status on waiting_iaa_confirmation 
 
     await expect(page.locator('#publishOfficialRunBtn')).toBeDisabled();
     await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
-    await expect(page.locator('#publishActionRow')).toContainText('IAA 計算中，完成後才能繼續');
-    await expect(page.locator('#publishActionRow')).toContainText('兩個動作都需要');
+    await expect(page.locator('#nextStepCard #nextStepConditions li.next-step-cond[data-cond="iaa-computed"][data-status="unmet"]')).toContainText('IAA 計算中，完成後才能繼續');
+    await expect(page.locator('#nextStepCard')).toContainText('兩個動作都需要');
 
     // Retry MUST NOT transition the task or create a new round.
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
@@ -107,7 +107,7 @@ test.describe('Issue #783 -- IAA computation status on waiting_iaa_confirmation 
     await expect(page.locator('#statusBadge')).toContainText('待 IAA 確認');
 
     await expect(page.locator('#retryIaaComputationBtn')).toHaveCount(0);
-    await expect(page.locator('#publishActionRow')).not.toContainText('重試計算');
+    await expect(page.locator('#nextStepCard')).not.toContainText('重試計算');
   });
 
   test('an unable-to-compute round (done, De=0) is not blocked by the pending/failed gate (FR-010o-4(1), dataset/017 FR-039.4)', async ({

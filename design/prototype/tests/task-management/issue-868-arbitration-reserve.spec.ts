@@ -90,9 +90,9 @@ test('blocks publish when membership churn leaves only an active arbiter', async
 
   await disableMember(page, 'Kevin Liu');
   await page.locator('#tabOverview').click();
-  await page.locator('#publishDryRunBtn').click();
-
-  await expect(page.locator('#toastMsg')).toContainText('至少需 1 位未被指定為仲裁者的啟用中審核員');
+  await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
+  await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="reviewers"][data-status="unmet"]')).toContainText('至少需 1 位未被指定為仲裁者的啟用中審核員');
+  await expect(page.locator('#publishDryRunBtn')).toHaveAttribute('aria-describedby', /nextStepCond-reviewers/);
   await expect(page.locator('#statusBadge')).toHaveText('草稿');
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(0);
 });

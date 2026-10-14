@@ -10,7 +10,7 @@
  *     round: no unassigned dry-run work, every active annotator submitted, every dry_run review
  *     unit derived `finalized` (015 FR-051), no unit left `disputed`, no pending dry_run
  *     final-exception-pool item. Otherwise it stays dry_run_in_progress.
- *   - Each unmet condition is ONE visible `li` inside #publishActionRow; the disabled
+ *   - Each unmet condition is ONE visible `li.next-step-cond[data-status=unmet]` inside #nextStepCard; the disabled
  *     新增試標回合 button (#publishDryRunBtn) points at that list with aria-describedby, so screen
  *     readers get the same text (same pattern as the official gate, task-detail-completion-gate).
  *   - Reasons carry a count with a unit, and are never phrased as an IAA problem (FR-010o-3/4).
@@ -78,7 +78,7 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     expect(review[0]).toMatch(/單位/);
     expect(pick(texts, DISPUTED.accept, DISPUTED.reject)).toHaveLength(0);
     expect(pick(texts, POOL.accept)).toHaveLength(0);
-    await expect(page.locator('#publishActionRow li', { hasText: review[0] }).first()).toBeVisible();
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]', { hasText: review[0] }).first()).toBeVisible();
     await expectNoIaaPhrasing(page);
   });
 
@@ -138,8 +138,9 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     expect(await persistedStatus(page, TASK)).toBe('waiting_iaa_confirmation');
     /* #1348: waiting now lists its own IAA item as an <li>, so the blocker list is checked by id
        plus the dry-run heading text instead of "no <li> at all". */
-    await expect(page.locator('#publishDryRunReasons')).toHaveCount(0);
-    await expect(page.locator('#publishActionRow')).not.toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="review"]')).toHaveCount(0);
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="submission"]')).toHaveCount(0);
+    await expect(page.locator('#nextStepDesc')).not.toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
   });
 
   test('unmet reasons are visible text and reach screen readers through aria-describedby on the disabled next-round button (FR-008a scenario, AC-3.16 accessibility)', async ({
@@ -152,7 +153,7 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     const texts = await reasonTexts(page);
     expect(texts.length).toBeGreaterThanOrEqual(2); // review (5) and disputed (3) both outstanding
     for (const reason of texts) {
-      await expect(page.locator('#publishActionRow li', { hasText: reason }).first()).toBeVisible();
+      await expect(page.locator('#nextStepCard li.next-step-cond[data-status="unmet"]', { hasText: reason }).first()).toBeVisible();
       const escaped = reason.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
       await expect(page.locator('#publishDryRunBtn')).toHaveAccessibleDescription(new RegExp(escaped));
     }
@@ -172,7 +173,7 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
 
     await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
     await expect(page.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R2');
-    const rowText = await page.locator('#publishActionRow').innerText();
+    const rowText = await page.locator('#nextStepDesc').innerText();
     expect(rowText).toMatch(/審核/);
     expect(rowText).toMatch(/仲裁/);
     // Only the disabled next-round control is offered, as in every dry_run_in_progress state.
@@ -208,16 +209,17 @@ test.describe('Review-aware dry-run completion gate (DRY_RUN_COMPLETION_RULE, FR
     await expect(page.locator('#statusBadge')).toBeAttached();
 
     await expectStillInProgress(page, TASK);
-    const reasons = page.locator('#publishDryRunReasons li');
+    const reasons = page.locator('#nextStepCard li.next-step-cond[data-cond="submission"][data-status="unmet"]');
     await expect(reasons).toHaveCount(1);
     await expect(reasons.first()).toBeVisible();
     await expect(reasons.first()).toContainText('未全部提交');
-    await expect(page.locator('#publishDryRunBtn')).toHaveAttribute('aria-describedby', /publishDryRunReasons/);
+    await expect(page.locator('#publishDryRunBtn')).toHaveAttribute('aria-describedby', /nextStepCond-submission/);
     expect(await reasonTexts(page)).toHaveLength(1);
     await expectNoIaaPhrasing(page);
     // The delta's FR-013(1) wording is shown next to the disabled button as well, and the retired
     // IAA phrasing is gone from the whole action row.
-    await expect(page.locator('#publishActionRow')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
+    await expect(page.locator('#nextStepDesc')).toContainText('本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合');
+    await expect(page.locator('#nextStepDesc')).not.toContainText(/IAA/i);
     await expect(page.locator('#publishActionRow')).not.toContainText(/IAA/i);
   });
 

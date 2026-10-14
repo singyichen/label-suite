@@ -379,7 +379,7 @@ test.describe('issue #850: task-detail and annotation pages share no trial-round
     expect(pick(reasons, REVIEW.accept, REVIEW.reject)).toHaveLength(0);
     expect(pick(reasons, DISPUTED.accept, DISPUTED.reject)).toHaveLength(0);
     expect(pick(reasons, POOL.accept)).toHaveLength(0);
-    await expect(page.locator('#publishDryRunBtn')).toHaveAttribute('aria-describedby', /publishDryRunReasons/);
+    await expect(page.locator('#publishDryRunBtn')).toHaveAttribute('aria-describedby', /nextStepCond-submission/);
   });
 
   test('issue #850 D1: an R2 resubmission with an answer byte-identical to R1 still counts toward R2 progress', async ({

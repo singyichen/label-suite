@@ -178,6 +178,7 @@ type RunControlCase = {
      and it must be the only run-control button in the action row. */
   actionDisabled?: boolean;
   reasonText?: string;
+  noActionControls?: boolean;
   onlyButtonInRow?: boolean;
   /* issue #791: waiting_iaa_confirmation is the only decision point where
      both "start official run" and "add next round" are offered side by
@@ -227,8 +228,9 @@ const RUN_CONTROL_CASES: RunControlCase[] = [
     badge: '已完成',
     activeStepLabel: '已完成',
     roundCount: 1,
-    actionButton: '#publishActionRow',
+    actionButton: '#nextStepTitle',
     actionText: '任務已完成，無待執行動作',
+    noActionControls: true,
   },
 ];
 
@@ -327,8 +329,13 @@ test.describe('Task detail profile mapping', () => {
       if (rc.actionDisabled) {
         await expect(page.locator(rc.actionButton)).toBeDisabled();
       }
+      if (rc.noActionControls) {
+        // #1403 (FR-027(6)): completed renders the sentence in the card title and no buttons or condition rows.
+        await expect(page.locator('#publishActionRow button')).toHaveCount(0);
+        await expect(page.locator('#nextStepCard li.next-step-cond')).toHaveCount(0);
+      }
       if (rc.reasonText) {
-        await expect(page.locator('#publishActionRow')).toContainText(rc.reasonText);
+        await expect(page.locator('#nextStepDesc')).toContainText(rc.reasonText);
       }
       if (rc.onlyButtonInRow) {
         await expect(page.locator('#publishActionRow button')).toHaveCount(1);
