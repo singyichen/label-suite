@@ -795,6 +795,8 @@ Compact in-row action buttons used in dense tables and list rows (`annotation-li
 
 ### Inputs
 
+Shared definition: `pages/shared/input.css` (`.input`, `.input-textarea`). Adopted by `annotation/annotation-workspace` (T009 free-text answer, reviewer reason, bypass reason); other pages still carry local input styles.
+
 ```css
 .input {
   padding: 12px 16px;
@@ -3009,3 +3011,4 @@ Before delivering any UI code, verify:
 | v1.34 | 2026-10-15 | **Workspace guideline tabs use Desktop Content Tabs (issue #1445)** — `annotation/annotation-workspace` guideline panel tabs drop their page-level `.guideline-tab` style and use `.admin-tabs` / `.admin-tab` from `pages/shared/content-tabs.css`; a `.admin-tabs--panel` modifier (`margin-bottom: 0; padding: 0 var(--space-md); flex-shrink: 0`) keeps the flush panel layout; no token value changed. |
 | v1.35 | 2026-10-15 | **Single modal close class (issue #1446)** — §Modals documents `.modal-header` + `.modal-close` as the one close-button definition (32px bordered icon button); the borderless `.modal-close-btn` is retired and its three consumers (task-detail and task-new dataset preview, annotation-progress member detail) use `.modal-close`. No token value changed. |
 | v1.36 | 2026-10-15 | **Metric KPI Tile adopted by dataset-analysis-detail stats tab (issue #1453)** — the page-local `.stats-metric-card` / `-label` / `-value` / `-desc` and `.stats-inline-card` families are removed in favour of the shared `.metric`; `pages/shared/metric.css` gains `.metric-desc` and `.metric-lg strong` (defaults only, no new tokens); §Metric KPI Tile lists the adopting pages and documents both modifiers. |
+| v1.37 | 2026-10-15 | **Shared input.css (issue #1447)** — §Inputs now points to `pages/shared/input.css` (`.input` / `.input-textarea`: 12px 16px padding, 16px font, `--radius-md`, `--color-border`, primary focus ring); `annotation/annotation-workspace` converges its three text inputs (T009 free-text answer, reviewer reason, bypass reason) on it; no token value changed. |

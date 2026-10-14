@@ -642,6 +642,7 @@
 
     var input = document.createElement('input');
     input.type = 'text';
+    input.className = 'input';
     input.setAttribute('data-testid', 'ws-bypass-reason-' + outKey);
     input.value = state.bypassReasons[outKey] || '';
 
@@ -748,6 +749,10 @@
     var textarea = container.querySelector('[data-testid="generation-answer-input"]');
     if (!textarea) return;
     textarea.setAttribute('data-testid', 'ws-free-text-input');
+    /* Engine styles this textarea inline for the task-new preview; the
+       workspace adopts the shared input vocabulary instead (issue #1447). */
+    textarea.removeAttribute('style');
+    textarea.classList.add('input-textarea');
     var counter = textarea.nextElementSibling;
     if (!counter) return;
     counter.setAttribute('data-testid', 'ws-free-text-counter');
@@ -4077,6 +4082,7 @@
     input.id = inputId;
     input.rows = 2;
     input.required = true;
+    input.className = 'input-textarea';
     input.setAttribute('data-testid', 'ws-review-reason');
     input.setAttribute('data-outkey', outKey);
     input.setAttribute('placeholder', t('reviewReasonPlaceholder'));
