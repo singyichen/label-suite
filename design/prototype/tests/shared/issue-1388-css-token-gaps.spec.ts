@@ -1,9 +1,8 @@
 /*
  * Traceability: issue #1388 -- undefined CSS custom properties were silently
  * dropped (or masked by a var() fallback). Contract: each consumer resolves to
- * an existing tokens.css token, and the sidebar mobile layout variables exist
- * on :root for every page that links sidebar.css (annotation-workspace never
- * declared them, so its mobile body padding collapsed to 0).
+ * an existing tokens.css token, and annotation-workspace's mobile
+ * layout (which has no --navbar-mobile-* by design) stays unchanged.
  */
 import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
@@ -72,19 +71,16 @@ test.describe('Issue #1388 -- CSS token gaps', () => {
     expect(got).toBe(expected);
   });
 
-  test('annotation-workspace gets the sidebar mobile navbar variables', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
+  test('annotation-workspace mobile layout does not gain sidebar navbar padding', async ({ page }) => {
+    // Guard: the workspace never declares --navbar-mobile-*; its body padding must stay at the
+    // initial value (a sidebar.css :root default shifted the mobile drawer, RESP-01 / issue #928).
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(WORKSPACE);
     expect(page.url()).toContain('annotation-workspace.html');
-    const vars = await page.evaluate(() => {
-      const cs = getComputedStyle(document.documentElement);
-      return [cs.getPropertyValue('--navbar-mobile-height').trim(), cs.getPropertyValue('--navbar-mobile-top-height').trim()];
-    });
-    expect(vars).toEqual(['84px', '64px']);
     const pad = await page.evaluate(() => {
       const cs = getComputedStyle(document.body);
       return [cs.paddingTop, cs.paddingBottom];
     });
-    expect(pad).toEqual(['64px', '84px']);
+    expect(pad).toEqual(['0px', '0px']);
   });
 });
