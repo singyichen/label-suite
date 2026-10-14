@@ -1,7 +1,7 @@
 # task-management/013-task-new Specification
 
 ## Purpose
-New Task（新增任務精靈與設定建構器，Project Leader）的 derived view。正典為 `specs/task-management/013-task-new/spec.md`（v8.5.1）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `2026-09-04-seq-tagging-span-config`（issue #581）之 FR-003d-1／FR-003d-3（修訂）、change `2026-10-13-task-new-list-title-field`（issue #1338）之 FR-002c-9（新增）、change `2026-10-13-task-new-dialogue-fields`（issue #1340）之 FR-002c-10（新增）。本檔於該 change archive 前以正典 v6.9.6 的兩條原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
+New Task（新增任務精靈與設定建構器，Project Leader）的 derived view。正典為 `specs/task-management/013-task-new/spec.md`（v8.5.2）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `2026-09-04-seq-tagging-span-config`（issue #581）之 FR-003d-1／FR-003d-3（修訂）、change `2026-10-13-task-new-list-title-field`（issue #1338）之 FR-002c-9（新增）、change `2026-10-13-task-new-dialogue-fields`（issue #1340）之 FR-002c-10（新增）。本檔於該 change archive 前以正典 v6.9.6 的兩條原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
 
 ## Requirements
 
