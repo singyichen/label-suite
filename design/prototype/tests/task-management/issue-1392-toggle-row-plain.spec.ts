@@ -10,7 +10,8 @@
  * `.toggle-row--plain` variant itself (not a page-level override), while the
  * default .toggle-row outside such containers keeps its border.
  */
-import { test, expect, type Locator } from '../fixtures';
+import { test, expect } from '../fixtures';
+import type { Locator } from '@playwright/test';
 import { openSettingsSection } from './_task-detail-settings-helpers';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
