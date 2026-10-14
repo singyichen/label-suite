@@ -163,6 +163,20 @@ test.describe('task-detail Code 套用 (FR-026 (3))', () => {
     await expect(page.locator('#settingsConfigView')).not.toContainText('excellent');
   });
 
+  test('late renderOverview() does not clear the 請先套用 hint while the form is open (#1380)', async ({ page }) => {
+    await openLabelingEdit(page);
+    await editCodeLabel(page, 'excellent');
+    await page.locator('#settingsSaveBtn').click();
+    await expect(page.locator('#settingsEditError')).toContainText('請先套用');
+
+    // Simulate the delayed re-render deterministically instead of racing the real timer.
+    await page.evaluate(() => (window as unknown as { renderOverview: () => void }).renderOverview());
+
+    await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#settingsEditError')).toBeVisible();
+    await expect(page.locator('#settingsEditError')).toContainText('請先套用');
+  });
+
   test('English mode: Code button reads Apply and the config-file label reads Config file', async ({ page }) => {
     await page.addInitScript(() => window.localStorage.setItem('labelsuite.lang', 'en'));
     await openLabelingEdit(page);

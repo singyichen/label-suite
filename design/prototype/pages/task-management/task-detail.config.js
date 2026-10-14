@@ -162,6 +162,11 @@ function ensureTaskConfigSeeded() {
   (TASK_DATA.outputs || []).forEach(function(out) {
     state.outputConfigs[out.type] = normalizeOutputConfig(out.type, out.config || {}, state.lang);
   });
+  /* Load the task's stored dialogue_fields into the shared state (same field
+     task-new uses) so the auto list title / dialogue preview resolve the
+     first turn instead of the count text (#1386). */
+  state.dialogueFields = TASK_DATA.dialogue_fields ? Object.assign({}, TASK_DATA.dialogue_fields) : null;
+  state.dialogueDeclined = false;
   state.itemPairLabels = Array.isArray(TASK_DATA.itemPairLabels) ? TASK_DATA.itemPairLabels.slice() : null;
   /* seedDatasetFromProfile() below bumps _datasetVersion, so the next
      renderSchemaFields() runs its auto-population reset; the pending copy
