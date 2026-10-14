@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v12.11.2）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）；以及 change `exception-pool-select-then-confirm`（issue #920，**MAJOR**）之 FR-095（修訂，新增「先選取、後確認的處置互動模型」段落，廢止 AC-4.56、AC-4.57，新增 AC-4.72 ~ AC-4.75）；以及 change `filter-review-workspace-units`（issue #956）之 FR-093（修訂，新增工作區左欄依審核指派過濾與仲裁可見性段落，對應新增 AC-4.76 ~ AC-4.79）；以及 change `fix-992-decision-summary-readable`（issue #992）之 FR-016B（修訂，新增審核決策摘要顯示層中文化段落）與新增 AC-2.28；以及 change `annotation-list-summary-shared`（issue #1339）之 FR-106（新增標記清單樣本摘要，對應新增 AC-1.35 ~ AC-1.38、SC-028）；以及 change `annotation-dialogue-thread-preview`（issue #1341）之 FR-107（新增整合預覽對話串與發言內座標，對應新增 AC-2.31 ~ AC-2.35、SC-029）；以及 change `annotation-dialogue-followups`（issue #1358）之 FR-106（修訂第 3 點，依 `dialogue_fields.text` 取文字）與 FR-107（修訂，新增第 8 ~ 10 點，對應新增 AC-2.36 ~ AC-2.38）；以及 change `annotation-dialogue-preview-no-output-entities`（issue #1371）之 FR-107（修訂，新增第 14 ~ 15 點，對應新增 AC-2.44 ~ AC-2.47）。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v12.12.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）；以及 change `exception-pool-select-then-confirm`（issue #920，**MAJOR**）之 FR-095（修訂，新增「先選取、後確認的處置互動模型」段落，廢止 AC-4.56、AC-4.57，新增 AC-4.72 ~ AC-4.75）；以及 change `filter-review-workspace-units`（issue #956）之 FR-093（修訂，新增工作區左欄依審核指派過濾與仲裁可見性段落，對應新增 AC-4.76 ~ AC-4.79）；以及 change `fix-992-decision-summary-readable`（issue #992）之 FR-016B（修訂，新增審核決策摘要顯示層中文化段落）與新增 AC-2.28；以及 change `annotation-list-summary-shared`（issue #1339）之 FR-106（新增標記清單樣本摘要，對應新增 AC-1.35 ~ AC-1.38、SC-028）；以及 change `annotation-dialogue-thread-preview`（issue #1341）之 FR-107（新增整合預覽對話串與發言內座標，對應新增 AC-2.31 ~ AC-2.35、SC-029）；以及 change `annotation-dialogue-followups`（issue #1358）之 FR-106（修訂第 3 點，依 `dialogue_fields.text` 取文字）與 FR-107（修訂，新增第 8 ~ 10 點，對應新增 AC-2.36 ~ AC-2.38）；以及 change `annotation-dialogue-preview-no-output-entities`（issue #1371）之 FR-107（修訂，新增第 14 ~ 15 點，對應新增 AC-2.44 ~ AC-2.47）；以及 change `annotation-preview-entities-role-gate`（issue #1413）之 FR-107（修訂，新增第 16 點，對應新增 AC-2.48 ~ AC-2.49）。
 
 ## Requirements
 
@@ -1714,8 +1714,9 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 12. **回覆縮排與回應標記**：`dialogue_fields.reply_to` 非 `null`，且該則發言的 `reply_to` 子欄位值等於**同一樣本內另一則**發言的發言編號時，該則發言 MUST 縮排並顯示「跨發言 · 回應 #n」標記（`n` 為被回覆發言的發言編號，英文介面為 `Cross-turn · replies to #n`）。`reply_to` 為 `null`、該則的值缺漏或為空、值找不到對應發言、或值等於該則自己的發言編號時，MUST NOT 縮排也 MUST NOT 顯示標記。MUST NOT 由實體、關係或 `@名字` 文字推測回覆關係；`dialogue_fields` 缺少 `reply_to` 鍵時視同 `null`。
 13. **顯示切換**：對話串上方 MUST 提供「顯示已標實體」與「純文字」兩個按鈕（以 `aria-pressed` 表示目前模式），預設為「顯示已標實體」。「純文字」模式下發言文字不繪製實體標示與關係選取標示，已記錄的實體資料不變，反白標記仍可進行。
 
-14. **不從 Output 預填實體**：Input 為物件陣列（對話）時，整合預覽 MUST NOT 以角色為 Output 的欄位內容預填實體；資料自帶的 `entities` 照常載入。守門 MUST 沿用既有的物件陣列 Input 判斷，不另立判斷。Input 非物件陣列的任務，既有預填行為 MUST 不變（Data Fairness，承接 #1358 裁定 1 之範圍外項目）。
+14. **不從 Output 預填實體**：Input 為物件陣列（對話）時，整合預覽 MUST NOT 以角色為 Output 的欄位內容預填實體。守門 MUST 沿用既有的物件陣列 Input 判斷，不另立判斷。Input 非物件陣列的任務，由 Output 欄位解析預填的既有行為 MUST 不變（Data Fairness，承接 #1358 裁定 1 之範圍外項目）；資料自帶的 `entities` 欄位是否載入，依第 16 點的角色守門。
 15. **反白歧義提示**：反白選取的 DOM 位置與發言文字不符，而該選取文字在該則發言中出現多次（或找不到）時，MUST NOT 取第一次出現的位置，且 MUST 顯示專屬的反白歧義提示（中英文案，不得顯示未替換的 `{n}` 佔位符）；僅在該則發言中恰出現一次時，才以該唯一位置記錄。
+16. **資料自帶實體欄位的角色守門**（v12.12.0 新增，issue #1413）：整合預覽載入資料自帶的 `entities` 欄位作為預填實體前，MUST 依 `fieldRoleMap` 查該欄位的角色，僅在角色不是 Output 時才載入；角色為 Output，或角色未知（`fieldRoleMap` 未指派、為空字串或無法判定）一律 MUST NOT 預填（fail-closed，Data Fairness），不分 Input 為字串或物件陣列。本點只管資料自帶 `entities` 欄位的載入路徑，非物件陣列 Input 由 Output 欄位解析預填的既有路徑（第 14 點、AC-2.45）不在本點範圍。預填來源目前仍以固定鍵名 `entities` 讀取，改由任務設定宣告預填來源欄位之需求延後至 #1430。
 
 #### Scenario: AC-2.31 對話串一則一列
 
@@ -1824,10 +1825,10 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 
 #### Scenario: AC-2.45 非對話 Input 的預填行為不變
 
-- **GIVEN** 任務 Input 為字串（非物件陣列），資料的 `entities` 為空，角色為 Output 的欄位含實體陣列；或對話 Input 的資料自帶 `entities`
+- **GIVEN** 任務 Input 為字串（非物件陣列），資料的 `entities` 為空，角色為 Output 的欄位含實體陣列；或對話 Input 的資料自帶 `entities`，且該欄位角色不是 Output
 - **WHEN** 開啟整合預覽
 - **THEN** 字串 Input 照既有行為由 Output 欄位預填實體
-- **AND** 對話 Input 自帶的 `entities` 照常載入
+- **AND** 對話 Input 自帶的 `entities`（角色非 Output）照常載入
 
 #### Scenario: AC-2.46 反白歧義顯示專屬提示
 
@@ -1842,3 +1843,25 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 - **WHEN** 完成反白並已選取實體類型
 - **THEN** 新增的實體座標為該唯一出現的位置，`slice(start, end)` 等於選取文字
 - **AND** 該文字出現多次時不新增（見 AC-2.46）
+
+### Requirement: AC-2.48 角色為 Output 的 entities 欄位不預填
+
+資料自帶的 `entities` 欄位在 `fieldRoleMap` 中的角色為 Output 時，整合預覽不得把它載入為預填實體（FR-107 第 16 點）。
+
+#### Scenario: AC-2.48 角色為 Output 的 entities 欄位不預填
+
+- **GIVEN** 任務 Input 為物件陣列（對話），資料自帶非空的 `entities`，且 `fieldRoleMap` 中 `entities` 的角色為 Output
+- **WHEN** 開啟整合預覽
+- **THEN** 不預填任何實體，`previewEntities` 為空
+- **AND** 頁面文字不含該 `entities` 欄位的內容
+
+### Requirement: AC-2.49 角色未知的 entities 欄位不預填
+
+資料自帶的 `entities` 欄位角色未知時一律不預填（fail-closed），角色為 Input 或 Evidence 等非 Output 的已知角色時照常載入（FR-107 第 16 點）。
+
+#### Scenario: AC-2.49 角色未知的 entities 欄位不預填
+
+- **GIVEN** 資料自帶非空的 `entities`，且 `fieldRoleMap` 沒有 `entities` 這個鍵或其值為空字串，並且沒有角色為 Output 的欄位
+- **WHEN** 開啟整合預覽（Input 為字串或物件陣列皆然）
+- **THEN** 不預填任何實體，`previewEntities` 為空
+- **AND** `entities` 角色為 Input 或 Evidence 時，該欄位內容照常載入為預填實體
