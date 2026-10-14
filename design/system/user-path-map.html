@@ -802,7 +802,7 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
       <div class="branch">
         <div class="blabel">對照：審核員開啟成員管理分頁 → <strong>有</strong> toast「reviewer 無權限檢視成員管理，已導回任務概覽。」</div>
       </div>
-      <p class="cites"><b>證據</b>（行號依 2026-09-24 複驗基底）寫入端 task-detail.html:5082–5091 標記員分支，:5089 <span class="mono">window.location.href = './task-list.html?unauthorized=annotator';</span> · 讀取端 task-list.html:1333 <span class="mono">pendingUnauthorizedToast = !!q.get('unauthorized');</span> · <span class="mono">/usr/bin/grep -rn "unauthorized" design/prototype/pages/</span> → 3 行 · 對照組 task-detail.html:5531 與 :7335 <span class="mono">showToast(t('reviewerTabBlocked'), true)</span>，文案在 :2840</p>
+      <p class="cites"><b>證據</b>（行號依 2026-09-24 複驗基底）寫入端 task-detail.html:5082–5091 標記員分支，:5089 <span class="mono">window.location.href = './task-list.html?unauthorized=annotator';</span> · 讀取端 task-list.html:1265 <span class="mono">pendingUnauthorizedToast = !!q.get('unauthorized');</span> · <span class="mono">/usr/bin/grep -rn "unauthorized" design/prototype/pages/</span> → 3 行 · 對照組 task-detail.html:5531 與 :7335 <span class="mono">showToast(t('reviewerTabBlocked'), true)</span>，文案在 :2840</p>
       <p class="cites"><b>F6 原判定成因（2026-09-08）</b> 當時 <span class="mono">unauthorized</span> 參數全樹只寫不讀，使用者點了一個連結、畫面換成任務列表卻沒有任何說明；同一支檔案對審核員有提示、對標記員沒有。<b>現況（2026-09-24 複驗）</b> 已修復：落地頁讀取該參數並顯示無權限提示，顯示後參數隨 <span class="mono">syncUrl()</span> 自網址移除、重整不會重複提示，因此<strong>「全樹只寫不讀」的推論已不成立</strong>，詳見<a href="#m12">第 12 節</a>第 3 列與 <a href="https://github.com/singyichen/label-suite/issues/721">#721</a>。</p>
     </div>
 
@@ -926,7 +926,7 @@ footer { margin-top: var(--space-3xl); padding-top: var(--space-lg); border-top:
         <tr>
           <td class="num">3</td><td><span class="tag tag--gap">F6</span> <span class="tag tag--ok">已修復</span></td><td>P1 標記員開任務詳情</td>
           <td>任務列表進站即讀取並消費 <span class="mono">unauthorized</span> 參數，顯示「無權限檢視任務詳情」提示後把該參數自網址移除，重新整理不會重複提示。</td>
-          <td class="src">task-list.html:1333 <span class="mono">pendingUnauthorizedToast</span>（寫入端 task-detail.html:5089）· tests/task-management/issue-721-task-list-unauthorized-toast.spec.ts</td>
+          <td class="src">task-list.html:1265 <span class="mono">pendingUnauthorizedToast</span>（寫入端 task-detail.html:5089）· tests/task-management/issue-721-task-list-unauthorized-toast.spec.ts</td>
           <td><a href="https://github.com/singyichen/label-suite/issues/721">#721</a></td>
         </tr>
         <tr>
