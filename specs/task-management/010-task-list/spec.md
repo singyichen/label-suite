@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.3.3
+版本: 2.3.4
 狀態: In Progress
 ---
 
@@ -173,7 +173,7 @@ sequenceDiagram
 - `刪除` 操作必須為軟刪除（`TASK_DELETE_MODE`），不得物理刪除資料。
 - `刪除` 操作僅允許 `project_leader` 與 `super_admin` 執行；其他角色不得看到可用刪除操作，若直接呼叫刪除動作需收到無權限提示且不得變更任務。
 - `刪除` 操作僅允許套用於 `status = draft` 的任務；非 `draft` 任務不得顯示可用刪除操作，若直接觸發刪除需被拒絕且不得變更任務。
-- `刪除` 操作需先經刪除確認彈窗；彈窗樣式需沿用 task-management 既有共用 modal（`modal-backdrop` / `modal` / `modal-actions`）。
+- `刪除` 操作需先經刪除確認彈窗；彈窗樣式需沿用 task-management 共用 modal 骨架 `design/prototype/pages/shared/modal.css`（`modal-overlay` / `modal` / `modal-actions`）。
 - 軟刪除後任務不應出現在預設任務列表；資料保留供審計與復原。
 - 輸出類型欄必須依 `outputs[]` 順序，為每個 `output.type` 各呈現一個唯讀 tag；複合任務不得合併成自訂的固定類型 badge。
 - 輸出類型 tag 的 zh/en 文案必須來自 `OUTPUT_TYPE_REGISTRY`；顏色只能作為輔助，tag 必須保留可見文字，且 tag 群組需具有可存取名稱，使螢幕閱讀器可讀出完整輸出類型清單。
@@ -423,6 +423,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.4 | 2026-10-14 | Issue #1424（Lightweight，PATCH）：刪除確認彈窗樣式條文的共用 class 名稱由 `modal-backdrop` 更正為 `modal-overlay`，並指向 #1390 已落地的共用骨架 `pages/shared/modal.css`；條文未增減，無 FR／AC 變動，無 API 契約變更。 |
 | 2.3.3 | 2026-10-14 | Issue #1384 第 1 段（Lightweight，PATCH）：「v2.0.1 下游同步界線」blockquote 的 014／015／017 consumer 延後敘述改寫為現況——三者已各自完成 `outputs[]` 遷移（014 v2.0.0、015 v2.0.0、017 v2.0.0），僅階層 `multi_label` 的 014 設定檢視與 017 統計／IAA 延後至 #1412；條文未增減，無 API 契約變更，Changelog 列逐字不動。 |
 | 2.3.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 2.3.1 | 2026-10-13 | Issue #1270：FR-010e 補釐清句——`task.delete` 已於 admin-007 v1.3.0 登錄（已登錄、待啟用），啟用前依未知鍵拒絕，刪除既有閘門與 `super_admin` 路徑不變；「42 列」改讀為 56 列；依賴表同步。條文未增減，純 PATCH。 |
