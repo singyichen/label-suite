@@ -1,7 +1,7 @@
 # dataset/017-dataset-analysis-detail Specification
 
 ## Purpose
-Dataset Analysis Detail（統計總覽 + 品質監控雙 Tab，Project Leader／Reviewer）的 derived view。正典為 `specs/dataset/017-dataset-analysis-detail/spec.md`（v3.1.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。收錄 change `1141-dataset-quality-metrics-ready-signal`（issue #1141）之 FR-044（新增，品質指標就緒訊號）；另收錄 change `seq-tagging-span-export-metrics`（issue #581）之 FR-009L／FR-012L／FR-013／FR-024A／FR-035／FR-036／FR-039（修訂）；change `dataset-quality-entity-value-alignment`（issue #783）之 FR-008／FR-025（新收錄，實體欄位與常數值域對齊）與 FR-039（修訂，IAA 計算未結束不是 IAA 結果）；此七條於該 change archive 前以正典 v2.2.2 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容即被完整取代。基線的 scenario 標題刻意採用 delta 的新標題——`openspec archive` 以標題比對判定 MODIFIED 是否丟失既有 scenario，標題不一致即中止；標題以下的條文仍為 v2.2.2 原文。
+Dataset Analysis Detail（統計總覽 + 品質監控雙 Tab，Project Leader／Reviewer）的 derived view。正典為 `specs/dataset/017-dataset-analysis-detail/spec.md`（v3.2.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。收錄 change `1412-dataset-analysis-labelpath-unit`（issue #1412）之 FR-045（新增，`multi_label` 階層 `LabelPath` 的計數單位）；收錄 change `1141-dataset-quality-metrics-ready-signal`（issue #1141）之 FR-044（新增，品質指標就緒訊號）；另收錄 change `seq-tagging-span-export-metrics`（issue #581）之 FR-009L／FR-012L／FR-013／FR-024A／FR-035／FR-036／FR-039（修訂）；change `dataset-quality-entity-value-alignment`（issue #783）之 FR-008／FR-025（新收錄，實體欄位與常數值域對齊）與 FR-039（修訂，IAA 計算未結束不是 IAA 結果）；此七條於該 change archive 前以正典 v2.2.2 原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容即被完整取代。基線的 scenario 標題刻意採用 delta 的新標題——`openspec archive` 以標題比對判定 MODIFIED 是否丟失既有 scenario，標題不一致即中止；標題以下的條文仍為 v2.2.2 原文。
 
 ## Requirements
 
@@ -256,3 +256,25 @@ u-α 的計算輸入沿用 FR-039 的既有規則不變：僅標記員原始標�
 - **THEN** 訊號為 `false`
 - **AND** 最新回合的 `iaa_computation_status` 為 `done` 時訊號為 `true`，即使其中某輸出類型因 `De = 0` 為「無法計算」
 - **AND** 該任務沒有試標回合紀錄或紀錄缺 `iaa_computation_status` 時訊號為 `true`
+
+### Requirement: FR-045 multi_label 階層 LabelPath 的計數單位
+
+當任務 `outputs[]` 含 `multi_label` 時，017 的統計總覽與品質監控 MUST 以**完整 `LabelPath`** 作為「標籤」的計數單位。`LabelPath` 為 `task-management/013-task-new` 定義、`annotation/015-annotation-workspace` FR-024E-1 提交於 `selected: LabelPath[]` 的 root-to-selected-node 節點 ID 序列。
+
+1. 每一條提交的 `LabelPath` MUST 算一個標籤，類別鍵 MUST 為完整路徑（畫面顯示為依序以 `›` 連接各節點名稱，例如 `A › B`）。同名但路徑不同的節點 MUST 視為不同類別。
+2. 系統 MUST NOT 隱含計入祖先節點：提交 `A › B` 不使 `A` 的次數增加。路徑可止於 branch 或 leaf，因此 `A` 與 `A › B` 為兩個獨立類別，僅在標記員另外提交 `A` 本身時 `A` 才被計次。
+3. 統計總覽的標籤次數／比例長條圖與多標籤共現矩陣，列與欄 MUST 皆以完整 `LabelPath` 為單位。標記員於同一筆樣本同時提交 `A` 與 `A › B` 時，兩者之間 MUST 為一般共現，MUST NOT 因階層關係特殊處理、合併或略過。比例的母體定義不變，僅類別鍵改為完整路徑。
+4. 品質監控的逐標籤 Krippendorff's Alpha MUST 以完整 `LabelPath` 為「標籤」，巨集平均對象為各完整路徑；`IAA_LABEL_MIN_POSITIVE` 的「正例出現次數」MUST 以完整路徑計，MUST NOT 把子孫路徑的出現次數併入祖先路徑。常數值不變。排除於巨集平均的稀有標籤，其排除清單 MUST 列出完整路徑。
+5. 其他以「標籤」為單位的 `multi_label` 品質指標（例如 FR-035 的逐樣本投票分裂度取各標籤平均）同樣以完整路徑為標籤。
+6. 扁平 config 與舊資料視為長度為 1 的 `LabelPath`，其統計與 Alpha MUST 與扁平標籤的既有計算結果一致。
+7. 依頂層（或任一祖先層）彙總（roll-up）不在本規格範圍；MUST NOT 以隱含祖先計次提供。
+8. 計數 MUST 由資料中的 `LabelPath` 驅動，MUST NOT 硬編層數、節點名稱或任務類型分支。
+
+#### Scenario: 以完整 LabelPath 計次且不隱含祖先
+
+- **GIVEN** 一個 `outputs[]` 含 `multi_label` 的任務，階層 taxonomy 含 `A` 與其子節點 `A › B`，一位標記員對某樣本提交 `[A › B]`
+- **WHEN** 系統計算統計總覽的標籤次數與共現矩陣
+- **THEN** 類別 `A › B` 次數為 1，類別 `A` 次數為 0
+- **AND** 另一位標記員對另一樣本提交 `[A, A › B]` 時，`A` 與 `A › B` 次數各增加 1，且共現矩陣中兩者的共現格為 1
+- **AND** 品質監控的逐標籤 Alpha 與 `IAA_LABEL_MIN_POSITIVE` 皆以 `A` 與 `A › B` 為兩個獨立標籤，正例出現次數不足 `IAA_LABEL_MIN_POSITIVE` 的完整路徑被排除於巨集平均並列於排除清單
+- **AND** 以僅含長度為 1 的 `LabelPath` 的扁平資料重算，結果與扁平標籤既有計算相同
