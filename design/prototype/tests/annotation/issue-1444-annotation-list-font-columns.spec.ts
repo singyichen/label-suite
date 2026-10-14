@@ -98,3 +98,33 @@ test.describe('annotation-list reviewer queue columns (#1444)', () => {
     });
   }
 });
+
+test.describe('annotation-list reviewer queue answer chips (#1444)', () => {
+  test('en T016 at 1440px: every answer label chip renders on a single line', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+    await page.goto(buildListUrl({ task_id: 'T016', role: 'reviewer', run_type: 'official_run' }));
+
+    const chips = page.locator('[data-testid="list-review-answer"] .annotator-result-tag');
+    await expect(chips.first()).toBeVisible();
+
+    const broken = await chips.evaluateAll((els) =>
+      els
+        .map((el) => {
+          const cs = getComputedStyle(el);
+          const lineHeight = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.2;
+          const rect = el.getBoundingClientRect();
+          return {
+            text: (el.textContent || '').trim(),
+            rects: el.getClientRects().length,
+            height: rect.height,
+            lineHeight,
+          };
+        })
+        .filter((c) => c.rects !== 1 || c.height > c.lineHeight * 1.5),
+    );
+    expect(broken).toEqual([]);
+  });
+});
