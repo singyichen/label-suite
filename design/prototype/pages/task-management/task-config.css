@@ -238,6 +238,8 @@
 
     /* ── Toggle switch ── */
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+    /* Borderless variant for rows nested in an already-framed container (#1392) */
+    .toggle-row--plain { padding: 0; border: none; border-radius: 0; background: transparent; }
     .toggle-info { flex: 1; }
     .toggle-label-text { font-size: 14px; font-weight: 500; color: var(--color-ink); display: block; }
     .toggle-desc { font-size: 12px; color: var(--color-text-soft); display: block; margin-top: 2px; }

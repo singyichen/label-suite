@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <link rel="stylesheet" href="../shared/metric.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="stylesheet" href="task-config.css">
   <style>
@@ -60,31 +62,6 @@
       margin: 0 0 4px;
     }
 
-    .admin-tabs {
-      display: flex;
-      border-bottom: 2px solid var(--color-border);
-      margin-bottom: var(--space-lg);
-    }
-    .admin-tab {
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--color-text-soft);
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      cursor: pointer;
-      transition: color var(--dur-fast), border-color var(--dur-fast);
-      text-decoration: none;
-      display: inline-block;
-      background: transparent;
-      border-left: none;
-      border-right: none;
-      border-top: none;
-      white-space: nowrap;
-    }
-    .admin-tab:hover { color: var(--color-primary); }
-    .admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
-
     .skeleton-stack {
       display: grid;
       gap: var(--space-md);
@@ -132,29 +109,6 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px 16px;
-    }
-    .kv-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      background: var(--color-white);
-      min-width: 0;
-    }
-    .kv-key {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--color-ink-muted);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .kv-value {
-      display: block;
-      font-size: 14px;
-      color: var(--color-ink);
-      line-height: 1.5;
-      word-break: break-word;
     }
     .mono { font-family: var(--font-mono); font-size: 12px; }
 
@@ -227,6 +181,8 @@
     .btn-cta:hover:not(:disabled) { opacity: 0.9; }
     .btn-secondary { color: var(--color-ink); background: var(--color-white); border-color: var(--color-border); }
     .btn-secondary:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .btn-link { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
+    .btn-link:hover:not(:disabled) { background: transparent; text-decoration: underline; }
 
     .sampling-panel {
       border: 1px solid var(--color-border);
@@ -335,15 +291,6 @@
       justify-content: space-between;
       gap: 12px;
     }
-    /* Scoped override: task-config.css's global .toggle-row (line ~241)
-       adds its own border/padding/background, which double-frames this
-       nested row inside .isolation-wrap's own card frame (issue #1100). */
-    .isolation-wrap .toggle-row {
-      border: none;
-      padding: 0;
-      background: transparent;
-      border-radius: 0;
-    }
     .toggle-meta {
       min-width: 0;
     }
@@ -432,30 +379,6 @@
       gap: 10px;
       margin-top: 16px;
     }
-    .progress-metric-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      background: var(--color-white);
-      min-width: 0;
-    }
-    .progress-metric-key {
-      display: block;
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--color-ink-muted);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .progress-metric-value {
-      display: block;
-      color: var(--color-ink);
-      font-size: 17px;
-      line-height: 1.3;
-      font-weight: 700;
-      word-break: break-word;
-    }
     .review-progress-breakdown {
       grid-column: 1 / -1;
     }
@@ -464,7 +387,11 @@
       flex-wrap: wrap;
       gap: 8px 18px;
     }
-    .review-progress-value {
+    .review-progress-breakdown .review-progress-value {
+      display: inline;
+      margin-bottom: 0;
+      text-transform: none;
+      letter-spacing: normal;
       color: var(--color-ink);
       font-size: 14px;
       line-height: 1.4;
@@ -577,8 +504,8 @@
     .stage-split-fill.dry { background: var(--color-primary); }
     .stage-split-fill.official { background: var(--color-cta); }
     .phase-flow { display: flex; flex-direction: column; gap: 10px; }
-    .phase-item { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); padding: 14px; }
-    .phase-item--active { border-color: var(--color-primary); }
+    .phase-item { padding: 14px 0; }
+    .phase-item + .phase-item { border-top: 1px solid var(--color-border-muted); }
     .phase-item--pending { opacity: 0.55; }
     .phase-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .phase-round-label { font-size: 14px; font-weight: 700; color: var(--color-ink); }
@@ -730,12 +657,7 @@
       grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
       gap: var(--space-md);
     }
-    .member-entry-card {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-slate-50);
-      padding: var(--space-md);
-    }
+    .member-entry-card { padding: 0; }
     .member-entry-title {
       margin: 0 0 6px;
       font-size: 16px;
@@ -1111,18 +1033,15 @@
     .settings-section.panel { border: 1px solid var(--color-border); box-shadow: none; border-radius: var(--radius-lg); background: var(--color-white); margin-bottom: 0; }
     /* FR-026 (1) / design.md: section title, text-link edit, divided definition list. Scoped to the settings tab only. */
     .settings-section .panel-title { font-size: 16px; font-weight: 600; }
-    .settings-section [id$="EditBtn"] { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
-    .settings-section [id$="EditBtn"]:hover { background: transparent; text-decoration: underline; }
     .settings-section .kv-dl { grid-template-columns: 160px minmax(0, 1fr); gap: 10px 0; }
-    .settings-section .kv-dl-key { padding: 0 16px 10px 0; border-bottom: 1px solid var(--color-border-muted); }
-    .settings-section .kv-dl-value { padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
+    .settings-section .kv-dl-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
+    .settings-section .kv-dl-key { padding: 0 16px 0 0; }
 
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .settings-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
       .settings-section-nav { flex-direction: row; }
       .settings-nav-item { flex: 0 0 auto; white-space: nowrap; }
-      .admin-tabs { overflow-x: auto; flex-wrap: wrap; }
       .kv-grid { grid-template-columns: 1fr; }
       .sampling-grid { grid-template-columns: 1fr; }
 .progress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1789,17 +1708,6 @@
       gap: 10px;
       margin-bottom: 12px;
     }
-    .exec-round-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .exec-round-key { font-size: 12px; color: var(--color-text-soft); }
-    .exec-round-value { font-size: 20px; line-height: 1.15; color: var(--color-ink); font-variant-numeric: tabular-nums; }
     .exec-stop-row {
       margin-bottom: var(--space-md);
       display: flex;
@@ -1868,10 +1776,6 @@
       background: var(--color-warning-bg);
     }
     .round-history-panel {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      padding: 16px;
       margin-bottom: var(--space-md);
     }
     .round-history-head {
@@ -6070,7 +5974,8 @@ function interpolate(template, payload) {
       }
     }
     if (stopStdPill) stopStdPill.classList.add('hidden');
-    if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
+    /* #1402 / FR-010t: count active annotator members, the same derivation as getMembershipGapMessages(). */
+    if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', getActiveAnnotatorMembers().length >= Number(TASK_DATA.minAnnotators));
     /* issue #1127: non-colour cue (icon + state word) so met / unmet /
        not-computable stay distinguishable without relying on colour. */
     appendStopPillCue(stopAgreementPill, stopAgreementPill && (stopAgreementPill.classList.contains('not-computable') ? 'not-computable' : stopAgreementPill.classList.contains('passed') ? 'met' : 'unmet'));
