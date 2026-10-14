@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
   <link rel="stylesheet" href="../task-management/task-config.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
@@ -763,24 +764,6 @@
     .workspace-body.guideline-collapsed .guideline-collapse-btn { right: 8px; }
     .guideline-collapse-btn svg { width: 16px; height: 16px; transition: transform var(--dur-normal) var(--ease-standard); }
     .workspace-body.guideline-collapsed .guideline-collapse-btn svg { transform: rotate(180deg); }
-    .guideline-tabs {
-      display: flex;
-      border-bottom: 2px solid var(--color-border);
-      padding: 0 var(--space-md);
-      flex-shrink: 0;
-    }
-    .guideline-tab {
-      padding: 12px 14px;
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-text-soft);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-    }
-    .guideline-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
     .guideline-panel { flex: 1; overflow-y: auto; padding: var(--space-md); }
     .history-list { display: flex; flex-direction: column; gap: var(--space-sm); }
     .history-item {
@@ -1329,9 +1312,9 @@
 
     <!-- Right: Guideline + History tabs -->
     <div class="col-guideline" data-testid="ws-guideline-panel">
-      <div class="guideline-tabs">
-        <button class="guideline-tab active" type="button" id="wsTabGuideline" data-testid="ws-guideline-tab-guideline"><span id="wsTabGuidelineLabel"></span></button>
-        <button class="guideline-tab" type="button" id="wsTabHistory" data-testid="ws-guideline-tab-history"><span id="wsTabHistoryLabel"></span></button>
+      <div class="admin-tabs admin-tabs--panel">
+        <button class="admin-tab active" type="button" id="wsTabGuideline" data-testid="ws-guideline-tab-guideline"><span id="wsTabGuidelineLabel"></span></button>
+        <button class="admin-tab" type="button" id="wsTabHistory" data-testid="ws-guideline-tab-history"><span id="wsTabHistoryLabel"></span></button>
       </div>
       <div class="guideline-panel" id="wsGuidelinePanel">
         <div class="guideline-summary">
