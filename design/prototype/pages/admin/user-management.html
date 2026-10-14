@@ -948,6 +948,8 @@
       disableConfirmPrefix: '確定要停用 ',
       disableConfirmSuffix: ' 的帳號嗎？',
       pageSizeAria: '每頁顯示',
+      closeAria: '關閉',
+      toastCloseAria: '關閉通知',
       pageSizeOption: (n) => n + ' 筆/頁',
     });
     Object.assign(i18n.en, {
@@ -955,6 +957,8 @@
       disableConfirmPrefix: 'Are you sure you want to disable the account of ',
       disableConfirmSuffix: '?',
       pageSizeAria: 'Rows per page',
+      closeAria: 'Close',
+      toastCloseAria: 'Close notification',
       pageSizeOption: (n) => n + ' / page',
     });
 
@@ -996,6 +1000,8 @@
 
       const pageSizeSelectEl = document.getElementById('pageSizeSelect');
       pageSizeSelectEl.setAttribute('aria-label', t.pageSizeAria);
+      document.querySelectorAll('.modal-close').forEach(b => b.setAttribute('aria-label', t.closeAria));
+      document.getElementById('toastClose').setAttribute('aria-label', t.toastCloseAria);
       Array.from(pageSizeSelectEl.options).forEach(o => { o.textContent = t.pageSizeOption(o.value); });
 
       const adminTabs = document.getElementById('adminTabs');
