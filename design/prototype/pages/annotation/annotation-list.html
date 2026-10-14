@@ -15,6 +15,7 @@
       --navbar-mobile-top-height: 64px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    button, input, select { font: inherit; }
     body {
       font-family: var(--font-sans);
       background: var(--color-surface);
@@ -446,14 +447,20 @@
     .reviewer-stats {
       font-size: 12px; color: var(--color-text-soft); font-family: monospace;
       display: block;
-      min-width: 240px;
+      min-width: 0;
       white-space: pre-line;
       line-height: 1.6;
     }
     .reviewer-stats-cell {
-      min-width: 280px;
-      width: 280px;
+      min-width: 160px;
+      width: 160px;
     }
+    /* Reviewer queue has 9 columns (the annotator list has 5): tighter cell
+       padding and a floor on 文本摘要 let it fit .task-table-wrap at 1440px
+       instead of squeezing the summary or pushing 操作 out of view (#1444). */
+    .task-table:has(.reviewer-stats-cell) th,
+    .task-table:has(.reviewer-stats-cell) td { padding-left: 8px; padding-right: 8px; }
+    .task-table:has(.reviewer-stats-cell) td.text-snippet { min-width: 160px; }
     .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
     /* FR-091 processing summary: three stacked lines rather than one run-on
        string, so a reader can find the same field at the same height on
