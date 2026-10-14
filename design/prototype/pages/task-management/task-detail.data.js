@@ -1111,6 +1111,11 @@
           id: 'dry-05-pending-review',
           text: '甜點是隱藏亮點，尤其是烤布蕾，外層焦糖的脆度恰到好處。',
           gold_label: 'positive'
+        },
+        {
+          id: 'dry-06-official-pool',
+          text: '店面乾淨明亮，店員會主動補水，唯一可惜的是假日等候時間偏長。',
+          gold_label: 'neutral'
         }
       ],
       /* issue #1232: T014 is dry_run_in_progress, so its latest (and only)
@@ -1119,8 +1124,10 @@
          date. This seed pins it as in_progress (no verdict, no completion
          date). agreement/annotators mirror computeIaaAlpha('T014',
          'dry_run', ...) (0.59, 3 raters) so the live IAA stays visible;
-         issue-489-task-detail-iaa-derived.spec.ts fails if they drift. The 5 records are the full dataset, so the official pool is
-         unchanged. */
+         issue-489-task-detail-iaa-derived.spec.ts fails if they drift.
+         issue #1429: R1 consumes the first 5 records (usedSamples 5); the
+         extra record dry-06-official-pool lies outside R1's 5 samples and
+         is the official pool (014 FR-010e), so the pool is 1, not 0. */
       trialRounds: [
         {
           round: 1,
