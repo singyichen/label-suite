@@ -7283,6 +7283,9 @@ function getTaskTypeLabel() {
     var hint = document.getElementById('settingsReadonlyHint');
 
     if (!saveBtn || !cancelBtn || !form || !view || !hint) return;
+    // #1375: computed before the toggles; a re-render while the form is already open
+    // (e.g. the overview skeleton timer) must not rebuild inputs under the user's focus.
+    var enteringEdit = form.classList.contains('hidden');
     if (editBtn) editBtn.disabled = !editable;
     if (editBtn) editBtn.classList.toggle('hidden', state.settingsEditMode);
     saveBtn.classList.toggle('hidden', !state.settingsEditMode);
@@ -7293,10 +7296,12 @@ function getTaskTypeLabel() {
     if (state.settingsEditMode) {
       hint.classList.add('hidden');
       hint.textContent = '';
-      setSettingsEditError('');
-      ensureTaskConfigSeeded();
-      renderTemplateBtns();
-      renderSchemaFields();
+      if (enteringEdit) {
+        setSettingsEditError('');
+        ensureTaskConfigSeeded();
+        renderTemplateBtns();
+        renderSchemaFields();
+      }
       return;
     }
 
