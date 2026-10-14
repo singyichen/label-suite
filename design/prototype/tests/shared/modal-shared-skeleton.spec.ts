@@ -3,8 +3,8 @@
  * Pages in scope: task-list, task-new, task-detail. (user-management,
  * role-settings, annotation-workspace belong to PR-B.)
  */
-import { readFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { resolve, extname } from 'node:path';
 import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
 
@@ -158,5 +158,69 @@ test.describe('shared modal skeleton: computed styles (#1390)', () => {
     expect(new Set(seen).size).toBe(1);
     expect(JSON.parse(seen[0]).display).toBe('flex');
     expect(JSON.parse(seen[0]).justifyContent).toBe('flex-end');
+  });
+});
+
+/*
+ * Traceability: issue #1446 PR-B — single modal close button class.
+ * Decision: keep `.modal-close`, retire `.modal-close-btn`.
+ */
+const PAGES_DIR = resolve(PROTO, 'pages');
+const walk = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((d) =>
+    d.isDirectory() ? walk(resolve(dir, d.name)) : [resolve(dir, d.name)],
+  );
+
+const CLOSE_BUTTONS = [
+  { name: 'task-detail', rel: 'pages/task-management/task-detail.html', id: 'datasetPreviewCloseBtn' },
+  { name: 'task-new', rel: 'pages/task-management/task-new.html', id: 'datasetPreviewCloseBtn' },
+  { name: 'annotation-progress', rel: 'pages/task-management/task-detail.panels/annotation-progress.html', id: 'memberDetailCloseBtn' },
+] as const;
+
+test.describe('single modal close button class (#1446)', () => {
+  test('modal.css has no .modal-close-btn selector', () => {
+    expectMatch(read(MODAL_CSS), /\.modal-close-btn\b/, false);
+  });
+
+  test('no html/css/js under pages/ references modal-close-btn', () => {
+    const offenders = walk(PAGES_DIR)
+      .filter((f) => ['.html', '.css', '.js'].includes(extname(f)))
+      .filter((f) => read(f).includes('modal-close-btn'))
+      .map((f) => f.slice(PROTO.length + 1));
+    expect(offenders, 'files still referencing modal-close-btn').toEqual([]);
+  });
+
+  for (const b of CLOSE_BUTTONS) {
+    test(`${b.name} #${b.id} uses class modal-close`, () => {
+      const html = read(resolve(PROTO, b.rel));
+      const tag = html.match(new RegExp(`<button\\b[^>]*\\bid="${b.id}"[^>]*>`));
+      expect(tag, `#${b.id} button not found`).not.toBeNull();
+      const cls = tag![0].match(/\bclass="([^"]*)"/);
+      expect(cls, `#${b.id} has no class attribute`).not.toBeNull();
+      expect(cls![1].split(/\s+/)).toContain('modal-close');
+    });
+  }
+
+  test('MASTER.md Modals section documents .modal-close and not modal-close-btn', () => {
+    const md = read(MASTER);
+    const start = md.indexOf('### Modals');
+    const end = md.indexOf('### Status Badges');
+    expect(start).toBeGreaterThan(-1);
+    const section = md.slice(start, end);
+    expect(section.includes('.modal-close'), 'MASTER Modals section must mention .modal-close').toBe(true);
+    expect(section.includes('modal-close-btn'), 'MASTER Modals section must not mention modal-close-btn').toBe(false);
+  });
+
+  test('task-detail dataset preview close button computes the shared .modal-close look', async ({ page }) => {
+    await page.goto('/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001&status=draft');
+    await page.locator('#datasetPreviewModal').waitFor({ state: 'attached' });
+    await page.evaluate(() => document.querySelector('#datasetPreviewModal')!.classList.add('show'));
+    await expect(page.locator('#datasetPreviewCloseBtn')).toBeVisible();
+    const cs = await page.locator('#datasetPreviewCloseBtn').evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { width: s.width, height: s.height, borderTopWidth: s.borderTopWidth, borderTopStyle: s.borderTopStyle };
+    });
+    // .modal-close: 32x32 with a 1px solid border; retired .modal-close-btn had border: none
+    expect(cs).toEqual({ width: '32px', height: '32px', borderTopWidth: '1px', borderTopStyle: 'solid' });
   });
 });
