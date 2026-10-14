@@ -42,22 +42,6 @@
   line-height: 1.7;
 }
 
-.modal-close-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: var(--color-ink-muted);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: color var(--dur-fast), background var(--dur-fast);
-}
-.modal-close-btn:hover { background: var(--color-border-muted); color: var(--color-ink); }
-
 .modal-footer,
 .modal-actions {
   display: flex;
