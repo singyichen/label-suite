@@ -1908,7 +1908,9 @@ function initPreviewState() {
   var sampleRel1 = relationTypes[0] || 'has_aspect';
   var sampleRel2 = relationTypes[1] || 'has_opinion';
 
-  if (tripShape === 'ner') {
+  /* Object-array (dialogue) Input never prefills triples from an Output column: 'ner' and
+     'gold' shapes carry no utt_id, so they cannot anchor to a turn (#1358). */
+  if (tripShape === 'ner' && !getObjectArrayInput()) {
     state.previewTriples = trips.map(function(trip) {
       var e1 = trip.entity1 || {}, rel = trip.relation || {}, e2 = trip.entity2 || {};
       function fmt(o) { var s = o.text || '?'; if (o.start != null && o.end != null) s += ' (' + o.start + ',' + o.end + ')'; return s; }
@@ -1918,7 +1920,7 @@ function initPreviewState() {
         objStart: e2.start != null ? e2.start : null, objEnd: e2.end != null ? e2.end : null
       };
     });
-  } else if (tripShape === 'gold') {
+  } else if (tripShape === 'gold' && !getObjectArrayInput()) {
     state.previewTriples = trips.map(function(trip) {
       return {
         subj: trip.subj || '?', rel: trip.rel || '?', obj: trip.obj || '?', relType: trip.relation_type || null,
@@ -1927,7 +1929,8 @@ function initPreviewState() {
     });
   } else if (tripShape === 'absa' && !getObjectArrayInput()) {
     /* Flat-string ABSA rows carry no utt_id, so on a dialogue (object-array) Input they
-       cannot anchor to a turn and would surface the output column's text (#1341 AC-2.35). */
+       cannot anchor to a turn and would surface the output column's text (#1341 AC-2.35);
+       'ner' and 'gold' follow the same guard (#1358). */
     state.previewTriples = [];
     trips.forEach(function(trip) {
       var tgt = trip.target_text || '?', asp = trip.aspect_text || '', opn = trip.opinion_text || '';
@@ -2251,6 +2254,20 @@ function getObjectArrayInput() {
   return cols.length > 0 && isObjectArrayValue(raw[cols[0]]) ? raw[cols[0]] : null;
 }
 
+/* Which placed entities of one utterance are drawn vs skipped for overlapping an earlier
+   one; storage is untouched. Single source for drawing and the overlap count (#1358). */
+function dialogueLayout(uttId) {
+  var pos = 0, drawn = [], skipped = [];
+  state.previewEntities.filter(function(e) {
+    return e.start != null && e.utt_id != null && sameUttId(e, { utt_id: uttId });
+  }).sort(function(a, b) { return a.start - b.start; }).forEach(function(ent) {
+    if (ent.start < pos) { skipped.push(ent); return; }
+    drawn.push(ent);
+    pos = ent.end;
+  });
+  return { drawn: drawn, skipped: skipped };
+}
+
 /* Draw one utterance, wrapping marked entities and the pending relation selection.
    Spans are half-open [start,end) inside the utterance (#1341 D3). */
 function fillDialogueUtterance(txEl, text, uttId) {
@@ -2266,10 +2283,7 @@ function fillDialogueUtterance(txEl, text, uttId) {
     if (se < to) txEl.appendChild(document.createTextNode(text.substring(se, to)));
   }
   var pos = 0;
-  state.previewEntities.filter(function(e) {
-    return e.start != null && e.utt_id != null && sameUttId(e, { utt_id: uttId });
-  }).sort(function(a, b) { return a.start - b.start; }).forEach(function(ent) {
-    if (ent.start < pos) return;
+  dialogueLayout(uttId).drawn.forEach(function(ent) {
     appendPlain(pos, ent.start);
     var span = document.createElement('span');
     span.className = 'absa-span-highlight';
@@ -2337,8 +2351,17 @@ function renderDialogueInput(textEl, turns, allowEntityEditing, refresh) {
     pre.selectNodeContents(txEl);
     pre.setEnd(range.startContainer, range.startOffset);
     var start = pre.toString().length + (raw.length - raw.replace(/^\s+/, '').length);
-    if (utterance.substring(start, start + selText.length) !== selText) start = utterance.indexOf(selText);
-    if (start < 0) return;
+    if (utterance.substring(start, start + selText.length) !== selText) {
+      /* Fall back to a text search only when the match is unambiguous (#1358) */
+      var first = utterance.indexOf(selText);
+      if (first < 0 || utterance.indexOf(selText, first + 1) >= 0) {
+        state.dialogueMsg = t('dialogueLocateFailHint').replace('{n}', 1);
+        sel.removeAllRanges();
+        refresh();
+        return;
+      }
+      start = first;
+    }
     var slot = { text: selText, utt_id: dialogueUttIdOf(turns[i], i, cfg), start: start, end: start + selText.length };
     state.dialogueMsg = '';
     if (allowEntityEditing && state.activeEntityType) {
@@ -2456,6 +2479,25 @@ function renderAbsaUnifiedPreview(previewContainer) {
     uttHint.style.cssText = 'font-size:0.75rem;color:var(--color-error);margin-top:6px;';
     uttHint.textContent = state.dialogueMsg;
     previewContainer.appendChild(uttHint);
+  }
+
+  if (objInput) {
+    var seenUtt = {}, overlapN = 0;
+    state.previewEntities.forEach(function(e) {
+      if (e.start == null || e.utt_id == null || seenUtt[String(e.utt_id)]) return;
+      seenUtt[String(e.utt_id)] = true;
+      overlapN += dialogueLayout(e.utt_id).skipped.length;
+    });
+    var unplacedN = state.previewEntities.filter(function(e) { return e.start == null || e.utt_id == null; }).length;
+    [['dialogue-overlap-hint', 'dialogueOverlapHint', overlapN], ['dialogue-unplaced-hint', 'dialogueLocateFailHint', unplacedN]].forEach(function(h) {
+      if (!h[2]) return;
+      var hintEl = document.createElement('div');
+      hintEl.setAttribute('data-testid', h[0]);
+      hintEl.setAttribute('role', 'status');
+      hintEl.style.cssText = 'font-size:0.75rem;color:var(--color-error);margin-top:6px;';
+      hintEl.textContent = t(h[1]).replace('{n}', h[2]);
+      previewContainer.appendChild(hintEl);
+    });
   }
 
   if (allowEntityEditing) {

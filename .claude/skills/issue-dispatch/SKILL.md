@@ -163,9 +163,11 @@ An existing `agent-running` label or an existing checkpoint comment also counts 
 |---|---|---|
 | Lightweight | All true: ≤ 2 production files (spec and test files excluded) · no API contract change · minor behavior change needing a spec update · no FR/AC added or removed, only clarified | Fully automated |
 | OpenSpec change | Anything else that changes specified behavior | Fully automated through archive, subject to the MAJOR stop |
-| Needs adjudication | Requirement unclear or missing · body and comments disagree · two valid readings leading to materially different work · Critical or High security finding | Post a checkpoint comment naming exactly what is undecided, add `blocked`, return it to the maintainer. Nothing was dispatched yet, so there is no `agent-running` label to remove at this stage |
+| Needs adjudication | Requirement unclear or missing · body and comments disagree · two valid readings leading to materially different work · Critical or High security finding · the body links a `claude.ai/artifact/` URL but has no 草圖元素清單, or the list has an item not marked 做／不做／延後至 #N (post a comment naming the missing or unmarked items) | Post a checkpoint comment naming exactly what is undecided, add `blocked`, return it to the maintainer. Nothing was dispatched yet, so there is no `agent-running` label to remove at this stage |
 
 When any Lightweight condition is uncertain, default to the full OpenSpec flow.
+
+The artifact-link check applies at dispatch time only. Do not apply it retroactively to issues already dispatched or labeled `agent-running`.
 
 ### Codex eligibility
 
@@ -284,7 +286,7 @@ TDD → implement → spec consistency review (spec version bumped, Changelog en
 1. `/opsx:propose` — the spec delta against stable FR/AC IDs, `tasks.md`, and `design.md` when an API contract or DB schema changes. For an already-merged feature, carry the change in a change folder whose `proposal.md` names the canonical spec; never start a new spec from scratch.
 2. **Gate 1** — `openspec validate --changes --no-interactive`. Non-strict schema only: it checks nothing about project headings, ownership, status, or retired paths.
 3. **Gate 2** — Project SDD lint: `scripts/check-sdd.sh` plus the canonical workflow checklist for what the tooling does not cover.
-4. `/opsx:apply` — implement under step 5's Red/Green ownership. If apply narrows scope (an AC or FR deferred to a separate issue), narrow the spec delta to match before archive — otherwise archive writes an unimplemented AC into the canonical spec with no gate catching it, as would have happened when #921 deferred left-column filtering to #956.
+4. `/opsx:apply` — implement under step 5's Red/Green ownership. If apply narrows scope (an AC or FR deferred to a separate issue), narrow the spec delta to match before archive — otherwise archive writes an unimplemented AC into the canonical spec with no gate catching it, as would have happened when #921 deferred left-column filtering to #956. Every deferred AC or FR must name its follow-up issue as `延後至 #N` (open one, or name an existing one), and that issue's body must list the deferred clauses under 承接的延後條文 (spec path + FR/AC ID) so the clause is revisited when it lands.
 5. **Gate 3** — the code and test gates in step 6.
 6. **Gate 4** — Source-Verify pre-scan, then `/opsx:archive`: dual-write into the derived `openspec/specs/` view **and** write back to `specs/<module>/NNN-feature/spec.md` with a version bump and a Changelog entry. Archive belongs to the final PR group only; an intermediate stacked group merges with the change still open.
 7. **After the final PR merges** — the main session updates `specs/STATUS.md` to archived and runs `mv specs/<module>/NNN-feature specs/_archive/`. This happens on `main` after merge, never inside the worktree and never before merge.
