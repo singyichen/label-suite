@@ -1,0 +1,27 @@
+[
+  {
+    "file": "design/prototype/pages/shared/sidebar.css",
+    "token": "--navbar-mobile-top-height",
+    "reason": "Shared stylesheet consumes a layout variable that host pages are expected to declare themselves (e.g. task-list.html:17, dashboard.layout.css:5); not defined in sidebar.css or tokens.css, so the per-file check cannot see it. Not every host page declares it (annotation-workspace.html links sidebar.css without it), so this entry can hide a missing declaration there."
+  },
+  {
+    "file": "design/prototype/pages/shared/sidebar.css",
+    "token": "--navbar-mobile-height",
+    "reason": "Same host-page contract as --navbar-mobile-top-height (declared by e.g. task-list.html:17, dashboard.layout.css:5; consumed at sidebar.css:832 and :837). Some host pages such as annotation-workspace.html do not declare it, so this entry can hide a missing declaration there."
+  },
+  {
+    "file": "design/prototype/pages/annotation/annotation-workspace.html",
+    "token": "--color-surface-muted",
+    "reason": "Real gap: token exists in neither tokens.css nor any prototype file; the guideline markdown preview (lines ~940-946) only works because of the rgba(0,0,0,0.03) fallback or a literal value. Pre-existing; follow-up to add the token or switch to an existing surface token."
+  },
+  {
+    "file": "design/prototype/pages/task-management/task-detail.html",
+    "token": "--color-surface-raised",
+    "reason": "Real gap: --color-surface-raised (used at :1103 for .btn-view-detail:hover) and --color-primary-soft-border (:1765) are defined nowhere in the prototype, so the declarations are dropped by the browser. Pre-existing; follow-up to map to existing tokens."
+  },
+  {
+    "file": "design/prototype/pages/task-management/task-detail.html",
+    "token": "--color-primary-soft-border",
+    "reason": "Real gap: defined nowhere in tokens.css or the prototype, so border-color at task-detail.html:1765 is silently invalid. Pre-existing; follow-up to map to an existing primary token."
+  }
+]

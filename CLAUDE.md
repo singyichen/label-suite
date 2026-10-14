@@ -167,6 +167,10 @@ node scripts/check-database-schema.mjs
 # (scripts/speckit-tests.sh above is only the checker's regression harness on fixtures)
 node scripts/check-user-path-map-freshness.mjs
 
+# Prototype CSS token existence check (run from project root)
+# regression: node --test scripts/tests/check-css-tokens.test.mjs
+node scripts/check-css-tokens.mjs
+
 # Repository scripts and git hooks (run from project root)
 scripts/check-spec-artifacts.sh
 scripts/check-demo-data-parity.sh
