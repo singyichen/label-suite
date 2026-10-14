@@ -461,6 +461,18 @@
     .task-table:has(.reviewer-stats-cell) th,
     .task-table:has(.reviewer-stats-cell) td { padding-left: 8px; padding-right: 8px; }
     .task-table:has(.reviewer-stats-cell) td.text-snippet { min-width: 160px; }
+    /* English copy is longer (record ids, "Finalized by arbitration adopting B",
+       "Finalized . locked"): let the ID, review status and answer cells wrap
+       inside a capped width so the table fits with margin in zh and en. */
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1),
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(3),
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(6) {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1) { min-width: 100px; max-width: 120px; }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(3) { min-width: 96px; max-width: 110px; }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(6) { min-width: 100px; max-width: 140px; }
     .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
     /* FR-091 processing summary: three stacked lines rather than one run-on
        string, so a reader can find the same field at the same height on
