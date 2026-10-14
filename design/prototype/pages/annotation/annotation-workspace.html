@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 標記作業</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../task-management/task-config.css" />
@@ -946,7 +947,7 @@
     .guideline-md-preview h1 { font-size: 16px; }
     .guideline-md-preview h2 { font-size: 15px; }
     .guideline-md-preview h3 { font-size: 14px; }
-    .guideline-md-preview p { margin: 0 0 var(--space-sm); }
+    .guideline-md-preview p { margin: 0 0 var(--space-sm); font-size: inherit; color: inherit; line-height: inherit; }
     .guideline-md-preview ul, .guideline-md-preview ol { margin: 0 0 var(--space-sm); padding-left: 20px; }
     .guideline-md-preview li { margin-bottom: 4px; }
     .guideline-md-preview code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 1px 4px; border-radius: 4px; background: var(--color-surface-muted, rgba(0,0,0,0.05)); }
@@ -1020,30 +1021,13 @@
     }
 
     /* ── Modal ───────────────────────────────────────────────── */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: var(--z-modal);
-      padding: var(--space-lg);
-    }
-    .modal-overlay.hidden { display: none; }
-    .modal {
-      background: var(--color-white);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-xl);
-      padding: var(--space-xl);
-      width: 100%;
-      max-width: 520px;
+    /* hidden-class visibility contract: these pages open modals by removing .hidden (issue #1390) */
+    .modal-overlay:not(.hidden) { display: flex; }
+    .modal-overlay > .modal {
       display: flex;
       flex-direction: column;
       gap: var(--space-md);
     }
-    .modal-title { font-family: var(--font-serif-display); font-size: 22px; font-weight: 700; color: var(--color-ink); }
     /* Review-flow drawer (issue #525 PR-A): a right-edge sheet on desktop,
        a full-width modal below 768px. It inherits `position: fixed` from
        `.modal-overlay`, which is what keeps the review card's
@@ -1051,8 +1035,8 @@
     .rv-flow-overlay { align-items: stretch; justify-content: flex-end; padding: 0; }
     .rv-flow-drawer { max-width: 520px; height: 100%; border-radius: var(--radius-xl) 0 0 var(--radius-xl); overflow-y: auto; }
     .rv-flow-body { display: flex; flex-direction: column; gap: var(--space-lg); }
-    .rv-flow-description { margin: 0; color: var(--color-text-soft); font-size: 13px; line-height: 1.6; }
-    .rv-flow-route-summary {
+    .rv-flow-drawer .rv-flow-description { margin: 0; color: var(--color-text-soft); font-size: 13px; line-height: 1.6; }
+    .rv-flow-drawer .rv-flow-route-summary {
       margin: 0;
       padding-top: var(--space-md);
       border-top: 1px solid var(--color-border);
@@ -1066,7 +1050,6 @@
     @media (max-width: 767px) {
       .rv-flow-drawer { max-width: none; border-radius: 0; }
     }
-    .modal-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); }
 
     /* ── Toast (top-center, UXC-07 / MASTER §Toast) ──────────── */
     .toast-container {

@@ -65,3 +65,27 @@
   gap: var(--space-sm);
   flex-wrap: wrap;
 }
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 150ms;
+}
+.modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }

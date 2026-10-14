@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 角色設定</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <script src="../../assets/theme-fouc.js"></script>
@@ -276,41 +277,21 @@
     }
 
     /* ── Modal ───────────────────────────────────────────────────── */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: var(--z-modal);
-      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      padding: var(--space-md);
-    }
-    .modal-card {
-      background: var(--color-white); border-radius: var(--radius-xl);
-      padding: var(--space-xl); max-width: 400px; width: 100%;
-      box-shadow: var(--shadow-xl); text-align: center;
-    }
+    /* hidden-class visibility contract: these pages open modals by removing .hidden (issue #1390) */
+    .modal-overlay:not(.hidden) { display: flex; }
+    .modal-center { text-align: center; max-width: 400px; }
     .modal-icon {
       width: 48px; height: 48px; border-radius: 50%;
       background: var(--color-warning-soft-bg); color: var(--color-warning);
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto var(--space-md);
     }
-    .modal-title { font-size: 18px; font-weight: 700; color: var(--color-ink); margin-bottom: var(--space-sm); }
-    .modal-desc { font-size: 14px; color: var(--color-text-soft); line-height: 1.6; margin-bottom: var(--space-lg); }
-    .modal-actions { display: flex; gap: var(--space-sm); justify-content: center; }
     .btn-danger {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
       border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms;
     }
     .btn-danger:hover { opacity: 0.9; }
-
-    /* ── Modal close button ─────────────────────────────── */
-    .modal-close {
-      display: flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border-radius: var(--radius-md);
-      border: 1px solid var(--color-border); background: transparent;
-      color: var(--color-ink-muted); cursor: pointer; flex-shrink: 0; transition: all 150ms;
-    }
-    .modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }
 
     /* ── Audit Drawer ───────────────────────────────────── */
     .audit-drawer-overlay {
@@ -982,7 +963,7 @@
 
   <!-- ─── Unsaved Changes Modal ────────────────────────────────────── -->
   <div id="dirtyModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="dirtyModalTitle">
-    <div class="modal-card">
+    <div class="modal modal-center">
       <div class="modal-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
