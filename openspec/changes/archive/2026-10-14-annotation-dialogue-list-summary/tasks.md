@@ -46,5 +46,5 @@
 
 > **產品檔案（0）**：只執行 specs／openspec 寫回。**最終群組**：是（#1378 堆疊 PR 的最後一段）。
 
-- [ ] 4.1 Source-Verify 預掃，衍生檢視每一則正典引用皆可 grep 定位。 [@main]
-- [ ] 4.2 執行 openspec archive，正典 015 寫回 12.9.0 至 12.10.0（MINOR）並新增 Changelog，同步衍生檢視 Purpose 版號，STATUS.md 只改自己那列。 [@main]
+- [x] 4.1 Source-Verify 預掃，衍生檢視每一則正典引用皆可 grep 定位。 [@main]
+- [x] 4.2 執行 openspec archive，正典 015 寫回 12.9.0 至 12.10.0（MINOR）並新增 Changelog，同步衍生檢視 Purpose 版號，STATUS.md 只改自己那列。 [@main]
