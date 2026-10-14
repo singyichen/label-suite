@@ -2523,7 +2523,8 @@
       record,
       currentProfile.fieldRoleMap,
       currentProfile.listTitleField,
-      state.lang
+      state.lang,
+      currentProfile.dialogueFields
     );
     header.appendChild(snippet);
 
@@ -2587,7 +2588,7 @@
        or a ground-truth field (Data Fairness). */
     var record = findRecordById(sampleId);
     var previewText = record
-      ? window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(record, currentProfile.fieldRoleMap, currentProfile.listTitleField, state.lang)
+      ? window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(record, currentProfile.fieldRoleMap, currentProfile.listTitleField, state.lang, currentProfile.dialogueFields)
       : '';
     if (previewText) {
       var snippet = document.createElement('div');
@@ -2782,7 +2783,8 @@
           record,
           currentProfile.fieldRoleMap,
           currentProfile.listTitleField,
-          state.lang
+          state.lang,
+          currentProfile.dialogueFields
         );
         meta.appendChild(snippet);
       } else {
@@ -3395,8 +3397,8 @@
     return placed;
   }
 
-  /* Dialogue-thread variant (issue #1341 D7): the first occurrence not yet taken,
-     searched turn by turn; coordinates are half-open [start,end) inside that
+  /* Dialogue-thread variant (issue #1341 D7, #1358): a coordinate-less entity is placed
+     only at its single occurrence across the turns; coordinates are half-open [start,end) inside that
      turn. Without a confirmed text sub-field there is nothing to place against. */
   function placeCompactEntitiesInTurns(entities, turns) {
     var cfg = state.dialogueFields;
@@ -3409,19 +3411,17 @@
         placed.push(out);
         return;
       }
-      for (var i = 0; cfg && cfg.text && entity.text && i < turns.length && out.start == null; i++) {
+      /* Place only when the text occurs exactly once across all turns; an ambiguous or
+         absent text stays unplaced rather than guessing the first occurrence (#1358). */
+      var hits = [];
+      for (var i = 0; cfg && cfg.text && entity.text && i < turns.length; i++) {
         var uttText = turns[i] && typeof turns[i][cfg.text] === 'string' ? turns[i][cfg.text] : '';
-        var uttId = dialogueUttIdOf(turns[i], i, cfg);
-        for (var from = 0; ; ) {
-          var start = uttText.indexOf(entity.text, from);
-          if (start < 0) break;
-          var end = start + entity.text.length;
-          var taken = placed.some(function (p) {
-            return p.start != null && String(p.utt_id) === String(uttId) && start < p.end && end > p.start;
-          });
-          if (!taken) { out.utt_id = uttId; out.start = start; out.end = end; break; }
-          from = start + 1;
+        for (var from = uttText.indexOf(entity.text); from >= 0; from = uttText.indexOf(entity.text, from + 1)) {
+          hits.push({ utt_id: dialogueUttIdOf(turns[i], i, cfg), start: from });
         }
+      }
+      if (hits.length === 1) {
+        out.utt_id = hits[0].utt_id; out.start = hits[0].start; out.end = hits[0].start + entity.text.length;
       }
       placed.push(out);
     });
