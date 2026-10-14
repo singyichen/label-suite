@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.14.0
+版本: 1.14.1
 狀態: Draft
 ---
 
@@ -735,7 +735,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 ### 功能需求
 
 - **FR-130**：系統必須提供可重現的 local bootstrap contract，至少包含 `.env.example`、Docker Compose local profile 或等效服務啟動方式、seed data 策略、OpenAPI export / frontend type generation command，以及 one-command verification 或清楚列出的本機驗證命令。
-- **FR-131**：任何修改 `backend/app/modules/*/router.py` 或 `backend/app/modules/*/router/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/[feature]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth cookie 說明與 example response）；PR diff 中出現上述路徑的 route 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。**例外**：skeleton-only route PR（無實際業務邏輯的佔位 endpoint）可延後至後續 `PR-FOUND-BRUNO` 建立 `.bru` skeleton；**commit message 須包含** `FR-131-exempt: skeleton-only route`（pre-PR gate 以 `git log -1 --pretty=%B` 偵測，非 PR description）。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`；API 請求檔案依模組 → 功能 → API 分層放置。（參見 ADR-025、ADR-021）
+- **FR-131**：任何修改 `backend/app/modules/*/router.py` 或 `backend/app/modules/*/router/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/[feature]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth cookie 說明與 example response）；PR diff 中出現上述路徑的 route 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。**例外**：skeleton-only route PR（無實際業務邏輯的佔位 endpoint）可延後至後續 `PR-FOUND-BRUNO`（計畫工作包，見 plan.md 的 Bruno 更新任務；閘門腳本 `scripts/check-bruno-gate.sh` 見 #1262）建立 `.bru` skeleton；**commit message 須包含** `FR-131-exempt: skeleton-only route`（pre-PR gate 以 `git log -1 --pretty=%B` 偵測，非 PR description）。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`；API 請求檔案依模組 → 功能 → API 分層放置。（參見 ADR-025、ADR-021）
 
 ---
 
@@ -850,6 +850,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.14.1 | 2026-10-14 | Issue #1384 第 1 段（Lightweight，PATCH）：FR-131 skeleton-only 例外條款的 `PR-FOUND-BRUNO` 補註其為計畫工作包（plan.md 的 Bruno 更新任務），並指名閘門腳本 `scripts/check-bruno-gate.sh` 見 #1262；例外規則與偵測方式不變，條文未增減，Changelog 列逐字不動。 |
 | 1.14.0 | 2026-10-08 | Issue #1160：F-04 將一次登入候選表與 refresh FK 定名 `account_session`／`session_id`，新增僅代表明確登出成功的可空 `logged_out_at`；JWT `sid`、失效與輪替規則不變，尚無 runtime／migration。 |
 | 1.13.2 | 2026-10-06 | Issue #1160 D-4：FR-105 與 SC-046 明列 `audit_events` 跨模組共用表的單一命名例外；其餘新表仍遵守單數與 domain ownership 預設。 |
 | 1.13.1 | 2026-10-06 | 安全審查補強 FR-076：family absolute TTL 同時限制已認證請求與登入／refresh 核發的 access JWT 到期，避免最後核發的 JWT 在 family 期限後繼續通行；僅規劃契約，未實作 runtime。 |
