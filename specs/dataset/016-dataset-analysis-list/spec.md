@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dataset-analysis-output-types
 建立日期: 2026-04-24
-版本: 2.1.4
+版本: 2.1.5
 狀態: In Progress
 ---
 
@@ -20,7 +20,7 @@
 - Q: Dataset Analysis List 的任務類型應如何與 New Task 對齊？ → A: 直接消費 `outputs[].type`，合法 key 與 zh/en 文案由 `OUTPUT_TYPE_REGISTRY` 提供。
 - Q: 複合任務選定單一輸出類型篩選時是否命中？ → A: 是；只要 `outputs[]` 任一項符合所選 key 即納入結果。
 - Q: 13 筆 example-data 是否構成產品上限？ → A: 否；它們只用於 prototype 驗收，新增第 14 筆或其他合法組合不得需要修改列表核心邏輯。
-- Q: 本版是否同步 Dataset Analysis Detail 的統計與品質分析？ → A: 否；本版只同步列表 consumer，dataset-017 仍延後。
+- Q: 本版是否同步 Dataset Analysis Detail 的統計與品質分析？ → A: 否；本版只同步列表 consumer；dataset-017 其後已於 v2.0.0（2026-08-12）完成 `outputs[]` 遷移，僅階層 `multi_label` 的統計與 IAA 契約仍待 #1412。
 
 ## 規格常數
 
@@ -270,6 +270,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 2.1.5 | 2026-10-14 | Issue #1384 第 1 段（Lightweight，PATCH）：已釐清事項中「dataset-017 仍延後」改寫為現況——017 已於 v2.0.0 完成 `outputs[]` 遷移，僅階層 `multi_label` 的統計與 IAA 契約延後至 #1412；條文未增減，Changelog 列逐字不動。 |
 | 2.1.4 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 2.1.3 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-002 補述操作 → 權限鍵對應——在既有 `TASK_ROLES_ALLOWED` 條件之上，依 ADR-037 另以 `dataset.stats.view` 或 `dataset.quality.view` 格判定；V1 種子下範圍與既有相同，`invited` 等非 active membership 依 ADR-037 視同不存在。只對應鍵，不改既有可見範圍。 |
 | 2.1.2 | 2026-08-24 | Issue #261 drift 修正：更正「Prototype 示例資料基線」的 IAA 示意分布敘述——`pass = 6`／`not_started = 2` 為 v2.1.0 引入 `not_applicable` 徽章狀態前的舊值，未同步更新；實際 prototype fixture（`dataset-analysis-list.data.js`）與既有回歸測試（`dataset-analysis-list-filters-pagination.spec.ts` `IAA_FILTER_COUNTS`）皆為 `pass = 5`、`not_started = 1`、`not_applicable = 2`（2 筆 `free_text`-only 任務 T009／T012，依 FR-004A 顯示 `not_applicable`），純文字修正對齊既有正確行為，不改變任何 prototype 程式碼或測試。 |
