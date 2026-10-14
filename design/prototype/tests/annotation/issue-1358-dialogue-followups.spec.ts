@@ -369,7 +369,7 @@ async function listSummary(page: Page): Promise<string> {
 test.describe('issue #1358: left rail summary follows dialogue_fields (FR-106 clause 3, tasks 4.1)', () => {
   test('renamed text sub-field: left rail shows the first utterance content', async ({ page }) => {
     await patchDataFile(page, 'task-detail.data.js', RENAME_PATCH);
-    expect(await railSummary(page)).toBe(norm(UTT_0));
+    expect(await railSummary(page)).toBe(norm(`rottenrockteahouse：${UTT_0}`));
   });
 
   test('dialogue_fields null: left rail shows "{n} 筆資料", not a hardcoded text', async ({ page }) => {
@@ -384,7 +384,7 @@ test.describe('issue #1358: annotation-list summary equals the workspace left ra
     await patchDataFile(page, 'task-detail.data.js', RENAME_PATCH);
     const rail = await railSummary(page);
     const list = await listSummary(page);
-    expect(list).toBe(norm(UTT_0));
+    expect(list).toBe(norm(`rottenrockteahouse：${UTT_0}`));
     expect(list).toBe(rail);
   });
 

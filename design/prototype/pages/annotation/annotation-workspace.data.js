@@ -138,23 +138,64 @@
     return String(value);
   }
 
-  function getRecordSummaryText(record, fieldRoleMap, listTitleField, lang, dialogueFields) {
-    if (!record) return '';
+  function isDialogueThread(value, dialogueFields) {
+    return Array.isArray(value) && value.length > 0 && value.every(function (el) {
+      return objectTextField(el, dialogueFields) !== undefined;
+    });
+  }
+
+  /* The one field-selection pass behind both the summary text and its tags:
+     returns the chosen input-side field value and its summary text. */
+  function pickSummarySource(record, fieldRoleMap, listTitleField, lang, dialogueFields) {
     var roles = fieldRoleMap || {};
     var explicitOk = listTitleField != null && (
       roles[listTitleField] === 'input' || roles[listTitleField] === 'evidence' ||
       (listTitleField === 'id' && roles.id !== 'output')
     );
-    var text = explicitOk ? valueToSummaryText(record[listTitleField], lang, dialogueFields) : '';
+    var value = explicitOk ? record[listTitleField] : undefined;
+    var text = explicitOk ? valueToSummaryText(value, lang, dialogueFields) : '';
     if (!text) {
       Object.keys(roles).some(function (key) {
         if (roles[key] !== 'input') return false;
-        text = valueToSummaryText(record[key], lang, dialogueFields);
+        value = record[key];
+        text = valueToSummaryText(value, lang, dialogueFields);
         return !!text;
       });
     }
-    if (text) return text;
+    return text ? { value: value, text: text } : { value: undefined, text: '' };
+  }
+
+  /* FR-106 clause 6: sub-field names come only from dialogue_fields. */
+  function speakerOf(el, dialogueFields) {
+    var key = dialogueFields && dialogueFields.speaker;
+    return key && el && typeof el[key] === 'string' ? el[key] : '';
+  }
+
+  function getRecordSummaryText(record, fieldRoleMap, listTitleField, lang, dialogueFields) {
+    if (!record) return '';
+    var picked = pickSummarySource(record, fieldRoleMap, listTitleField, lang, dialogueFields);
+    if (picked.text) {
+      var first = isDialogueThread(picked.value, dialogueFields) ? speakerOf(picked.value[0], dialogueFields) : '';
+      return first ? first + (lang === 'en' ? ': ' : '：') + picked.text : picked.text;
+    }
+    var roles = fieldRoleMap || {};
     return roles.id !== 'output' && record.id != null ? String(record.id) : '';
+  }
+
+  function getRecordSummaryTags(record, fieldRoleMap, listTitleField, lang, dialogueFields) {
+    if (!record || !dialogueFields) return [];
+    var value = pickSummarySource(record, fieldRoleMap, listTitleField, lang, dialogueFields).value;
+    if (!isDialogueThread(value, dialogueFields)) return [];
+    var en = lang === 'en';
+    var tags = [value.length + (en ? ' turns' : ' 則發言')];
+    var seen = {};
+    value.forEach(function (el) {
+      var sp = speakerOf(el, dialogueFields);
+      if (sp) seen[sp] = true;
+    });
+    var m = Object.keys(seen).length;
+    if (m >= 1) tags.push(m + (en ? ' speakers' : ' 位發言者'));
+    return tags;
   }
 
   /* List search string: the text of EVERY input-role field (never output or
@@ -4110,6 +4151,7 @@
     sanitizeRecordForAnnotator: sanitizeRecordForAnnotator,
     getRecordId: getRecordId,
     getRecordSummaryText: getRecordSummaryText,
+    getRecordSummaryTags: getRecordSummaryTags,
     getRecordSearchText: getRecordSearchText,
     isSampleSubmitted: isSampleSubmitted,
     getSampleStatus: getSampleStatus,

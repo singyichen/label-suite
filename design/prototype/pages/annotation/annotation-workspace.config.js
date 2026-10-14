@@ -2472,6 +2472,23 @@
     );
   }
 
+  /* FR-106 clause 6: one small tag per getRecordSummaryTags() entry, beside the summary. */
+  function appendSummaryTags(container, record) {
+    window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryTags(
+      record,
+      currentProfile.fieldRoleMap,
+      currentProfile.listTitleField,
+      state.lang,
+      currentProfile.dialogueFields
+    ).forEach(function (label) {
+      var tag = document.createElement('span');
+      tag.className = 'sample-summary-tag';
+      tag.setAttribute('data-testid', 'ws-summary-tag');
+      tag.textContent = label;
+      container.appendChild(tag);
+    });
+  }
+
   /* Reviewer-only sample group wrapper (issue #455). One review unit per
      row (FR-056) means a 3-annotator sample renders three rows whose ONLY
      difference is the annotator account -- the record snippet above it is
@@ -2527,6 +2544,7 @@
       currentProfile.dialogueFields
     );
     header.appendChild(snippet);
+    appendSummaryTags(header, record);
 
     group.appendChild(header);
     return group;
@@ -2596,6 +2614,7 @@
       snippet.setAttribute('data-testid', 'ws-exception-sample-group-snippet');
       snippet.textContent = previewText;
       header.appendChild(snippet);
+      appendSummaryTags(header, record);
     }
 
     group.appendChild(header);
@@ -2787,6 +2806,7 @@
           currentProfile.dialogueFields
         );
         meta.appendChild(snippet);
+        appendSummaryTags(meta, record);
       } else {
         /* Only the annotator: it is the one dimension that varies inside a
            group. The sample ID already sits once in the group header, and
