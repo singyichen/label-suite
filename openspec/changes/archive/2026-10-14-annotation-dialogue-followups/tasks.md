@@ -10,7 +10,7 @@
 
 **故事目標**（FR-107、SC-029）：流程狀態檔反映本 change 對 annotation-015 的 in-flight 狀態。
 
-- [ ] 0.1 修改 `specs/STATUS.md`，於 annotation-015 列追加本 change 的 in-flight 說明（append-only，只改本列）。 [@main]
+- [x] 0.1 修改 `specs/STATUS.md`，於 annotation-015 列追加本 change 的 in-flight 說明（append-only，只改本列）。 [@main]
 
 ## 1. 提示文案（FR-107 第 9、10 點、SC-029）
 
@@ -18,8 +18,8 @@
 
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.data.js`
 
-- [ ] 1.1 新增 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts` 的 Red：中英兩語皆有「無法定位」與「重疊未標示」提示文案鍵，且含數量佔位。 [@senior-qa]
-- [ ] 1.2 （Green）修改 `task-config.data.js` 補文案。 [@senior-frontend]
+- [x] 1.1 新增 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts` 的 Red：中英兩語皆有「無法定位」與「重疊未標示」提示文案鍵，且含數量佔位。 [@senior-qa]
+- [x] 1.2 （Green）修改 `task-config.data.js` 補文案。 [@senior-frontend]
 
 ## 2. 引擎：不預填、重疊提示、定位失敗（FR-107 第 8、9、10 點、AC-2.36 ~ AC-2.38、SC-029）
 
@@ -28,8 +28,8 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.engine.js`
 > **相依**：群組 1。
 
-- [ ] 2.1 修改 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts`，補 Red：對話 Input 搭配 `entity1` 形狀與 `subj`／`rel`／`obj` 形狀 Output 皆不預填且頁面不含其內容；兩個重疊實體時顯示未標示數量且 `previewEntities` 不變；無座標實體提示數量。 [@senior-qa]
-- [ ] 2.2 （Green）修改 `task-config.engine.js`。 [@senior-frontend]
+- [x] 2.1 修改 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts`，補 Red：對話 Input 搭配 `entity1` 形狀與 `subj`／`rel`／`obj` 形狀 Output 皆不預填且頁面不含其內容；兩個重疊實體時顯示未標示數量且 `previewEntities` 不變；無座標實體提示數量。 [@senior-qa]
+- [x] 2.2 （Green）修改 `task-config.engine.js`。 [@senior-frontend]
 
 ## 3. 摘要 helper 依 dialogue_fields（FR-106 第 3 點、SC-028）
 
@@ -38,8 +38,8 @@
 > **產品檔案（1）**：`design/prototype/pages/annotation/annotation-workspace.data.js`
 > **相依**：群組 2。
 
-- [ ] 3.1 修改 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts`，補 Red：`getRecordSummaryText` 傳入指向非 `text` 子欄位的 `dialogue_fields` 時取該子欄位；傳入 `null` 時為 `{n} 筆資料`。 [@senior-qa]
-- [ ] 3.2 （Green）修改 `annotation-workspace.data.js` 的 `getRecordSummaryText`、`getRecordSearchText`。 [@senior-frontend]
+- [x] 3.1 修改 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts`，補 Red：`getRecordSummaryText` 傳入指向非 `text` 子欄位的 `dialogue_fields` 時取該子欄位；傳入 `null` 時為 `{n} 筆資料`。 [@senior-qa]
+- [x] 3.2 （Green）修改 `annotation-workspace.data.js` 的 `getRecordSummaryText`、`getRecordSearchText`。 [@senior-frontend]
 
 ## 4. 工作區：無座標定位與傳入設定（FR-107 第 9 點、AC-2.37、SC-029）
 
@@ -48,8 +48,8 @@
 > **產品檔案（1）**：`design/prototype/pages/annotation/annotation-workspace.config.js`
 > **相依**：群組 3。
 
-- [ ] 4.1 修改 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts`，補 Red：無座標實體文字恰出現一次則定位、出現多次則不標示並顯示提示；已帶座標者照座標；左欄摘要依 dialogue_fields 的 text 子欄位。 [@senior-qa]
-- [ ] 4.2 （Green）修改 `annotation-workspace.config.js`。 [@senior-frontend]
+- [x] 4.1 修改 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts`，補 Red：無座標實體文字恰出現一次則定位、出現多次則不標示並顯示提示；已帶座標者照座標；左欄摘要依 dialogue_fields 的 text 子欄位。 [@senior-qa]
+- [x] 4.2 （Green）修改 `annotation-workspace.config.js`。 [@senior-frontend]
 
 ## 5. 標記清單呼叫端（FR-106、SC-028）
 
@@ -58,8 +58,8 @@
 > **產品檔案（1）**：`design/prototype/pages/annotation/annotation-list.html`
 > **相依**：群組 3。
 
-- [ ] 5.1 修改 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts`，補 Red：dialogue_fields 的 text 子欄位 指向非 `text` 子欄位時，`annotation-list` 與工作區左欄摘要相同。 [@senior-qa]
-- [ ] 5.2 （Green）修改 `annotation-list.html`。 [@senior-frontend]
+- [x] 5.1 修改 `design/prototype/tests/annotation/issue-1358-dialogue-followups.spec.ts`，補 Red：dialogue_fields 的 text 子欄位 指向非 `text` 子欄位時，`annotation-list` 與工作區左欄摘要相同。 [@senior-qa]
+- [x] 5.2 （Green）修改 `annotation-list.html`。 [@senior-frontend]
 
 ## 6. 測試調整、回歸、審查、Source-Verify 與 archive
 
@@ -68,10 +68,10 @@
 > **產品檔案（0）**：只改測試與 specs／openspec 寫回。
 > **最終群組**：是。
 
-- [ ] 6.1 對齊 `design/prototype/tests/dashboard/dashboard-output-types.spec.ts` 的 Input 摘要比對改讀 dialogue_fields 的 text 子欄位，不放寬斷言。 [@senior-qa]
-- [ ] 6.2 對齊 `design/prototype/tests/annotation/issue-590-relation-compact-answer.spec.ts` 的測試標題與 T013 扁平種子，斷言不變。 [@senior-qa]
-- [ ] 6.3 對齊 `design/prototype/tests/annotation/issue-590-relation-offsets-engine.spec.ts` 的測試標題與 T013 扁平種子，斷言不變。 [@senior-qa]
-- [ ] 6.4 執行 typecheck、test:node 與範圍限定的 Playwright，皆 exit 0。 [@main]
-- [ ] 6.5 senior-code-reviewer 獨立審查 Generalization-First、Data Fairness 與 DRY。 [@senior-code-reviewer]
-- [ ] 6.6 Source-Verify：衍生檢視每一則正典引用皆可 grep 定位。 [@main]
-- [ ] 6.7 執行 openspec archive，正典 015 寫回 12.7.0 至 12.8.0（MINOR）並新增 Changelog，同步衍生檢視 Purpose 版號。 [@main]
+- [x] 6.1 對齊 `design/prototype/tests/dashboard/dashboard-output-types.spec.ts` 的 Input 摘要比對改讀 dialogue_fields 的 text 子欄位，不放寬斷言。 [@senior-qa]
+- [x] 6.2 對齊 `design/prototype/tests/annotation/issue-590-relation-compact-answer.spec.ts` 的測試標題與 T013 扁平種子，斷言不變。 [@senior-qa]
+- [x] 6.3 對齊 `design/prototype/tests/annotation/issue-590-relation-offsets-engine.spec.ts` 的測試標題與 T013 扁平種子，斷言不變。 [@senior-qa]
+- [x] 6.4 執行 typecheck、test:node 與範圍限定的 Playwright，皆 exit 0。 [@main]
+- [x] 6.5 senior-code-reviewer 獨立審查 Generalization-First、Data Fairness 與 DRY。 [@senior-code-reviewer]
+- [x] 6.6 Source-Verify：衍生檢視每一則正典引用皆可 grep 定位。 [@main]
+- [x] 6.7 執行 openspec archive，正典 015 寫回 12.7.0 至 12.8.0（MINOR）並新增 Changelog，同步衍生檢視 Purpose 版號。 [@main]
