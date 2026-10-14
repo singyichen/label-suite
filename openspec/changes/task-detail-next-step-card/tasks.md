@@ -6,6 +6,8 @@
 >
 > **範圍**：產品檔案 2 個（`task-detail.html`、`task-detail.panels/overview.html`）；文件 `design/system/pages/task-detail.md`、`design/system/screen-inventory.md`（產生檔）。產品 diff 超過 300 行時拆堆疊 PR。
 >
+> **堆疊 PR（Principle X 拆分）**：產品 diff 合計 509 行超過 300 行上限，拆成兩個堆疊 PR。PR-A（分支 `feat/1403-next-step-card-a`，base `main`）交付群組 0～2 與 5.1 中 pill／待 IAA 確認／草稿相關規格的改目標，產品 diff 300 行；PR-B（分支 `feat/1403-next-step-card`，base PR-A）交付群組 3～7 與 5.1 其餘改目標、archive 寫回，產品 diff 257 行。PR-A 期間 `dry_run_in_progress`、`official_run_in_progress`、`completed` 與 `reviewer` 仍沿用原動作欄內容（置於卡片內），pill 的 i18n 鍵於 PR-B 一併刪除。
+>
 > **Selector 契約（Red 與 Green 共用，不得各自改名）**：
 > - 卡片：`#nextStepCard`（`data-testid="next-step-card"`），取代 `#execStopRow`；DOM 中不得再有 `#execStopPills`、`#stopConditionTitle`、`#stopAgreementPill`、`#stopStdPill`、`#stopAnnotatorPill`、`.stop-pill`。
 > - 卡頭：`#nextStepTitle`（zh 以「下一步：」開頭、en 以「Next step: 」開頭；`completed` 為「任務已完成，無待執行動作」）、`#nextStepDesc`、`#publishActionRow`（沿用，位於卡頭右側）。
@@ -27,8 +29,8 @@
 > **產品檔案（2）**：`task-detail.html`、`task-detail.panels/overview.html`
 > **相依**：群組 0。
 
-- [ ] 1.1 新增 Red `design/prototype/tests/task-management/issue-1403-next-step-card.spec.ts`：(a) 卡片存在、pill 相關元素不存在；(b) `waiting_iaa_confirmation` 且 `done`：卡頭兩顆按鈕、只有 `#publishOfficialRunBtn` 為 `--color-cta` 背景、`pool` 列在 `official-only` 分組；IAA 未達標時 `iaa-advisory` 為 info 列、文字含「不阻擋」、不在 `both`／`official-only`／`required` 分組，兩顆按鈕可點擊；(c) `pending`：`iaa-computed` 列在 `both` 分組且 unmet、卡片內無 IAA 數值、兩顆按鈕停用且 `aria-describedby` 含 `publishIaaReason`；(d) `failed`：`#retryIaaComputationBtn` 位於 `iaa-computed` 列內；(e) 正式池為 0：`pool` 列 unmet、`#publishOfficialRunBtn` 停用。 [@senior-qa]
-- [ ] 1.2 （Green）以 `#nextStepCard` 取代 `#execStopRow` 與 pills，改寫 `renderPublishActions()` 的 `waiting_iaa_confirmation` 分支並移除 pill 渲染程式與 CSS。 [@senior-frontend]
+- [x] 1.1 新增 Red `design/prototype/tests/task-management/issue-1403-next-step-card.spec.ts`：(a) 卡片存在、pill 相關元素不存在；(b) `waiting_iaa_confirmation` 且 `done`：卡頭兩顆按鈕、只有 `#publishOfficialRunBtn` 為 `--color-cta` 背景、`pool` 列在 `official-only` 分組；IAA 未達標時 `iaa-advisory` 為 info 列、文字含「不阻擋」、不在 `both`／`official-only`／`required` 分組，兩顆按鈕可點擊；(c) `pending`：`iaa-computed` 列在 `both` 分組且 unmet、卡片內無 IAA 數值、兩顆按鈕停用且 `aria-describedby` 含 `publishIaaReason`；(d) `failed`：`#retryIaaComputationBtn` 位於 `iaa-computed` 列內；(e) 正式池為 0：`pool` 列 unmet、`#publishOfficialRunBtn` 停用。 [@senior-qa]
+- [x] 1.2 （Green）以 `#nextStepCard` 取代 `#execStopRow` 與 pills，改寫 `renderPublishActions()` 的 `waiting_iaa_confirmation` 分支並移除 pill 渲染程式與 CSS。 [@senior-frontend]
 
 ## 2. 草稿條件清單（AC-3.10、FR-022(3)）
 
@@ -37,8 +39,8 @@
 > **產品檔案（1）**：`task-detail.html`
 > **相依**：群組 1。
 
-- [ ] 2.1 修改 `design/prototype/tests/task-management/issue-1403-next-step-card.spec.ts` 補 Red：`draft` 卡片有 `pool`、`annotators`、`reviewers` 三個 `required` 列與 `iaa-later` info 列；標記者不足時 `annotators` 列 unmet、值含「還差 N 位」、`#publishDryRunBtn` 停用且 `aria-describedby` 含 `nextStepCond-annotators`；條件全滿足時按鈕可點擊、三列皆 met。 [@senior-qa]
-- [ ] 2.2 （Green）改寫 `draft` 分支：三列由 FR-010f-3 剩餘池與 FR-010t 成員推導產生，任一 unmet 即停用按鈕。 [@senior-frontend]
+- [x] 2.1 修改 `design/prototype/tests/task-management/issue-1403-next-step-card.spec.ts` 補 Red：`draft` 卡片有 `pool`、`annotators`、`reviewers` 三個 `required` 列與 `iaa-later` info 列；標記者不足時 `annotators` 列 unmet、值含「還差 N 位」、`#publishDryRunBtn` 停用且 `aria-describedby` 含 `nextStepCond-annotators`；條件全滿足時按鈕可點擊、三列皆 met。 [@senior-qa]
+- [x] 2.2 （Green）改寫 `draft` 分支：三列由 FR-010f-3 剩餘池與 FR-010t 成員推導產生，任一 unmet 即停用按鈕。 [@senior-frontend]
 
 ## 3. 試標進行中與正式標記中（AC-3.14、AC-3.37、AC-3.9）
 
