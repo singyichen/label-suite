@@ -1,5 +1,10 @@
 @import url("./empty-state.css");
 /* Shared sidebar styles for prototype pages */
+:root {
+  --navbar-mobile-height: 84px;
+  --navbar-mobile-top-height: 64px;
+}
+
 .navbar {
   width: 240px;
   height: 100vh;
