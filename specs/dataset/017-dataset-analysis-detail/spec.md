@@ -1,7 +1,7 @@
 ---
 功能分支: feat/1141-quality-metrics-ready-signal
 建立日期: 2026-04-24
-版本: 3.1.2
+版本: 3.2.0
 狀態: Draft
 ---
 
@@ -84,7 +84,7 @@
 | Output Type | 主指標（gate 用） | 單位 | 門檻常數 | 附註 |
 | --- | --- | --- | --- | --- |
 | `single_label` | Krippendorff's Alpha（nominal）⭐️；輔助顯示 Cohen's Kappa（2 人）/ Fleiss' Kappa | item | `IAA_THRESHOLD_SINGLE_LABEL = 0.80` | |
-| `multi_label` | 逐標籤 Alpha（nominal）→ 巨集平均 ⭐️ | label | `IAA_THRESHOLD_MULTI_LABEL = 0.80` | 正例出現次數 `< IAA_LABEL_MIN_POSITIVE` 的稀有標籤排除於巨集平均 |
+| `multi_label` | 逐標籤 Alpha（nominal）→ 巨集平均 ⭐️（標籤＝完整 `LabelPath`，FR-045） | label | `IAA_THRESHOLD_MULTI_LABEL = 0.80` | 正例出現次數 `< IAA_LABEL_MIN_POSITIVE` 的稀有標籤排除於巨集平均 |
 | `single_dim` | ICC(2,1) two-way random absolute ⭐️；輔助顯示 Alpha（interval）/ Pearson / Spearman | item | `IAA_THRESHOLD_SINGLE_DIM_RECOMMENDED = 0.75`（建議，**gate 用**）/ `IAA_THRESHOLD_SINGLE_DIM_STRICT = 0.80`（嚴格，僅顯示） | |
 | `multi_dim` | 逐維度 ICC(2,1) → 巨集平均 ⭐️ | dimension | `IAA_THRESHOLD_MULTI_DIM_RECOMMENDED = 0.75`（建議，僅顯示）/ `IAA_THRESHOLD_MULTI_DIM_STRICT = 0.80`（嚴格，**gate 用**） | 泛化 `single_dim` 之 N 維版本 |
 | `entity_recognition` | Pairwise Span F1 strict（start + end + type 全同）⭐️；partial-overlap F1 僅供顯示，不入閘門 | span | `IAA_THRESHOLD_ENTITY_RECOGNITION_STRICT = 0.80`（`IAA_THRESHOLD_ENTITY_RECOGNITION_PARTIAL_DISPLAY = 0.70` 僅顯示） | 以任兩位標記員配對（`C(n,2)`）計算後取平均 |
@@ -96,7 +96,7 @@
 > 雙門檻型別（`single_dim` / `multi_dim`）以「**gate 用**」標註者為達標判定與 registry `default_threshold`（`task-management-014` 唯讀呈現引用值）：`single_dim` 取建議階 `0.75`、`multi_dim` 取嚴格階 `0.80`（使用者定案：多維度巨集平均刻意取嚴格階）；另一階僅供顯示標示（FR-012H / FR-012I），不入閘門。
 > `input_type = item_pair` 的任務沿用其 `outputs[]` 實際類型（`single_label` / `multi_label` / `single_dim` / `multi_dim`）計算 IAA；配對欄位顯示名稱另由 `item_pair_labels`（`task-management-013` v6.9.0）驅動，不影響 IAA 數學。
 
-- `IAA_LABEL_MIN_POSITIVE = 5`（`multi_label` 巨集平均排除正例出現次數低於此值的稀有標籤）
+- `IAA_LABEL_MIN_POSITIVE = 5`（`multi_label` 巨集平均排除正例出現次數低於此值的稀有標籤；階層 taxonomy 下以完整 `LabelPath` 計正例出現次數，常數值不變，FR-045）
 - `IAA_GATE_EXCLUDED_TYPES = free_text`（IAA 達標分母排除集，registry/常數驅動，不得硬編任務類型判斷）
 - `IAA_UNCALIBRATED_TYPES = sequence_tagging`（v3.0.0 新增，FR-043；主指標可計算、但平台尚未取得足以訂定門檻之實證資料的輸出類型集合。與 `IAA_GATE_EXCLUDED_TYPES` 在 `x/y` 分母上效果相同，但語意與文案 MUST NOT 共用——前者是「永久沒有自動指標，由審核員評估」，後者是「已算出數值、暫不判定」）
 - `QUALITY_METRICS_READY_RULE`（v3.1.0 新增，FR-044）：`quality_metrics_ready` 由最新一輪試標回合的 `iaa_computation_status` 推導——`done`（含「無法計算」）或缺資料為就緒，`pending`／`failed` 為未就緒；唯一消費者為 `task-management/014-task-detail` FR-008b 第 5 項
@@ -422,7 +422,7 @@ Project Leader 可將 `sequence_tagging` 的 span 標記結果以 BIO／BIOES／
 - **FR-008A**: stats tab 必須實作正式狀態列舉 `STATS_TAB_STATES`，並以互斥狀態驅動 loading、empty、ready、error 顯示。
 - **FR-009**: 系統必須依任務資料中的 `outputs[]` 動態渲染 stats tab 對應各輸出類型特定統計指標區塊，涵蓋 `OUTPUT_TYPE_KEYS` 所有值；複合任務需依 `outputs[]` 原順序逐型並列顯示，不得壓縮為單一固定類型。
 - **FR-009F**: `single_label` 必須顯示各標籤次數 / 比例長條圖。
-- **FR-009G**: `multi_label` 必須顯示各標籤次數 / 比例長條圖與多標籤共現矩陣。
+- **FR-009G**: `multi_label` 必須顯示各標籤次數 / 比例長條圖與多標籤共現矩陣；階層 `label_options` 下「標籤」＝完整 `LabelPath`，計數單位見 FR-045。
 - **FR-009H**: `single_dim` 必須顯示該維度分佈直方圖與統計摘要（平均值 / 標準差 / 中位數）。
 - **FR-009I**: `multi_dim` 必須依維度數量顯示逐維度分佈直方圖、逐維度統計摘要，以及維度間分佈視覺化（2 維為 scatter plot，3 維以上為逐對散佈或平行座標）。
 - **FR-009J**: `entity_recognition` 必須顯示實體類型分佈、每句平均實體數與 Entity span 長度分佈。
@@ -433,7 +433,7 @@ Project Leader 可將 `sequence_tagging` 的 span 標記結果以 BIO／BIOES／
 - **FR-011**: 品質監控為 detail 頁的 `TAB_QUALITY`（`?tab=quality`）tab，必須由 stats tab 切換或 Dashboard badge deep link 進入。
 - **FR-012**: 系統必須依任務 `outputs[]` 顯示對應各輸出類型的主要 IAA 指標，涵蓋 `OUTPUT_TYPE_KEYS` 所有值並依 `OUTPUT_TYPE_IAA_REGISTRY` 定義計算方式與門檻；複合任務需依原順序逐型並列顯示。
 - **FR-012F**: `single_label` 必須顯示 Krippendorff's Alpha（nominal）為主要指標並標示 `IAA_THRESHOLD_SINGLE_LABEL`；輔助指標（Cohen's Kappa / Fleiss' Kappa）以可展開區塊顯示。
-- **FR-012G**: `multi_label` 必須顯示逐標籤 Alpha → 巨集平均為主要指標並標示 `IAA_THRESHOLD_MULTI_LABEL`；正例出現次數 `< IAA_LABEL_MIN_POSITIVE` 的標籤必須排除於巨集平均並標示排除清單。
+- **FR-012G**: `multi_label` 必須顯示逐標籤 Alpha → 巨集平均為主要指標並標示 `IAA_THRESHOLD_MULTI_LABEL`；正例出現次數 `< IAA_LABEL_MIN_POSITIVE` 的標籤必須排除於巨集平均並標示排除清單；階層 `label_options` 下「標籤」＝完整 `LabelPath`，計數單位見 FR-045。
 - **FR-012H**: `single_dim` 必須顯示 ICC(2,1) 為主要指標並標示 `IAA_THRESHOLD_SINGLE_DIM_RECOMMENDED` 與 `IAA_THRESHOLD_SINGLE_DIM_STRICT`；輔助指標（Alpha interval / Pearson / Spearman）以可展開區塊顯示。
 - **FR-012I**: `multi_dim` 必須顯示逐維度 ICC(2,1) → 巨集平均為主要指標並標示 `IAA_THRESHOLD_MULTI_DIM_RECOMMENDED` 與 `IAA_THRESHOLD_MULTI_DIM_STRICT`。
 - **FR-012J**: `entity_recognition` 必須顯示 Pairwise Span F1 strict 為主要指標並標示 `IAA_THRESHOLD_ENTITY_RECOGNITION_STRICT`；partial-overlap F1（`IAA_THRESHOLD_ENTITY_RECOGNITION_PARTIAL_DISPLAY`）僅供顯示切換，不得作為第二道達標判定。
@@ -513,6 +513,15 @@ Project Leader 可將 `sequence_tagging` 的 span 標記結果以 BIO／BIOES／
   4. 本訊號只描述「IAA 計算是否已結束」，MUST NOT 描述 IAA 是否達門檻；達標與否不影響本訊號，與 FR-039 第 1 點的非阻擋語意一致。
   5. 被修改率（FR-040）由審核差異即時推導、沒有非同步計算狀態，MUST NOT 作為本訊號的輸入。
   6. 本訊號的唯一消費者為 `task-management/014-task-detail` FR-008b 第 5 項；MUST NOT 被用於阻擋 `dry_run` 試標完成或 `開始正式標記`（兩者各有其前置條件）。
+- **FR-045**（v3.2.0 新增，`multi_label` 階層 `LabelPath` 的計數單位；SC-038，issue #1412）：當任務 `outputs[]` 含 `multi_label` 時，統計總覽與品質監控 MUST 以**完整 `LabelPath`** 作為「標籤」的計數單位。`LabelPath` 為 `task-management/013-task-new` 定義、`annotation/015-annotation-workspace` FR-024E-1 提交於 `selected: LabelPath[]` 的 root-to-selected-node 節點 ID 序列。
+  1. 每一條提交的 `LabelPath` MUST 算一個標籤，類別鍵 MUST 為完整路徑（畫面顯示為依序以 `›` 連接各節點名稱，例如 `A › B`）。同名但路徑不同的節點 MUST 視為不同類別。
+  2. 系統 MUST NOT 隱含計入祖先節點：提交 `A › B` 不使 `A` 的次數增加。路徑可止於 branch 或 leaf，因此 `A` 與 `A › B` 為兩個獨立類別，僅在標記員另外提交 `A` 本身時 `A` 才被計次。
+  3. 統計總覽的標籤次數／比例長條圖與多標籤共現矩陣，列與欄 MUST 皆以完整 `LabelPath` 為單位。標記員於同一筆樣本同時提交 `A` 與 `A › B` 時，兩者之間 MUST 為一般共現，MUST NOT 因階層關係特殊處理、合併或略過。比例的母體定義不變，僅類別鍵改為完整路徑。
+  4. 品質監控的逐標籤 Krippendorff's Alpha MUST 以完整 `LabelPath` 為「標籤」，巨集平均對象為各完整路徑；`IAA_LABEL_MIN_POSITIVE` 的「正例出現次數」MUST 以完整路徑計，MUST NOT 把子孫路徑的出現次數併入祖先路徑。常數值不變。排除於巨集平均的稀有標籤，其排除清單 MUST 列出完整路徑。
+  5. 其他以「標籤」為單位的 `multi_label` 品質指標（例如 FR-035 的逐樣本投票分裂度取各標籤平均）同樣以完整路徑為標籤。
+  6. 扁平 config 與舊資料視為長度為 1 的 `LabelPath`，其統計與 Alpha MUST 與扁平標籤的既有計算結果一致。
+  7. 依頂層（或任一祖先層）彙總（roll-up）不在本規格範圍；MUST NOT 以隱含祖先計次提供。
+  8. 計數 MUST 由資料中的 `LabelPath` 驅動，MUST NOT 硬編層數、節點名稱或任務類型分支。
 
 ### 使用者流程與導頁 *(必填)*
 
@@ -551,7 +560,7 @@ flowchart LR
 - **SharedMetrics**: 共用統計指標，恰含 `SHARED_METRICS` 五個欄位：`sentence_count`、`token_count`、`completion_rate`、`submitted_sample_count`、`avg_annotation_time_per_sentence`（FR-008）。
 - **OutputTypeStats**: 單一輸出類型的統計抽象父型別，依 `type` 分派至 `SingleLabelStats` / `MultiLabelStats` / `SingleDimStats` / `MultiDimStats` / `EntityRecognitionStats` / `RelationIdentificationStats` / `SequenceTaggingStats` / `FreeTextStats`。
 - **SingleLabelStats**: 包含各標籤次數 / 比例分佈。
-- **MultiLabelStats**: 包含各標籤次數 / 比例分佈與多標籤共現矩陣。
+- **MultiLabelStats**: 包含各標籤次數 / 比例分佈與多標籤共現矩陣；「標籤」為完整 `LabelPath`（FR-045）。
 - **SingleDimStats**: 包含該維度分佈、平均值 / 標準差 / 中位數。
 - **MultiDimStats**: 包含逐維度分佈陣列、逐維度統計摘要與維度間分佈視覺化資料。
 - **EntityRecognitionStats**: 包含 `entity_type_distribution`、`avg_entities_per_sentence`、`entity_span_length_distribution`。
@@ -597,7 +606,7 @@ flowchart LR
 | Spec # | Feature | What this spec needs from it |
 |--------|---------|------------------------------|
 | shared-008 | Shared Sidebar Navbar | 登入後共用導覽結構與 active 規則（資料集分析 L0 項） |
-| task-management-013 | New Task | `OUTPUT_TYPE_REGISTRY`、8 個 `OUTPUT_TYPE_KEYS`、`outputs[]` producer contract 與 `item_pair_labels` 欄位命名 |
+| task-management-013 | New Task | `OUTPUT_TYPE_REGISTRY`、8 個 `OUTPUT_TYPE_KEYS`、`outputs[]` producer contract 與 `item_pair_labels` 欄位命名；`multi_label` 階層 `label_options`（`LabelOptionNode[]`）與 `LabelPath` 定義（FR-045 計數單位的輸入） |
 | task-management-014 | Task Detail | `task_id`、`outputs[]`；Dry Run / Official Run 狀態；空狀態按鈕導回目標；`ExcludedAnnotationAssignment`（FR-005h，排除作業不計入 α 與被修改率）與停用成員既有標記語意（FR-005l，既有標記仍計入） |
 | annotation-015 | Annotation Workspace | 已提交標記結果（依 `outputs[]` 結構）作為統計資料與 FR-039 逐型 IAA 計算輸入來源（僅計入標記員原始標記，不含審核員修正）；現行審核單位狀態機 `ReviewUnit`／`REVIEW_UNIT_STATUS`（FR-051）與逐輸出類型差異比對（FR-052）作為 FR-040 被修改率計算依據；`OutputAnswer.bypass` 契約（關鍵實體）為 FR-040 排除規則一所需之資料層變更基礎（**v2.2.0 修正**：移除原「一致性最低樣本清單」與 `annotation-015` v3.0.0 dry_run 仲裁「divergent」分歧項同源參照——該流程已於 `annotation-015` v4.0.0〔見其「使用者故事 3」的「⚠️ v4.0.0 適用範圍再次收斂（BREAKING）」段落〕廢止，017 現為 IAA 語意 SSoT，不再對已死流程外推權威） |
 | dataset-016 | Dataset Analysis List | 模組入口任務列表、task card 導向 detail 頁規格、`IAA_BADGE_STATES` |
@@ -649,6 +658,7 @@ flowchart LR
 - **SC-035**（v3.0.0 新增，FR-043）：`IAA_UNCALIBRATED_TYPES` 中的型別正確顯示主指標點估計值與中性「待實證校準」標示，畫面不存在門檻數值、達標／未達標文案與綠紅色彩，且未沿用 `IAA_GATE_EXCLUDED_TYPES` 的「不適用—由審核員評估」文案。
 - **SC-036**（v3.0.0 新增，FR-043、FR-024A）：任務層級 `x/y` 徽章正確將 `IAA_UNCALIBRATED_TYPES` 命中型別排除於 `x` 與 `y` 兩側並計入「· {N} 型排除」後綴；`outputs[]` 僅含兩類排除型別時輸出 `IAA_SUMMARY_STATES = not_applicable`，不顯示 `0/0`。
 - **SC-037**（v3.1.0 新增，FR-044）：任一任務最新一輪 `iaa_computation_status` 為 `pending` 或 `failed` 時 `quality_metrics_ready` 為 `false`；為 `done`（含因 `De = 0` 而「無法計算」）或缺紀錄、缺欄位時為 `true`；訊號不描述 IAA 是否達門檻，且不被用於阻擋試標完成或 `開始正式標記`。
+- **SC-038**（v3.2.0 新增，FR-045）：`multi_label` 階層資料中，提交 `A › B` 時類別 `A › B` 計 1、類別 `A` 不隨之計次；`A` 與 `A › B` 同時被提交時兩者各計 1 且共現格為 1；逐標籤 Alpha 與 `IAA_LABEL_MIN_POSITIVE` 皆以完整 `LabelPath` 為標籤，正例出現次數不足者被排除於巨集平均並列於排除清單；僅含長度為 1 的 `LabelPath` 的扁平資料，結果與扁平標籤既有計算相同。
 
 ---
 
@@ -656,6 +666,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 3.2.0 | 2026-10-14 | **新增 `multi_label` 階層 `LabelPath` 的計數單位（issue #1412，OpenSpec change `1412-dataset-analysis-labelpath-unit`，MINOR）**：`task-management/013-task-new` v5.0.0 將 `multi_label.label_options` 重定義為遞迴 `LabelOptionNode[]`、提交值為完整 `LabelPath[]`（`annotation/015-annotation-workspace` FR-024E／FR-024E-1 已同步），但本規格的統計與 IAA 條文仍以扁平標籤為前提。維護者於 #1412 裁定計數單位為完整 `LabelPath`。**新增**：FR-045 與 SC-038——每條提交路徑算一個標籤、類別鍵為完整路徑、不隱含祖先計次；次數／比例長條圖、共現矩陣、逐標籤 Alpha 與 `IAA_LABEL_MIN_POSITIVE`（常數值不變）皆以完整路徑計；扁平 config 視為長度 1 的 `LabelPath`；依頂層彙總不在範圍。**就地補交叉引用**（不改既有措辭與數值）：FR-009G、FR-012G、`OUTPUT_TYPE_IAA_REGISTRY` 的 `multi_label` 列、`IAA_LABEL_MIN_POSITIVE`、`MultiLabelStats`、上游相依 `task-management-013` 列。**未改動**：所有既有 FR／AC／SC 的語意；原型為扁平固定標籤夾具，無程式行為變更。判定 MINOR：新增一條 FR，補明先前未規範的階層情境，不推翻任何既有條文。 |
 | 3.1.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 3.1.1 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-003 補述操作 → 權限鍵對應——統計總覽對應 `dataset.stats.view`、品質監控對應 `dataset.quality.view`、FR-041／FR-042 匯出檔下載對應 `dataset.export`，皆在既有 `TASK_ROLES_ALLOWED` 進入條件之上判定；`invited` 等非 active membership 依 ADR-037 視同不存在。V1 種子與 `TASK_ROLES_ALLOWED` 一致，只對應鍵，不改既有進入範圍。 |
 | 3.1.0 | 2026-10-06 | **新增品質指標就緒訊號（issue #1141，OpenSpec change `1141-dataset-quality-metrics-ready-signal`，MINOR）**：`task-management/014-task-detail` FR-008b 第 5 項要求「品質指標計算完成可用」才可結案，但整份規格未定義該訊號，原型因此恆為放行（#1120 驗收 07(5) 延後項）。**新增**：FR-044 與常數 `QUALITY_METRICS_READY_RULE`、SC-037——`quality_metrics_ready` 由最新一輪 `iaa_computation_status` 推導（`done` 含「無法計算」為就緒、`pending`／`failed` 為未就緒、缺資料為就緒），只描述計算是否結束、不描述是否達門檻，被修改率（FR-040）不是輸入，唯一消費者為 014 FR-008b 第 5 項。**未改動**：FR-039 的顧問性、非阻擋語意與所有既有 FR／AC／SC。判定 MINOR：新增一條 FR，不改任何既有行為。 |
