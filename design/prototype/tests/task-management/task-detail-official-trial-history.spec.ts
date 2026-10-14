@@ -226,7 +226,7 @@ test.describe('Issue #1120 -- IAA computation pending is a T018 retry state, not
     await expect(page.locator('#trialDecisionTitle')).toContainText('計算中');
     await expect(page.locator('#publishOfficialRunBtn')).toBeDisabled();
     await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
-    await expect(page.locator('#publishActionRow')).toContainText('IAA 計算中');
+    await expect(page.locator('#nextStepCard #nextStepConditions li.next-step-cond[data-cond="iaa-computed"][data-status="unmet"]')).toContainText('IAA 計算中');
   });
 
   for (const taskId of ['T015', 'T016']) {

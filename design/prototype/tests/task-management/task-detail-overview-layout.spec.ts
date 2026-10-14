@@ -6,7 +6,8 @@
  * content. Contract:
  *   1. The primary CTA background resolves to --color-cta (site-wide btn-primary), resolved at runtime.
  *      With several publish buttons (waiting_iaa_confirmation) only #publishOfficialRunBtn is primary.
- *   2. The CTA shares a row with the stop-condition pills (#execStopPills) and sits to their right.
+ *   2. The CTA sits in the header of the next-step card (#nextStepCard), on the same row as and to the right of
+ *      #nextStepTitle / #nextStepDesc (issue #1403, FR-027(4); the pills it used to share a row with are gone).
  *   3. The numbers row has exactly four columns (目前回合 / 最新 IAA / 已用試標 / 正式標記池; the
  *      已用試標 value reads "used / total") and no 已完成試標回合.
  *   4. The trial-round table has seven columns; the result column is coloured by text colour
@@ -18,7 +19,8 @@
  *
  * Selectors: [data-testid="overview-metrics" | "overview-metric" | "overview-metric-label" |
  *   "trial-round-table" | "trial-round-row" | "trial-round-result"], plus existing ids #overviewPanel,
- *   #trialDecisionTitle, #publishActionRow, #execStopPills, #loadingSkeleton, #trialUsedValue.
+ *   #trialDecisionTitle, #publishActionRow, #nextStepCard, #nextStepTitle, #nextStepDesc, #loadingSkeleton,
+ *   #trialUsedValue.
  *   The CTA is the first button inside #publishActionRow.
  *
  * Fixtures: T013 -> draft, no round rows.   T016 -> two finished rounds: R1 failed (0.62), R2 passed (0.84).
@@ -102,15 +104,21 @@ test.describe('task-detail overview layout (FR-027)', () => {
     expect(bg).toBe(ctaColor);
   });
 
-  test('CTA shares a row with the stop-condition pills and sits to their right', async ({ page }) => {
+  test('CTA sits in the next-step card header, on the title row and to the right of it (FR-027(4))', async ({ page }) => {
     await open(page, DRAFT_URL);
-    const pills = await page.locator('#execStopPills').boundingBox();
+    await expect(page.locator('#nextStepCard #publishActionRow')).toBeVisible();
+    await expect(page.locator('#execStopPills')).toHaveCount(0);
+    const title = await page.locator('#nextStepTitle').boundingBox();
+    const desc = await page.locator('#nextStepDesc').boundingBox();
     const btn = await cta(page).boundingBox();
-    expect(pills, 'pills box').not.toBeNull();
+    expect(title, 'title box').not.toBeNull();
+    expect(desc, 'description box').not.toBeNull();
     expect(btn, 'CTA box').not.toBeNull();
-    const overlap = Math.min(pills!.y + pills!.height, btn!.y + btn!.height) - Math.max(pills!.y, btn!.y);
-    expect(overlap, 'vertical overlap (same row)').toBeGreaterThan(0);
-    expect(btn!.x, 'CTA is right of the pills').toBeGreaterThanOrEqual(pills!.x + pills!.width);
+    const headerTop = title!.y;
+    const headerBottom = desc!.y + desc!.height;
+    const overlap = Math.min(headerBottom, btn!.y + btn!.height) - Math.max(headerTop, btn!.y);
+    expect(overlap, 'vertical overlap with the title/description block (same header row)').toBeGreaterThan(0);
+    expect(btn!.x + btn!.width / 2, 'CTA is right of the title').toBeGreaterThan(title!.x + title!.width / 2);
   });
 
   test('「已用試標」 value reads "used / total"', async ({ page }) => {

@@ -1,24 +1,17 @@
 /*
- * Traceability: issue #1348 (Plan A, maintainer ruling 2026-10-13) -- the overview "execution control"
- * cell (#execStopRow > #publishActionRow) becomes a vertical action column. Clarifies
- * specs/task-management/014-task-detail/spec.md FR-013 (1), FR-022, FR-008a, FR-027 (6); no FR/AC is
- * added or removed. Production code under test: renderPublishActions() in
- * design/prototype/pages/task-management/task-detail.html.
+ * Traceability: issue #1348 (Plan A, maintainer ruling 2026-10-13), retargeted by issue #1403
+ * (openspec/changes/task-detail-next-step-card, tasks.md 5.1). The vertical action column and the
+ * `.exec-action-reasons` blocks are replaced by the "next step" card (FR-027(4), FR-013(8)); this spec keeps
+ * the behaviours #1348 pinned and carries them over to the card contract. Clarifies
+ * specs/task-management/014-task-detail/spec.md FR-013 (1), FR-022, FR-008a, FR-027 (6).
  *
- * Selector contract for Green (the Red spec pins these; Green must not rename them):
- *   #publishActionRow                the action column container (existing id, kept). In every state,
- *                                    including completed, it is the single container of the column.
- *   .exec-action-buttons             button row inside #publishActionRow (every <button>, except
- *                                    #retryIaaComputationBtn, lives here; the first button is the primary CTA).
- *   .exec-action-reasons             light-background "still missing" block inside #publishActionRow.
- *   .exec-action-reasons-title       heading of that block (dry_run: the dryRunNextRoundReason text).
- *   .exec-action-reasons li          one item per unmet reason; each reason text appears exactly once.
- *   #retryIaaComputationBtn          lives inside the IAA reason <li>, never in .exec-action-buttons.
+ * Card contract used here (see issue-1403-next-step-card.spec.ts for the full list):
+ *   #nextStepCard                    the card; #publishActionRow is its header-right button container.
+ *   #nextStepDesc                    one-line description (dry_run: the dryRunNextRoundReason text).
+ *   #nextStepConditions li.next-step-cond[data-cond]   one row per condition; each reason text appears once.
+ *   #retryIaaComputationBtn          lives inside the iaa-computed row, never in #publishActionRow.
  *   .exec-action-readonly-note       reviewer-only visible line under the buttons (reviewerHint text).
- *   #publishUndeterminedNote         visible note under the buttons when waiting + IAA computed but
- *                                    undetermined (contains 無法判定); only in that state.
- *   Kept ids: publishPoolReason, publishMemberGapReason, publishDryRunReasons, publishCompleteReasons,
- *   publishOfficialRunBtn, publishDryRunBtn, publishCompleteBtn, stopConditionTitle, .exec-stop-main.
+ *   #publishUndeterminedNote         id of the iaa-undetermined info row (contains 無法判定); only in that state.
  *
  * Fixtures: T018 waiting + IAA failed + pool 0; T013 draft; T014 dry_run_in_progress; T003 / T015 / T016
  * official_run_in_progress; T002 waiting + IAA done (undetermined); T003&status=completed for completed.
@@ -29,7 +22,11 @@ import type { Page } from '@playwright/test';
 
 const BASE = '/pages/task-management/task-detail.html';
 const url = (task: string, role = 'project_leader', extra = '') => `${BASE}?task_id=${task}&task_role=${role}${extra}`;
-const ROW = '#publishActionRow';
+const CARD = '#nextStepCard';
+const ROW = `${CARD} #publishActionRow`;
+const CONDS = `${CARD} #nextStepConditions`;
+// #1403 PR-A: dry_run / official / completed still render main's reason blocks inside the card, so the T014 description,
+// reason-overlap and completed tests keep their main-branch form; stage B restores the card contract.
 const READONLY_TEXT = '僅 project leader 可操作';
 
 async function open(page: Page, target: string, width?: number) {
@@ -37,7 +34,7 @@ async function open(page: Page, target: string, width?: number) {
   await page.goto(target);
   await expect(page.locator('#loadingSkeleton')).toBeHidden({ timeout: 15000 });
   await expect(page.locator('#overviewPanel')).toBeVisible();
-  await expect(page.locator(ROW)).toBeVisible();
+  await expect(page.locator(CARD)).toBeVisible();
 }
 
 function resolveBg(page: Page, token: string): Promise<string> {
@@ -56,17 +53,19 @@ const countOf = (haystack: string, needle: string) => haystack.split(needle).len
 test.describe('Issue #1348 -- vertical execution action column', () => {
   test('T018: IAA failure reason appears once, pool reason is its own item, retry sits in the IAA item (problem 1, 2)', async ({ page }) => {
     await open(page, url('T018'));
-    const text = await page.locator(ROW).innerText();
+    const text = await page.locator(CONDS).innerText();
     expect(countOf(text, 'IAA 計算失敗')).toBe(1);
 
-    const reasons = page.locator(`${ROW} .exec-action-reasons li`);
+    const reasons = page.locator(`${CONDS} li.next-step-cond`);
     const iaaItem = reasons.filter({ hasText: 'IAA 計算失敗' });
     const poolItem = reasons.filter({ hasText: '正式標記池剩餘 0 筆' });
     await expect(iaaItem).toHaveCount(1);
     await expect(poolItem).toHaveCount(1);
+    await expect(iaaItem).toHaveAttribute('data-cond', 'iaa-computed');
+    await expect(poolItem).toHaveAttribute('data-cond', 'pool');
     await expect(iaaItem).not.toContainText('正式標記池');
     await expect(iaaItem.locator('#retryIaaComputationBtn')).toBeVisible();
-    await expect(page.locator(`${ROW} .exec-action-buttons #retryIaaComputationBtn`)).toHaveCount(0);
+    await expect(page.locator(`${ROW} #retryIaaComputationBtn`)).toHaveCount(0);
   });
 
   for (const task of ['T013', 'T014', 'T015', 'T018']) {
@@ -107,22 +106,22 @@ test.describe('Issue #1348 -- vertical execution action column', () => {
   test('T014: dryRunNextRoundReason stays visible as the reasons-list heading, not duplicated (FR-013(1))', async ({ page }) => {
     await open(page, url('T014'));
     const reason = '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合';
-    expect(countOf(await page.locator(ROW).innerText(), reason)).toBe(1);
-    const title = page.locator(`${ROW} .exec-action-reasons .exec-action-reasons-title`);
+    expect(countOf(await page.locator('#publishActionRow').innerText(), reason)).toBe(1);
+    const title = page.locator(`#publishActionRow .exec-action-reasons .exec-action-reasons-title`);
     await expect(title).toBeVisible();
     await expect(title).toContainText(reason);
-    await expect(page.locator(`${ROW} .exec-action-buttons`)).not.toContainText(reason);
-    await expect(page.locator(`${ROW} .exec-action-reasons li`).first()).toBeVisible();
-    await expect(page.locator(`${ROW} .exec-action-reasons li`).filter({ hasText: reason })).toHaveCount(0);
+    await expect(page.locator(`#publishActionRow .exec-action-buttons`)).not.toContainText(reason);
+    await expect(page.locator(`#publishActionRow .exec-action-reasons li`).first()).toBeVisible();
+    await expect(page.locator(`#publishActionRow .exec-action-reasons li`).filter({ hasText: reason })).toHaveCount(0);
   });
 
   for (const task of ['T003', 'T014', 'T015', 'T016']) {
     test(`${task}: reason items do not overlap any button (problem 3)`, async ({ page }) => {
       await open(page, url(task));
-      const items = page.locator(`${ROW} .exec-action-reasons li`);
+      const items = page.locator(`#publishActionRow .exec-action-reasons li`);
       const n = await items.count();
       expect(n).toBeGreaterThan(0);
-      const buttons = page.locator(`${ROW} button`);
+      const buttons = page.locator(`#publishActionRow button`);
       const boxes = [] as { x: number; y: number; width: number; height: number }[];
       for (let i = 0; i < (await buttons.count()); i++) {
         const b = await buttons.nth(i).boundingBox();
@@ -156,31 +155,17 @@ test.describe('Issue #1348 -- vertical execution action column', () => {
     });
   }
 
-  test('T018 at 1100px: the action column is at most 420px wide and does not overflow horizontally', async ({ page }) => {
-    await open(page, url('T018'), 1100);
-    const m = await page.locator(ROW).evaluate((el) => ({
-      width: el.getBoundingClientRect().width,
-      scrollWidth: el.scrollWidth,
-      clientWidth: el.clientWidth,
-    }));
-    expect(m.width).toBeLessThanOrEqual(424);
-    expect(m.scrollWidth).toBeLessThanOrEqual(m.clientWidth);
-  });
-
-  for (const task of ['T014', 'T015', 'T018']) {
-    test(`${task} at 400px: .exec-stop-main keeps >= 120px and the stop-condition heading is one line (problem 7)`, async ({ page }) => {
-      await open(page, url(task), 400);
-      const main = await page.locator('.exec-stop-main').boundingBox();
-      expect(main!.width).toBeGreaterThanOrEqual(120);
-      const title = page.locator('#stopConditionTitle');
-      await expect(title).toContainText('達標條件');
-      const h = await title.evaluate((el) => {
-        const s = getComputedStyle(el);
-        const fs = parseFloat(s.fontSize);
-        const lh = parseFloat(s.lineHeight);
-        return { height: el.getBoundingClientRect().height, line: Number.isFinite(lh) ? lh : fs * 1.6 };
-      });
-      expect(h.height).toBeLessThanOrEqual(h.line * 1.1);
+  for (const [task, width] of [['T018', 1100], ['T014', 400], ['T015', 400], ['T018', 400]] as const) {
+    test(`${task} at ${width}px: the card does not overflow horizontally and its title stays visible (problem 7)`, async ({ page }) => {
+      await open(page, url(task), width);
+      const m = await page.locator(CARD).evaluate((el) => ({
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+        right: el.getBoundingClientRect().right,
+      }));
+      expect(m.scrollWidth).toBeLessThanOrEqual(m.clientWidth);
+      expect(m.right).toBeLessThanOrEqual(width);
+      await expect(page.locator('#nextStepTitle')).toBeVisible();
     });
   }
 
@@ -190,8 +175,10 @@ test.describe('Issue #1348 -- vertical execution action column', () => {
   ] as const) {
     test(`${label}: undetermined note is visible while both buttons stay enabled (problem 5)`, async ({ page }) => {
       await open(page, target);
-      const note = page.locator(`${ROW} #publishUndeterminedNote`);
+      const note = page.locator(`${CONDS} #publishUndeterminedNote`);
       await expect(note).toBeVisible();
+      await expect(note).toHaveAttribute('data-cond', 'iaa-undetermined');
+      await expect(note).toHaveAttribute('data-status', 'info');
       await expect(note).toContainText('無法判定');
       await expect(page.locator('#publishOfficialRunBtn')).toBeEnabled();
       await expect(page.locator('#publishDryRunBtn')).toBeEnabled();
@@ -211,18 +198,18 @@ test.describe('Issue #1348 -- vertical execution action column', () => {
 
     test(`reviewer ${task}: visible read-only note under the buttons, title kept, no blocker list (FR-027(6))`, async ({ page }) => {
       await open(page, url(task, 'reviewer'));
-      const note = page.locator(`${ROW} .exec-action-readonly-note`);
+      const note = page.locator(`${CARD} .exec-action-readonly-note`);
       await expect(note).toBeVisible();
       await expect(note).toContainText(READONLY_TEXT);
       await expect(page.locator(`${ROW} button`).first()).toHaveAttribute('title', READONLY_TEXT);
-      await expect(page.locator(`${ROW} .exec-action-reasons`)).toHaveCount(0);
+      await expect(page.locator(`${CARD} li.next-step-cond`)).toHaveCount(0);
       await expect(page.locator('#publishCompleteReasons')).toHaveCount(0);
     });
   }
 
   test('completed: the same action column shows 任務已完成 (plan item 8)', async ({ page }) => {
     await open(page, url('T003', 'project_leader', '&status=completed'));
-    await expect(page.locator(ROW)).toContainText('任務已完成');
-    await expect(page.locator(ROW)).not.toContainText('此狀態不提供發布操作');
+    await expect(page.locator('#publishActionRow')).toContainText('任務已完成');
+    await expect(page.locator('#publishActionRow')).not.toContainText('此狀態不提供發布操作');
   });
 });

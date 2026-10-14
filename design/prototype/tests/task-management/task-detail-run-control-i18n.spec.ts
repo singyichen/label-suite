@@ -40,5 +40,6 @@ test('run control stepper and metric labels translate to english', async ({ page
   await expect(page.locator('#trialUsedLabel')).toHaveText('Trial used');
   await expect(page.locator('#currentAgreementLabel')).toHaveText('Latest IAA');
   await expect(page.locator('#officialPoolLabel')).toHaveText('Official pool');
-  await expect(page.locator('#stopConditionTitle')).toHaveText('Stop conditions');
+  // FR-027(4) (issue #1403): the pill heading is gone; the next-step card title carries the English prefix.
+  await expect(page.locator('#nextStepTitle')).toHaveText(/^Next step: /);
 });
