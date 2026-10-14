@@ -77,8 +77,8 @@
 
 > **產品檔案（0）**：只執行驗證與審查。
 
-- [ ] 6.1 執行 `node scripts/check-css-tokens.mjs`、`node scripts/gen-screen-inventory.mjs` 與 `--check`、`node scripts/check-user-path-map-freshness.mjs`、prototype typecheck，以及範圍限定的 Playwright（本 change 新 spec 與所有引用 publish 動作或 pill 的 task-detail 規格，`PW_PORT=8983`），皆 exit 0。 [@main]
-- [ ] 6.2 senior-code-reviewer 獨立審查 Generalization-First、Data Fairness、停用樣式範圍、Principle X 與 Red 契約未被弱化。 [@senior-code-reviewer]
+- [x] 6.1 執行 `node scripts/check-css-tokens.mjs`、`node scripts/gen-screen-inventory.mjs` 與 `--check`、`node scripts/check-user-path-map-freshness.mjs`、prototype typecheck，以及範圍限定的 Playwright（本 change 新 spec 與所有引用 publish 動作或 pill 的 task-detail 規格，`PW_PORT=8983`），皆 exit 0。 [@main]
+- [x] 6.2 senior-code-reviewer 獨立審查 Generalization-First、Data Fairness、停用樣式範圍、Principle X 與 Red 契約未被弱化。 [@senior-code-reviewer]
 
 ## 7. Source-Verify 與 archive
 
@@ -86,8 +86,8 @@
 
 > **產品檔案（0）**：只執行 specs／openspec 寫回。**最終群組**：是（單一 PR，archive 與正典寫回於同一 PR）。
 
-- [ ] 7.1 Source-Verify 預掃（archive 前）：FR-027、FR-013、FR-010o-3、FR-010o-4、FR-010t、FR-022、FR-008a、FR-008b、FR-010d、FR-010e、FR-010f-3、AC-3.9、AC-3.10、AC-3.14、AC-3.15、AC-3.17、AC-3.18、AC-3.20、AC-3.37、AC-3.69、AC-3.72、issue #1403、#1429，逐一以 `/usr/bin/grep` 在正典定位。 [@main]
-- [ ] 7.2 執行 openspec archive 寫回正典 014（12.3.0 至 13.0.0，MAJOR），Changelog 列指名 #1403 並寫明移除 FR-027(1) 的 pill 規定；同步改寫 spec:191–192 介面定義、FR-010o-3 的 pill 措辭、Prototype Traceability `overview.html` 列、AC-3.69。Exception: governance-propagation; Files: `specs/task-management/014-task-detail/spec.md`, `openspec/specs/task-management/014-task-detail/spec.md`, `specs/STATUS.md`; Reason: archive 寫回正典、同步衍生檢視 Purpose 版號與 STATUS.md 的 task-management-014 列必須同批原子完成。 [@main]
+- [x] 7.1 Source-Verify 預掃（archive 前）：FR-027、FR-013、FR-010o-3、FR-010o-4、FR-010t、FR-022、FR-008a、FR-008b、FR-010d、FR-010e、FR-010f-3、AC-3.9、AC-3.10、AC-3.14、AC-3.15、AC-3.17、AC-3.18、AC-3.20、AC-3.37、AC-3.69、AC-3.72、issue #1403、#1429，逐一以 `/usr/bin/grep` 在正典定位。 [@main]
+- [x] 7.2 執行 openspec archive 寫回正典 014（12.3.0 至 13.0.0，MAJOR），Changelog 列指名 #1403 並寫明移除 FR-027(1) 的 pill 規定；同步改寫 spec:191–192 介面定義、FR-010o-3 的 pill 措辭、Prototype Traceability `overview.html` 列、AC-3.69。Exception: governance-propagation; Files: `specs/task-management/014-task-detail/spec.md`, `openspec/specs/task-management/014-task-detail/spec.md`, `specs/STATUS.md`; Reason: archive 寫回正典、同步衍生檢視 Purpose 版號與 STATUS.md 的 task-management-014 列必須同批原子完成。 [@main]
 
 ## Traceability
 
