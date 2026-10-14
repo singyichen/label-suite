@@ -452,7 +452,7 @@ test.describe('Issue #1340 — dialogue_fields persistence (SC-002j)', () => {
     await expect(block(page)).toBeVisible();
     const task = await readCreatedTask(page, 'issue-1340-confirmed');
     expect(task).not.toBeNull();
-    expect(task!.dialogue_fields).toEqual({ text: 'text', speaker: 'speaker', utt_id: 'utt_id' });
+    expect(task!.dialogue_fields).toEqual({ text: 'text', speaker: 'speaker', utt_id: 'utt_id', reply_to: null });
   });
 
   test('payload carries a user-edited mapping (speaker none, utt_id array index -> null)', async ({
@@ -463,7 +463,7 @@ test.describe('Issue #1340 — dialogue_fields persistence (SC-002j)', () => {
     await speakerSel(page).selectOption('');
     await uttSel(page).selectOption('');
     const task = await readCreatedTask(page, 'issue-1340-edited');
-    expect(task!.dialogue_fields).toEqual({ text: 'text', speaker: null, utt_id: null });
+    expect(task!.dialogue_fields).toEqual({ text: 'text', speaker: null, utt_id: null, reply_to: null });
   });
 
   test('payload carries dialogue_fields null (key present) when declined', async ({ page }) => {
