@@ -157,3 +157,68 @@ test.describe('Issue #1403 -- next-step card: skeleton and waiting_iaa_confirmat
     await expect(page.locator('#publishDryRunBtn')).toBeEnabled();
   });
 });
+
+/* Drops active annotators below min (3 -> 2) via the real member-management disable action,
+   then re-renders the overview (applyLang re-runs it), as task-detail-overview-annotator-pill-active-derivation does. */
+async function disableAlexWang(page: Page) {
+  await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+  await page.locator('#tabMemberManagement').click();
+  const row = page.locator('#memberTableBody tr').filter({ hasText: 'Alex Wang' });
+  await row.locator('button:has-text("停用")').click();
+  await page.locator('#memberActionConfirmBtn').click();
+  await expect(row).toContainText('停用');
+  await page.locator('#tabOverview').click();
+  await page.evaluate(() => (window as any).applyLang('en'));
+  await page.evaluate(() => (window as any).applyLang('zh'));
+}
+
+test.describe('Issue #1403 -- next-step card: draft condition list (tasks 2.1)', () => {
+  test('draft lists pool, annotators and reviewers as required rows plus the iaa-later info row (AC-3.10)', async ({ page }) => {
+    await open(page, url('T001'));
+    await expect(page.locator(`${CARD} #nextStepTitle`)).toContainText('下一步：');
+    for (const key of ['pool', 'annotators', 'reviewers']) {
+      await expect(inGroup(page, 'required', key), key).toHaveCount(1);
+    }
+    const later = cond(page, 'iaa-later');
+    await expect(later).toHaveCount(1);
+    await expect(later).toHaveAttribute('data-status', 'info');
+    await expect(later).toContainText('第一回合');
+    expect(await page.locator(`${CARD} .next-step-group[data-group="required"] li.next-step-cond[data-status="info"]`).count()).toBe(0);
+    expect(await condKeys(page)).toEqual(['pool', 'annotators', 'reviewers', 'iaa-later']);
+  });
+
+  test('all conditions met: the three required rows are met and 新增試標回合 R1 is clickable', async ({ page }) => {
+    await open(page, url('T001'));
+    for (const key of ['pool', 'annotators', 'reviewers']) {
+      await expect(cond(page, key), key).toHaveAttribute('data-status', 'met');
+    }
+    await expect(page.locator('#publishDryRunBtn')).toBeEnabled();
+  });
+
+  test('annotator shortfall: annotators row is unmet with 還差 1 位, the button is disabled and described by it (FR-010t)', async ({ page }) => {
+    await open(page, url('T001'));
+    await disableAlexWang(page);
+    const row = cond(page, 'annotators');
+    await expect(row).toHaveAttribute('data-status', 'unmet');
+    await expect(row.locator('.next-step-cond-value')).toContainText(/還差 1 位/);
+    await expect(row).toHaveAttribute('id', 'nextStepCond-annotators');
+    await expect(cond(page, 'pool')).toHaveAttribute('data-status', 'met');
+    const btn = page.locator('#publishDryRunBtn');
+    await expect(btn).toBeDisabled();
+    expect(await describedIds(btn)).toContain('nextStepCond-annotators');
+    expect(await describedIds(btn)).not.toContain('nextStepCond-pool');
+  });
+
+  test('pool exhausted (T013): pool row is unmet and the button is described by publishPoolReason (FR-022(3))', async ({ page }) => {
+    await open(page, url('T013'));
+    const row = cond(page, 'pool');
+    await expect(row).toHaveAttribute('data-status', 'unmet');
+    await expect(row).toHaveAttribute('id', 'publishPoolReason');
+    const btn = page.locator('#publishDryRunBtn');
+    await expect(btn).toBeDisabled();
+    expect(await describedIds(btn)).toContain('publishPoolReason');
+    for (const id of await describedIds(btn)) {
+      await expect(page.locator(`${CARD} [id="${id}"]`), id).toBeVisible();
+    }
+  });
+});
