@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <link rel="stylesheet" href="../shared/metric.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -182,10 +183,6 @@
 
     /* Stats tab */
     .stats-metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-    .stats-metric-card{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-slate-50)}
-    .stats-metric-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-ink-muted);margin-bottom:6px}
-    .stats-metric-value{font-size:32px;font-weight:700;line-height:1.1;font-family:var(--font-mono);color:var(--color-ink);margin-bottom:2px}
-    .stats-metric-desc{font-size:12px;color:var(--color-text-soft)}
     .stats-hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg)}
     .stats-chart-label{font-size:11px;font-weight:600;color:var(--color-ink-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
     .stats-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)}
@@ -210,7 +207,6 @@
     .stats-comatrix-hi{background:var(--color-primary-soft-bg);color:var(--color-ink)}
     .stats-comatrix-mid{background:var(--color-slate-50);color:var(--color-text-soft)}
     .stats-comatrix-low{color:var(--color-ink-muted)}
-    .stats-inline-card{display:inline-flex;align-items:center;gap:var(--space-md);padding:16px 24px;background:var(--color-slate-50);border:1px solid var(--color-border);border-radius:var(--radius-md)}
 
     /* Responsive */
     @media(max-width:767px){
@@ -300,31 +296,11 @@
       <section class="panel" aria-labelledby="statsSharedTitle">
         <h2 class="panel-title" id="statsSharedTitle">共用指標</h2>
         <div class="stats-metric-grid" style="margin-top:var(--space-md)">
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblSentence">句子數量</div>
-            <div class="stats-metric-value">1,248</div>
-            <div class="stats-metric-desc" id="statsDescSentence">分析母體</div>
-          </div>
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblToken">Token 數量</div>
-            <div class="stats-metric-value">42,816</div>
-            <div class="stats-metric-desc" id="statsDescToken">空格分詞</div>
-          </div>
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblCompletion">完成率</div>
-            <div class="stats-metric-value" style="color:var(--color-success)">87.5%</div>
-            <div class="stats-metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div>
-          </div>
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblSubmitted">已提交樣本</div>
-            <div class="stats-metric-value">1,092</div>
-            <div class="stats-metric-desc" id="statsDescSubmitted">至少 1 位已提交</div>
-          </div>
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblAvgTime">平均標記時間</div>
-            <div class="stats-metric-value">48<span style="font-size:18px;font-weight:500">s</span></div>
-            <div class="stats-metric-desc" id="statsDescAvgTime">每句平均用時</div>
-          </div>
+          <div class="metric"><span id="statsLblSentence">句子數量</span><strong>1,248</strong><div class="metric-desc" id="statsDescSentence">分析母體</div></div>
+          <div class="metric"><span id="statsLblToken">Token 數量</span><strong>42,816</strong><div class="metric-desc" id="statsDescToken">空格分詞</div></div>
+          <div class="metric"><span id="statsLblCompletion">完成率</span><strong style="color:var(--color-success)">87.5%</strong><div class="metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div></div>
+          <div class="metric"><span id="statsLblSubmitted">已提交樣本</span><strong>1,092</strong><div class="metric-desc" id="statsDescSubmitted">至少 1 位已提交</div></div>
+          <div class="metric"><span id="statsLblAvgTime">平均標記時間</span><strong>48<small style="font-size:18px;font-weight:500">s</small></strong><div class="metric-desc" id="statsDescAvgTime">每句平均用時</div></div>
         </div>
       </section>
       <!-- Task-type specific stats (FR-009) -->

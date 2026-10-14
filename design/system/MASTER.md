@@ -796,6 +796,8 @@ Compact in-row action buttons used in dense tables and list rows (`annotation-li
 
 ### Inputs
 
+Shared definition: `pages/shared/input.css` (`.input`, `.input-textarea`). Adopted by `annotation/annotation-workspace` (T009 free-text answer, reviewer reason, bypass reason); other pages still carry local input styles.
+
 ```css
 .input {
   padding: 12px 16px;
@@ -2862,6 +2864,8 @@ Compact stat tile used in dashboard panels — the "Dashboard Summary Card" name
 
 - Grid wrapper: `repeat(auto-fit, minmax(100px, 1fr))` with `var(--space-md)` gap; use `minmax(150px, 1fr)` when labels are long
 - The dense 16px-padding scale above is the sanctioned KPI-tile spec; the Cards `p-6` rule applies to content cards, not KPI tiles
+- Shared definition lives in `pages/shared/metric.css`; pages link it and must not redefine `.metric`. Used by dashboard, task-detail and the dataset-analysis-detail stats tab (issue #1453)
+- Optional modifiers: `.metric-desc` (block description line under the value, 12px `--color-text-soft`, 2px top margin) and `.metric-lg` (hero size for a single standalone KPI, `strong` at `2.5rem`)
 
 ---
 
@@ -3007,4 +3011,6 @@ Before delivering any UI code, verify:
 | v1.33 | 2026-10-14 | **Single solid Danger definition (issue #1435)** — §Buttons "Danger (solid)" now names `pages/shared/modal.css` as the single `.btn-danger` definition (pages must link it) and its shipped CSS example matches; the per-page copies in task-config, user-management and role-settings are removed. Text colour is `--color-on-cta` in both themes (light 6.47:1, dark 5.78:1 against `--color-error`), replacing the unresolved dark-mode "verify 4.5:1" note; no token value changed. |
 | v1.34 | 2026-10-15 | **Workspace guideline tabs use Desktop Content Tabs (issue #1445)** — `annotation/annotation-workspace` guideline panel tabs drop their page-level `.guideline-tab` style and use `.admin-tabs` / `.admin-tab` from `pages/shared/content-tabs.css`; a `.admin-tabs--panel` modifier (`margin-bottom: 0; padding: 0 var(--space-md); flex-shrink: 0`) keeps the flush panel layout; no token value changed. |
 | v1.35 | 2026-10-15 | **Single modal close class (issue #1446)** — §Modals documents `.modal-header` + `.modal-close` as the one close-button definition (32px bordered icon button); the borderless `.modal-close-btn` is retired and its three consumers (task-detail and task-new dataset preview, annotation-progress member detail) use `.modal-close`. No token value changed. |
+| v1.36 | 2026-10-15 | **Metric KPI Tile adopted by dataset-analysis-detail stats tab (issue #1453)** — the page-local `.stats-metric-card` / `-label` / `-value` / `-desc` and `.stats-inline-card` families are removed in favour of the shared `.metric`; `pages/shared/metric.css` gains `.metric-desc` and `.metric-lg strong` (defaults only, no new tokens); §Metric KPI Tile lists the adopting pages and documents both modifiers. |
+| v1.37 | 2026-10-15 | **Shared input.css (issue #1447)** — §Inputs now points to `pages/shared/input.css` (`.input` / `.input-textarea`: 12px 16px padding, 16px font, `--radius-md`, `--color-border`, primary focus ring); `annotation/annotation-workspace` converges its three text inputs (T009 free-text answer, reviewer reason, bypass reason) on it; no token value changed. |
 | v1.38 | 2026-10-15 | **Standalone auth pages light `--color-cta` WCAG AA fix (issue #1466)** — the four standalone auth pages (`login`/`register`/`forgot-password`/`reset-password`, none of which import `tokens.css`) still declared light `--color-cta: #10B981` (2.54:1 against the white CTA label), the same pre-#973 value `tokens.css` had already raised — the fix never reached these pages because they define their own local `:root` tokens. Light `--color-cta` raised to `#047857` and `--color-cta-hover` to `#065F46` to match `tokens.css` (5.48:1); dark values unchanged. Rule 9's ✅ list updated to record the light CTA values. |

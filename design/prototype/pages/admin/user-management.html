@@ -170,7 +170,7 @@
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
     .page-size-select {
       padding: 5px 28px 5px 10px; border: 1px solid var(--color-border);
-      border-radius: var(--radius-md); font-size: 13px;
+      border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink);
       background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
       appearance: none; -webkit-appearance: none; cursor: pointer;
     }
@@ -719,7 +719,7 @@
         <span id="disableWarningText">停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。</span>
       </div>
       <p id="disableConfirmText" style="font-size:14px;color:var(--color-ink);margin-top:var(--space-md)">
-        確定要停用 <strong id="disableTargetName">Alex Wang</strong> 的帳號嗎？
+        <span id="disableConfirmPrefix">確定要停用 </span><strong id="disableTargetName">Alex Wang</strong><span id="disableConfirmSuffix"> 的帳號嗎？</span>
       </p>
       <div class="modal-footer">
         <button type="button" class="btn-ghost" onclick="closeModal('disableModal')" id="disableCancelBtn">取消</button>
@@ -945,9 +945,17 @@
 
     Object.assign(i18n.zh, {
       disableModalTitle: '\u505c\u7528\u5e33\u865f',
+      disableConfirmPrefix: '確定要停用 ',
+      disableConfirmSuffix: ' 的帳號嗎？',
+      pageSizeAria: '每頁顯示',
+      pageSizeOption: (n) => n + ' 筆/頁',
     });
     Object.assign(i18n.en, {
       disableModalTitle: 'Disable Account',
+      disableConfirmPrefix: 'Are you sure you want to disable the account of ',
+      disableConfirmSuffix: '?',
+      pageSizeAria: 'Rows per page',
+      pageSizeOption: (n) => n + ' / page',
     });
 
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
@@ -977,7 +985,7 @@
         'editModalTitle','editNameLabel','editEmailLabel','editRoleLabel',
         'editStatusLabel','editStatusActive','editStatusDisabled',
         'editCancelBtn','editSaveBtnLabel',
-        'disableModalTitle','disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
+        'disableModalTitle','disableConfirmPrefix','disableConfirmSuffix','disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
       ];
       ids.forEach(id => {
         const el = document.getElementById(id);
@@ -985,6 +993,10 @@
       });
 
       document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+
+      const pageSizeSelectEl = document.getElementById('pageSizeSelect');
+      pageSizeSelectEl.setAttribute('aria-label', t.pageSizeAria);
+      Array.from(pageSizeSelectEl.options).forEach(o => { o.textContent = t.pageSizeOption(o.value); });
 
       const adminTabs = document.getElementById('adminTabs');
       if (adminTabs && t.adminTabsAria) adminTabs.setAttribute('aria-label', t.adminTabsAria);
