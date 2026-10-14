@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/metric.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="stylesheet" href="task-config.css">
   <style>
@@ -132,29 +133,6 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px 16px;
-    }
-    .kv-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      background: var(--color-white);
-      min-width: 0;
-    }
-    .kv-key {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--color-ink-muted);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .kv-value {
-      display: block;
-      font-size: 14px;
-      color: var(--color-ink);
-      line-height: 1.5;
-      word-break: break-word;
     }
     .mono { font-family: var(--font-mono); font-size: 12px; }
 
@@ -423,30 +401,6 @@
       gap: 10px;
       margin-top: 16px;
     }
-    .progress-metric-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      background: var(--color-white);
-      min-width: 0;
-    }
-    .progress-metric-key {
-      display: block;
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--color-ink-muted);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .progress-metric-value {
-      display: block;
-      color: var(--color-ink);
-      font-size: 17px;
-      line-height: 1.3;
-      font-weight: 700;
-      word-break: break-word;
-    }
     .review-progress-breakdown {
       grid-column: 1 / -1;
     }
@@ -455,7 +409,11 @@
       flex-wrap: wrap;
       gap: 8px 18px;
     }
-    .review-progress-value {
+    .review-progress-breakdown .review-progress-value {
+      display: inline;
+      margin-bottom: 0;
+      text-transform: none;
+      letter-spacing: normal;
       color: var(--color-ink);
       font-size: 14px;
       line-height: 1.4;
@@ -1091,7 +1049,7 @@
     .md-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
     .md-time-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; font-family: var(--font-mono); }
     .btn-view-detail { padding: 2px 10px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-primary); cursor: pointer; white-space: nowrap; }
-    .btn-view-detail:hover { background: var(--color-surface-raised); }
+    .btn-view-detail:hover { background: var(--color-primary-soft-bg); }
 
     /* FR-026 (1): settings tab = left section nav + one visible section. */
     .settings-layout { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px; align-items: start; }
@@ -1753,7 +1711,7 @@
     .run-control-tab.active {
       background: var(--color-white);
       color: var(--color-primary);
-      border-color: var(--color-primary-soft-border);
+      border-color: var(--color-primary-border);
     }
     .run-control-tab:hover {
       color: var(--color-primary);
@@ -1780,17 +1738,6 @@
       gap: 10px;
       margin-bottom: 12px;
     }
-    .exec-round-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .exec-round-key { font-size: 12px; color: var(--color-text-soft); }
-    .exec-round-value { font-size: 20px; line-height: 1.15; color: var(--color-ink); font-variant-numeric: tabular-nums; }
     .exec-stop-row {
       margin-bottom: var(--space-md);
       display: flex;
