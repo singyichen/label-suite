@@ -25,6 +25,6 @@
 
 **故事目標**（FR-107、SC-029）：獨立審查通過，並完成正典寫回與 Source-Verify。
 
-- [ ] 2.1 `senior-code-reviewer` 獨立審查。 [@senior-code-reviewer]
-- [ ] 2.2 執行 `/opsx:archive`，寫回正典 015 v12.12.0（版本、Changelog 指名 #1413、延後至 #1430）、同步 derived view Purpose 版號。 [@main]
+- [x] 2.1 `senior-code-reviewer` 獨立審查。 [@senior-code-reviewer]
+- [x] 2.2 執行 `/opsx:archive`，寫回正典 015 v12.12.0（版本、Changelog 指名 #1413、延後至 #1430）、同步 derived view Purpose 版號。 [@main]
 - [ ] 2.3 Source-Verify：新增 AC ID 與引用條文於正典與 derived view 皆可 `grep` 到。 [@main]
