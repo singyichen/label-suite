@@ -267,8 +267,6 @@
     }
 
     /* ── Modal ───────────────────────────────────────────────────── */
-    /* hidden-class visibility contract: these pages open modals by removing .hidden (issue #1390) */
-    .modal-overlay:not(.hidden) { display: flex; }
     .modal-center { text-align: center; max-width: 400px; }
     .modal-icon {
       width: 48px; height: 48px; border-radius: 50%;
@@ -946,7 +944,7 @@
   </aside>
 
   <!-- ─── Unsaved Changes Modal ────────────────────────────────────── -->
-  <div id="dirtyModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="dirtyModalTitle">
+  <div id="dirtyModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="dirtyModalTitle">
     <div class="modal modal-center">
       <div class="modal-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -1354,7 +1352,7 @@
 
     /* UXC-10 keyboard: Escape cancels, Enter confirms the open dialog */
     document.addEventListener('keydown', (e) => {
-      const dirtyModalOpen = !document.getElementById('dirtyModal').classList.contains('hidden');
+      const dirtyModalOpen = document.getElementById('dirtyModal').classList.contains('show');
       if (e.key === 'Escape') {
         if (dirtyModalOpen) hideDirtyModal();
         else closeAuditDrawer();
@@ -1373,11 +1371,11 @@
     }
 
     function showDirtyModal() {
-      document.getElementById('dirtyModal').classList.remove('hidden');
+      document.getElementById('dirtyModal').classList.add('show');
     }
 
     function hideDirtyModal() {
-      document.getElementById('dirtyModal').classList.add('hidden');
+      document.getElementById('dirtyModal').classList.remove('show');
     }
 
     function confirmDiscardChanges() {
