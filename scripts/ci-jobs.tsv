@@ -25,5 +25,6 @@ prototype-typecheck	pnpm typecheck	-
 sdd-lint	scripts/check-sdd.sh	check-sdd.sh
 speckit-tests	scripts/speckit-tests.sh	speckit-tests.sh
 user-path-map-freshness	node scripts/check-user-path-map-freshness.mjs	check-user-path-map-freshness.mjs
+user-path-map-freshness	node scripts/check-css-tokens.mjs	check-css-tokens.mjs
 validate	bash scripts/verify-bootstrap.sh	verify-bootstrap.sh
 validate	scripts/check-spec-artifacts.sh	check-spec-artifacts.sh
