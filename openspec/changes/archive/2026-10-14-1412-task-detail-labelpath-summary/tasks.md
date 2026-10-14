@@ -31,8 +31,8 @@
 
 > **版本判定**：**MINOR v13.1.0**。回寫前須先 `git fetch` 並確認 `origin/main` 上正典 014 仍為 v13.0.0。
 
-- [ ] 2.1 執行 Source-Verify 預掃：本 change 引入的 FR／AC ID、檔案路徑、issue 編號與引用的 FR 皆可逐項 `grep` 定位。 [@main]
-- [ ] 2.2 執行 `openspec archive 1412-task-detail-labelpath-summary`，使衍生檢視收錄 FR-014i-1。 [@main]
-- [ ] 2.3 修改正典 `specs/task-management/014-task-detail/spec.md`：新增 FR-014i-1、AC-3.85，FR-014i 就地補交叉引用，Prototype Traceability 補列，版本改為 v13.1.0 並新增 Changelog 列。 [@main]
-- [ ] 2.4 修改 `specs/STATUS.md` 的 task-management-014 列為 v13.1.0 並記錄本 change 已 archive。 [@main]
-- [ ] 2.5 逐條驗證衍生檢視的正典引用（archive 後 Source-Verify）。 [@main]
+- [x] 2.1 執行 Source-Verify 預掃：本 change 引入的 FR／AC ID、檔案路徑、issue 編號與引用的 FR 皆可逐項 `grep` 定位。 [@main]
+- [x] 2.2 執行 `openspec archive 1412-task-detail-labelpath-summary`，使衍生檢視收錄 FR-014i-1。 [@main]
+- [x] 2.3 修改正典 `specs/task-management/014-task-detail/spec.md`：新增 FR-014i-1、AC-3.85，FR-014i 就地補交叉引用，Prototype Traceability 補列，版本改為 v13.1.0 並新增 Changelog 列。 [@main]
+- [x] 2.4 修改 `specs/STATUS.md` 的 task-management-014 列為 v13.1.0 並記錄本 change 已 archive。 [@main]
+- [x] 2.5 逐條驗證衍生檢視的正典引用（archive 後 Source-Verify）。 [@main]

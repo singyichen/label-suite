@@ -2,7 +2,7 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v13.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v13.1.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `1412-task-detail-labelpath-summary`（issue #1412）之 FR-014i-1（新增，階層 `label_options` 唯讀摘要）；change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
 
 change `task-detail-next-step-card`（issue #1403）修訂 FR-027／FR-013／FR-010o-4：概覽執行控制改為單一「下一步」卡片，移除達標條件 pill。
 
@@ -1900,3 +1900,23 @@ Overview「標記設定」摘要區塊必須依當前 outputs[] 動態顯示摘�
 - **WHEN** 進入「標記設定」編輯模式並檢視標記預覽
 - **THEN** 預覽以每則一列呈現發言編號、發言者與文字，且不出現 `[object Object]`
 - **AND** 預覽文字不含 Output 欄位內容；非對話任務的預覽與修正前相同
+
+### Requirement: FR-014i-1 階層 label_options 的唯讀摘要
+
+設定分頁「標記設定」檢視狀態的摘要列（FR-014i），當輸出 config 欄位型別為 taxonomy 樹（registry 欄位 `type = taxonomy-tree`，現為 `multi_label.label_options`，遞迴 `LabelOptionNode[]`，見 `task-management/013-task-new` v5.0.0）時，MUST 以縮排清單列出每一個可勾選節點，而非只顯示頂層名稱。
+
+1. 一個節點一列，縮排深度對應節點層級；深度與節點數 MUST 由資料決定，MUST NOT 硬編層數、節點名稱或任務類型分支。
+2. 每列 MUST 顯示節點名稱，並以該節點的完整 `LabelPath`（依序以 `›` 連接各節點名稱，例如 `情緒 › 負向 › 悲傷`）作為該列的辨識值與可及名稱，與 `dataset/017-dataset-analysis-detail` FR-045 的計數單位一致。
+3. 祖先節點 MUST NOT 隱含於子孫之列：branch 節點本身為獨立一列（每層節點皆可獨立勾選）。
+4. 清單 MUST 純唯讀，不提供展開／收合、勾選或任何編輯控制。
+5. 扁平 `label_options` 的摘要 MUST 維持以逗號串接標籤名稱，與修正前相同。
+6. 該 config 的其餘欄位（例如 `max_selections`）MUST 仍依 FR-014i 以文字摘要，且 MUST NOT 在文字摘要中重複顯示 `label_options`。
+
+#### Scenario: AC-3.85 階層 label_options 以縮排清單列出每個節點
+
+- **GIVEN** 任務的 `outputs[]` 含 `multi_label`，`label_options` 為階層 taxonomy（根節點 `情緒`，其下 `負向`，其下 `悲傷`、`焦慮`）
+- **WHEN** 使用者開啟設定分頁並檢視「標記設定」檢視狀態
+- **THEN** 摘要列以縮排清單呈現 `情緒`、`負向`、`悲傷`、`焦慮` 各一列，縮排深度依序為 1、2、3、3
+- **AND** `悲傷` 該列的辨識值為完整路徑 `情緒 › 負向 › 悲傷`，且 `情緒` 與 `情緒 › 負向` 各有獨立一列
+- **AND** 清單不含展開、勾選或編輯控制，摘要中不再出現只含頂層名稱的逗號串接文字
+- **AND** 扁平 `label_options` 的任務仍顯示以逗號串接的標籤名稱，與修正前相同
