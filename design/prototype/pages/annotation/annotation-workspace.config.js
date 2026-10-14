@@ -5719,7 +5719,7 @@
   function openReviewFlowDrawer(trigger) {
     var drawer = document.getElementById(FLOW_DRAWER_ID);
     if (!drawer) return;
-    drawer.classList.remove('hidden');
+    drawer.classList.add('show');
     trigger.setAttribute('aria-expanded', 'true');
     if (window.LabelSuiteModalFocus) {
       window.LabelSuiteModalFocus.open(drawer, {
@@ -5731,8 +5731,8 @@
 
   function closeReviewFlowDrawer() {
     var drawer = document.getElementById(FLOW_DRAWER_ID);
-    if (!drawer || drawer.classList.contains('hidden')) return;
-    drawer.classList.add('hidden');
+    if (!drawer || !drawer.classList.contains('show')) return;
+    drawer.classList.remove('show');
     var trigger = document.querySelector('[data-testid="ws-review-flow-trigger"]');
     if (trigger) trigger.setAttribute('aria-expanded', 'false');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(drawer);
@@ -6360,7 +6360,7 @@
     if (!modal || !image) return;
     image.src = src;
     image.alt = altText || '';
-    modal.classList.remove('hidden');
+    modal.classList.add('show');
     if (window.LabelSuiteModalFocus) {
       window.LabelSuiteModalFocus.open(modal, {
         trigger: triggerEl || document.activeElement,
@@ -6370,7 +6370,7 @@
   }
   function closeGuidelineImageModal() {
     var modal = document.getElementById('wsGuidelineImageModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) modal.classList.remove('show');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   /* issue #353 (spec 015 AC-5.3 / SC-005C): PDF guideline files preview in
@@ -6384,7 +6384,7 @@
     if (!modal || !frame) return;
     frame.src = src;
     setText('wsGuidelinePdfModalTitleText', name || '');
-    modal.classList.remove('hidden');
+    modal.classList.add('show');
     if (window.LabelSuiteModalFocus) {
       window.LabelSuiteModalFocus.open(modal, {
         trigger: triggerEl || document.activeElement,
@@ -6394,7 +6394,7 @@
   }
   function closeGuidelinePdfModal() {
     var modal = document.getElementById('wsGuidelinePdfModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) modal.classList.remove('show');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   /* issue #527 (spec 015 AC-5.3 / FR-020D / SC-005D): Markdown guideline
@@ -6549,7 +6549,7 @@
        runs are escaped and whose only tags are the fixed allowlist above. */
     body.innerHTML = renderMarkdown(content);
     setText('wsGuidelineMdModalTitleText', name || '');
-    modal.classList.remove('hidden');
+    modal.classList.add('show');
     if (window.LabelSuiteModalFocus) {
       window.LabelSuiteModalFocus.open(modal, {
         trigger: triggerEl || document.activeElement,
@@ -6613,7 +6613,7 @@
   }
   function closeGuidelineMdModal() {
     var modal = document.getElementById('wsGuidelineMdModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) modal.classList.remove('show');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   var GUIDELINE_FILE_ICON_SVG = {
@@ -6797,7 +6797,7 @@
     var body = document.getElementById('wsGuidelineModalBody');
     if (!modal || !confirmBtn) return;
     if (!currentProfile || !currentProfile.forceShowGuideline) {
-      modal.classList.add('hidden');
+      modal.classList.remove('show');
       return;
     }
     var storageKey = guidelineModalStorageKey(currentProfile.id);
@@ -6808,7 +6808,7 @@
       /* treat blocked storage as not-seen: showing the modal again is safe */
     }
     function hideGuidelineModal() {
-      modal.classList.add('hidden');
+      modal.classList.remove('show');
       if (body) body.textContent = '';
       if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
     }
@@ -6833,7 +6833,7 @@
             .join('\n');
         }
       }
-      modal.classList.remove('hidden');
+      modal.classList.add('show');
       if (window.LabelSuiteModalFocus) {
         /* No user click triggers this modal (shown automatically on first
            visit), so focus returns to the workspace root landmark on close
@@ -6844,7 +6844,7 @@
         });
       }
     } else {
-      modal.classList.add('hidden');
+      modal.classList.remove('show');
       if (body) body.textContent = '';
     }
     confirmBtn.addEventListener('click', function () {

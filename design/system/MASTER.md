@@ -940,6 +940,8 @@ The modal skeleton (overlay, dialog, header, title, description, close button, f
 }
 ```
 
+**Header and close** (`.modal-header` + `.modal-close`): the header is a flex row with the title block on the left and a single close button on the right. `.modal-close` is the only close-button class (32px bordered icon button, 16px icon); do not introduce per-page variants.
+
 **Footer rules** (`.modal-footer` / `.modal-actions`):
 
 - Actions are right-aligned (`justify-content: flex-end`)
@@ -3005,4 +3007,5 @@ Before delivering any UI code, verify:
 | v1.32 | 2026-10-14 | **Shared modal skeleton (issue #1390)** — §Modals now points to `pages/shared/modal.css` as the single definition of the overlay / dialog / header / title / description / close / footer skeleton and adds the Footer rules list (right-aligned actions, secondary left of primary, solid Danger variant in the primary position for destructive confirmations, `--space-sm` gap). task-list, task-new and task-detail adopt it (task-list `.modal-backdrop` renamed `.modal-overlay`); no token value changed. |
 | v1.33 | 2026-10-14 | **Single solid Danger definition (issue #1435)** — §Buttons "Danger (solid)" now names `pages/shared/modal.css` as the single `.btn-danger` definition (pages must link it) and its shipped CSS example matches; the per-page copies in task-config, user-management and role-settings are removed. Text colour is `--color-on-cta` in both themes (light 6.47:1, dark 5.78:1 against `--color-error`), replacing the unresolved dark-mode "verify 4.5:1" note; no token value changed. |
 | v1.34 | 2026-10-15 | **Workspace guideline tabs use Desktop Content Tabs (issue #1445)** — `annotation/annotation-workspace` guideline panel tabs drop their page-level `.guideline-tab` style and use `.admin-tabs` / `.admin-tab` from `pages/shared/content-tabs.css`; a `.admin-tabs--panel` modifier (`margin-bottom: 0; padding: 0 var(--space-md); flex-shrink: 0`) keeps the flush panel layout; no token value changed. |
+| v1.35 | 2026-10-15 | **Single modal close class (issue #1446)** — §Modals documents `.modal-header` + `.modal-close` as the one close-button definition (32px bordered icon button); the borderless `.modal-close-btn` is retired and its three consumers (task-detail and task-new dataset preview, annotation-progress member detail) use `.modal-close`. No token value changed. |
 | v1.36 | 2026-10-15 | **Metric KPI Tile adopted by dataset-analysis-detail stats tab (issue #1453)** — the page-local `.stats-metric-card` / `-label` / `-value` / `-desc` and `.stats-inline-card` families are removed in favour of the shared `.metric`; `pages/shared/metric.css` gains `.metric-desc` and `.metric-lg strong` (defaults only, no new tokens); §Metric KPI Tile lists the adopting pages and documents both modifiers. |

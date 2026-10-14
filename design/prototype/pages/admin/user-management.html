@@ -176,8 +176,6 @@
     }
 
     /* ── Modal ──────────────────────────────────────────────────── */
-    /* hidden-class visibility contract: these pages open modals by removing .hidden (issue #1390) */
-    .modal-overlay:not(.hidden) { display: flex; }
     .modal-overlay .modal { max-height: 90vh; overflow-y: auto; }
     .modal-overlay .modal-footer {
       margin-top: var(--space-lg); padding-top: var(--space-lg);
@@ -580,7 +578,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- ADD USER MODAL                                             -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="modal-overlay hidden" id="addModal"
+  <div class="modal-overlay" id="addModal"
        role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="modal">
       <div class="modal-header">
@@ -642,7 +640,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- EDIT USER MODAL                                            -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="modal-overlay hidden" id="editModal"
+  <div class="modal-overlay" id="editModal"
        role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
     <div class="modal">
       <div class="modal-header">
@@ -702,7 +700,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- DISABLE CONFIRM MODAL                                      -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="modal-overlay hidden" id="disableModal"
+  <div class="modal-overlay" id="disableModal"
        role="alertdialog" aria-modal="true" aria-labelledby="disableModalTitle">
     <div class="modal" style="max-width:440px">
       <div class="modal-header">
@@ -1324,11 +1322,11 @@
     }
 
     function openModal(id) {
-      document.getElementById(id).classList.remove('hidden');
+      document.getElementById(id).classList.add('show');
       document.body.style.overflow = 'hidden';
     }
     function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
+      document.getElementById(id).classList.remove('show');
       document.body.style.overflow = '';
     }
 
@@ -1345,7 +1343,7 @@
         return;
       }
       /* UXC-10 keyboard: Enter confirms the open destructive dialog */
-      if (e.key === 'Enter' && !document.getElementById('disableModal').classList.contains('hidden')) {
+      if (e.key === 'Enter' && document.getElementById('disableModal').classList.contains('show')) {
         confirmDisable();
       }
     });
