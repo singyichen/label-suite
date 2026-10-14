@@ -795,6 +795,8 @@ Compact in-row action buttons used in dense tables and list rows (`annotation-li
 
 ### Inputs
 
+Shared definition: `pages/shared/input.css` (`.input`, `.input-textarea`). Adopted by `annotation/annotation-workspace` (T009 free-text answer, reviewer reason, bypass reason); other pages still carry local input styles.
+
 ```css
 .input {
   padding: 12px 16px;
@@ -3003,3 +3005,4 @@ Before delivering any UI code, verify:
 | v1.32 | 2026-10-14 | **Shared modal skeleton (issue #1390)** — §Modals now points to `pages/shared/modal.css` as the single definition of the overlay / dialog / header / title / description / close / footer skeleton and adds the Footer rules list (right-aligned actions, secondary left of primary, solid Danger variant in the primary position for destructive confirmations, `--space-sm` gap). task-list, task-new and task-detail adopt it (task-list `.modal-backdrop` renamed `.modal-overlay`); no token value changed. |
 | v1.33 | 2026-10-14 | **Single solid Danger definition (issue #1435)** — §Buttons "Danger (solid)" now names `pages/shared/modal.css` as the single `.btn-danger` definition (pages must link it) and its shipped CSS example matches; the per-page copies in task-config, user-management and role-settings are removed. Text colour is `--color-on-cta` in both themes (light 6.47:1, dark 5.78:1 against `--color-error`), replacing the unresolved dark-mode "verify 4.5:1" note; no token value changed. |
 | v1.34 | 2026-10-15 | **Workspace guideline tabs use Desktop Content Tabs (issue #1445)** — `annotation/annotation-workspace` guideline panel tabs drop their page-level `.guideline-tab` style and use `.admin-tabs` / `.admin-tab` from `pages/shared/content-tabs.css`; a `.admin-tabs--panel` modifier (`margin-bottom: 0; padding: 0 var(--space-md); flex-shrink: 0`) keeps the flush panel layout; no token value changed. |
+| v1.37 | 2026-10-15 | **Shared input.css (issue #1447)** — §Inputs now points to `pages/shared/input.css` (`.input` / `.input-textarea`: 12px 16px padding, 16px font, `--radius-md`, `--color-border`, primary focus ring); `annotation/annotation-workspace` converges its three text inputs (T009 free-text answer, reviewer reason, bypass reason) on it; no token value changed. |
