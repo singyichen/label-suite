@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-overview-settings-1199
 建立日期: 2026-04-20
-版本: 12.2.4
+版本: 12.3.0
 狀態: Draft
 ---
 
@@ -123,6 +123,7 @@ sequenceDiagram
 
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
+| 12.3.0 | 2026-10-14 | **task-detail 承接對話串欄位 `dialogue_fields` 的載入與儲存**（MINOR，issue #1386，OpenSpec change `task-detail-dialogue-fields`）：承接 `013-task-new` v8.5.0 Changelog 所留「task-detail 載入與儲存另案」。新增 FR-014k-1（基本資料編輯模式的對話串確認區以已儲存值初始化、儲存時寫回 `dialogue_fields`、取消與放棄變更時還原、「自動」清單標題與 `annotation-015` FR-106 一致）與 AC-3.80～AC-3.83；新增 FR-014l-4（標記設定預覽以對話串呈現）與 AC-3.84；既有 FR-014k、FR-014l-1 措辭不變；013 的歷史 Changelog 列不改寫。 |
 | 1 | `project_leader` / `reviewer` | 進入 `/task-detail` | 驗證 task context 後顯示頁面，預設 `overview` tab |
 | 2 | `project_leader` | 管理成員 | 可新增、移除/停用任務成員；既有成員角色唯讀（承接 task-new 初始值） |
 | 3 | `project_leader` | 開始試標回合 | 狀態轉為 `dry_run_in_progress` |
@@ -535,6 +536,11 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 77. **AC-3.77**（v12.0.0，issue #1199）：**Given** 使用者只有 `reviewer` membership，**When** 檢視分頁列並開啟 `settings`，**Then** 分頁列顯示 `settings` 而不顯示 `member-management`，且設定分頁各區塊皆無「編輯」連結（FR-006）。
 78. **AC-3.78**（v12.1.0，issue #1270）：**Given** 某任務的 active `project_leader` P 與 active `reviewer` W，且 `task.lifecycle.manage` 仍為「已登錄、待啟用」，**When** W 發布任務或儲存 `reviewer_ids`、P 儲存 `arbiter_ids` 與資料集重綁、Super Admin 把 `project_leader × task.members.manage` 改為 ❌ 後 P 再次儲存 `reviewer_ids`，**Then** W 的兩個請求都拒絕；P 的名冊寫入依 `task.members.manage`、資料集重綁依 `task.detail.edit` 與既有狀態規則判斷，格改為 ❌ 後名冊寫入拒絕而資料集重綁不受影響；以 `task.lifecycle.manage` 作為必要條件的判斷依未知鍵拒絕，P 的發布只依既有的角色、狀態與資源閘門判斷（FR-024）。
 79. **AC-3.79**（v12.1.0，issue #1270）：**Given** 一個 `arbiter_ids` 為空且有爭議項的任務，有 active `project_leader` P、active `reviewer` W 與 membership 已停用的 `project_leader` Q，**When** W 與 Q 直接呼叫負責人裁定 handler、P 在 `annotation.dispute.adjudicate` 啟用前裁定，以及該鍵啟用後 P 對 `arbiter_ids` 非空的任務裁定，**Then** W 與 Q 被拒；P 在啟用前依既有角色閘門與 FR-023 第 (1) 點判斷，以該鍵作為必要條件的判斷依未知鍵拒絕；`arbiter_ids` 非空時 P 被拒，該審核單位維持「爭議中」（FR-023）。
+80. **AC-3.80**（v12.3.0 新增，對應 FR-014k-1，issue #1386）：**Given** 對話串任務已儲存 `dialogue_fields = { text: "text", speaker: "speaker", utt_id: "utt_id", reply_to: null }`，`project_leader` 開啟設定分頁「基本資料」，**When** 點擊「編輯」進入編輯模式，**Then** 對話串確認區出現，文字、發言者、發言編號對應與已儲存值一致，**And** 任務的 `dialogue_fields` 為 `null` 且資料不含可偵測對話串時，不顯示確認區，且其行為與修正前相同
+81. **AC-3.81**（v12.3.0 新增，對應 FR-014k-1，issue #1386）：**Given** 對話串任務位於基本資料編輯模式，使用者將發言者欄位改選為另一子欄位，**When** 點擊「儲存」，**Then** 任務的 `dialogue_fields` 為更新後的對應，重新進入編輯模式時確認區顯示該對應，**And** 使用者取消提議後儲存，`dialogue_fields` 為 `null`
+82. **AC-3.82**（v12.3.0 新增，對應 FR-014k-1，issue #1386）：**Given** 對話串任務已儲存 `dialogue_fields`，使用者進入編輯模式後修改對應並關閉對話串開關，使「自動」清單標題變成「N 筆資料」，**When** 點擊「取消」，或在有未儲存變更時於頁內確認對話框選擇放棄變更，**Then** 回到檢視狀態，任務的 `dialogue_fields` 仍為已儲存值，**And** 重新進入編輯模式時，開關為開啟、對應為已儲存值、「自動」清單標題為第 1 則對話文字
+83. **AC-3.83**（v12.3.0 新增，對應 FR-014k-1，issue #1386）：**Given** 對話串任務的 `list_title_field` 為「自動」，已儲存 `dialogue_fields`，**When** 基本資料編輯模式顯示「標記清單預覽」，**Then** 每筆預覽摘要等於 015 FR-106 `getRecordSummaryText` 對同一筆資料的輸出（第 1 則 `text` 並依 FR-106 加發言者前綴），不出現「N 筆資料」或 `[object Object]`，**And** 非對話任務的自動摘要與修正前相同
+84. **AC-3.84**（v12.3.0 新增，對應 FR-014l-4，issue #1386）：**Given** 對話串任務已儲存 `dialogue_fields`，`project_leader` 開啟設定分頁，**When** 進入「標記設定」編輯模式並檢視標記預覽，**Then** 預覽以每則一列呈現發言編號、發言者與文字，且不出現 `[object Object]`，**And** 預覽文字不含 Output 欄位內容；非對話任務的預覽與修正前相同
 
 **行為規則**：
 
@@ -730,10 +736,12 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-014i**（**v12.0.0 修訂**，對應 AC-3.73，issue #1199）：設定分頁「標記設定」摘要區塊必須依當前 outputs[] 動態顯示摘要列：每個輸出類型一列，key 為該輸出類型的 registry 顯示名稱，value 為該輸出 config 的欄位摘要（由 registry 欄位定義推導，不含 `allow_bypass`）；除 `設定檔`、`標記類型` 外，不得固定顯示與當前 outputs 組合無關的欄位，亦不得顯示抽樣相關欄位（抽樣屬「抽樣設定」區塊）。
 - **FR-014j**：設定分頁顯示模式中，所有必填欄位標籤必須顯示紅色 `*`（沿用 `required` 樣式）；不限於編輯模式。
 - **FR-014k**：設定分頁「基本資料」編輯模式必須與 `013-task-new` Step 1 同構：依序提供資料集上傳（含已上傳檔案列）、`欄位預覽・指定欄位角色` 表（`field_role_map` 檢視與調整）、任務類型 chips（大分類 / 輸入類型 / 輸出類型三組），並沿用 Step 1 的驗證規則與互動行為；進入編輯模式時 chips 與欄位角色表必須反映該任務當前已儲存的組合。
+- **FR-014k-1**（**v12.3.0 新增**，對應 AC-3.80～AC-3.83，issue #1386）：設定分頁「基本資料」編輯模式的對話串確認區 MUST 與 `013-task-new` task-management/013-task-new FR-002c-10 同構。(1) 進入編輯模式時，確認區 MUST 以任務已儲存的 `dialogue_fields` 初始化；`dialogue_fields` 為 `null` 或缺漏時，MUST 依 013 task-management/013-task-new FR-002c-10 的偵測與預填規則決定是否提議，非對話任務 MUST NOT 顯示確認區且行為不變。(2) 儲存基本資料時，系統 MUST 將當下確認結果寫回任務設定鍵 `dialogue_fields`；使用者已取消提議或資料不是對話串時 MUST 寫入 `null`。(3) 取消編輯（含有未儲存變更時於頁內確認對話框選擇放棄）MUST 還原已儲存的 `dialogue_fields`，包含對話串開關與自動清單標題；重新進入編輯模式時 MUST 顯示已儲存狀態，不得沿用取消前的編輯或取消提議旗標。(4) 「自動」清單標題預覽 MUST 與 `annotation/015-annotation-workspace` FR-106 的 `getRecordSummaryText` 使用同一組對話串欄位得到相同摘要。確認區的文字來源 MUST 限於 Input 角色欄位（Data Fairness），且 MUST NOT 依欄位名稱硬編任務邏輯（Generalization-First）。
 - **FR-014l**：設定分頁「標記設定」編輯模式必須與 `013-task-new` Step 2 共用同一份 registry/schema/config source-of-truth（`OUTPUT_TYPE_REGISTRY`）：每個已選輸出類型呈現一個獨立設定 accordion，欄位群組、預設展開/收合行為與 Step 2 一致；不得為 task-detail 另行維護第二份 schema 定義。
 - **FR-014l-1**：設定分頁「標記設定」編輯模式的標記預覽必須與 `013-task-new` Step 2 標記預覽同源，依 outputs[] 組合渲染各輸出類型的預覽元件；Visual schema、code 與預覽必須共享同一份 config source-of-truth。
 - **FR-014l-2**：設定分頁「標記設定」編輯模式必須提供與 `013-task-new` Step 2 相同的設定檔 code 區：支援 YAML / JSON 格式切換、code 草稿未儲存時鎖定格式切換、儲存時驗證（格式錯誤與結構錯誤需顯示於 code 錯誤列且不得離開編輯模式）；code 內容必須包含 Step 1 已選取的所有輸出類型，且 `input_type` 必須與 Step 1 設定一致。
 - **FR-014l-3**：輸入類型為 `item_pair` 時，「標記設定」編輯模式必須呈現與 `013-task-new` FR-003k 同構的「項目對名稱」設定卡；「基本資料」或「標記設定」儲存時，系統必須將當下生效的兩個項目對名稱隨任務資料持久化，重新進入編輯模式需帶回已儲存名稱；於「基本資料」編輯更換資料集後，名稱必須依 FR-003k 規則以新資料集重新初始化，不得殘留先前資料集的已儲存名稱。
+- **FR-014l-4**（**v12.3.0 新增**，對應 AC-3.84，issue #1386）：對話串任務（已儲存或已確認 `dialogue_fields`，Input 為物件陣列）於設定分頁「標記設定」編輯模式的標記預覽，MUST 與 `013-task-new` Step 2 預覽同源，以對話串呈現，每則一列，含發言編號、發言者（若有）與文字，不得出現 `[object Object]`，文字來源 MUST NOT 含 Output 欄位。非對話任務的預覽 MUST 與修正前相同。
 - **FR-014m**：設定分頁「標記設定」編輯模式的範本按鈕必須沿用 `013-task-new` Step 2 規則：僅當 outputs 組合恰為 `entity_recognition + relation_identification` 時提供 ABSA 範本按鈕；設定檔上傳入口則恆常提供。
 - **FR-014n**：設定分頁編輯儲存時，系統必須以儲存當下的 categories / input_types / outputs 組合重新推導 `LEGACY_TASK_TYPE_EXPORT_ENUM` 對應值，供 annotation-results 呈現分流與匯出檔 `task_type` 欄位使用。
 - **FR-015**：系統必須提供 `annotation-results` tab，讓 `project_leader` 與 `reviewer` 查看逐筆樣本的標記員提交內容與審核員審核決定，且全部唯讀。

@@ -22,7 +22,7 @@
 - **GIVEN** 對話串任務位於基本資料編輯模式，使用者將發言者欄位改選為另一子欄位
 - **WHEN** 點擊「儲存」
 - **THEN** 任務的 `dialogue_fields` 為更新後的對應，重新進入編輯模式時確認區顯示該對應
-- **AND** 使用者取消提議後儲存，`dialogue_fields` 為 `null`，重新進入編輯模式時依 013 規則不自動再預填之外的狀態與儲存值一致
+- **AND** 使用者取消提議後儲存，`dialogue_fields` 為 `null`
 
 #### Scenario: AC-3.82 取消編輯還原已儲存的 dialogue_fields
 
