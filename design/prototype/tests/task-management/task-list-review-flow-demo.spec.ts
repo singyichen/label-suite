@@ -61,7 +61,7 @@ test.describe('Review-flow demo seeds (T014-T016)', () => {
     }
   });
 
-  test('resolves the T014 task-detail profile with 6 records and single_label outputs', async ({
+  test('resolves the T014 task-detail profile with dataset total 6 and single_label outputs', async ({
     page,
   }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);

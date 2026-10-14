@@ -23,10 +23,5 @@
     "id": "dry-05-pending-review",
     "text": "甜點是隱藏亮點，尤其是烤布蕾，外層焦糖的脆度恰到好處。",
     "gold_label": "positive"
-  },
-  {
-    "id": "dry-06-official-pool",
-    "text": "店面乾淨明亮，店員會主動補水，唯一可惜的是假日等候時間偏長。",
-    "gold_label": "neutral"
   }
 ]

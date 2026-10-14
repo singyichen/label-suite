@@ -126,7 +126,7 @@ test.describe('T017 review-flow demo fixture is fully removed (issue #815, tasks
     }
   });
 
-  test('requirement 3b: T014 task-detail profile still resolves 6 records after T017 removal', async ({ page }) => {
+  test('requirement 3b: T014 task-detail profile still resolves dataset total 6 after T017 removal', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
 
     // FR-028: the task name lives in the H1; the breadcrumb tail is the task id.
