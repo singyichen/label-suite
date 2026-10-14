@@ -303,3 +303,38 @@ test.describe('Issue #1378 — reply_to persistence (SC-002j)', () => {
     expect((await dialogueFields(page))?.reply_to).toBe('reply_to');
   });
 });
+
+/* ── AC-1.14 forward compatibility: a dialogue_fields saved before reply_to existed ── */
+
+test.describe('Issue #1378 — legacy dialogue_fields without reply_to (AC-1.14)', () => {
+  test('a draft lacking the reply_to key loads as reply_to null, keeps the other mappings, and raises no page error', async ({
+    page,
+  }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', (err) => pageErrors.push(err.message));
+
+    await setupReplyDialogue(page);
+    await page.evaluate(() => {
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i)!;
+        const draft = JSON.parse(sessionStorage.getItem(key) || 'null');
+        if (draft && draft.dialogueFields) {
+          delete draft.dialogueFields.reply_to;
+          sessionStorage.setItem(key, JSON.stringify(draft));
+        }
+      }
+    });
+
+    await page.reload({ waitUntil: 'load' });
+
+    await expect(block(page)).toBeVisible({ timeout: 15000 });
+    await expect(replySel(page)).toHaveValue('');
+    expect(await dialogueFields(page)).toEqual({
+      text: 'text',
+      speaker: 'speaker',
+      utt_id: 'utt_id',
+      reply_to: null,
+    });
+    expect(pageErrors).toEqual([]);
+  });
+});
