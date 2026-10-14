@@ -203,7 +203,7 @@ test.describe('Issue #1120 -- trial-rounds-used excludes the in-progress round (
     await expect(page.locator('#taskHeaderStatus')).toContainText('第 1 回合');
     await expect(page.locator('#trialRoundValue')).toBeVisible();
     await expect(page.locator('#trialRoundValue')).toHaveText('R1');
-    await expect(page.locator('#officialPoolValue')).toHaveText('0');
+    await expect(page.locator('#officialPoolValue')).toHaveText('1');
   });
 
   test('T014 has no R2 history to view next to its active R1', async ({ page }) => {

@@ -1119,8 +1119,13 @@
          date. This seed pins it as in_progress (no verdict, no completion
          date). agreement/annotators mirror computeIaaAlpha('T014',
          'dry_run', ...) (0.59, 3 raters) so the live IAA stays visible;
-         issue-489-task-detail-iaa-derived.spec.ts fails if they drift. The 5 records are the full dataset, so the official pool is
-         unchanged. */
+         issue-489-task-detail-iaa-derived.spec.ts fails if they drift.
+         issue #1429: R1 consumes the 5 listed records (sampleCount 5).
+         datasetTotal 6 covers the whole dataset, leaving 1 official-pool
+         record outside datasetRecords (014 FR-010e), so the pool is 1, not
+         0. Same #1120 precedent as T015/T016: annotation trial surfaces keep
+         iterating only the 5 listed records and stay unchanged. */
+      datasetTotal: 6,
       trialRounds: [
         {
           round: 1,
