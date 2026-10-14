@@ -1323,6 +1323,34 @@ var TASK_META = {
 var DEFAULT_TASK_ID = 'T001';
 var S_ROUTE = { taskId: DEFAULT_TASK_ID };
 
+/* Shared single_label IAA derivation (#1451): the card and the header badge both read this,
+ * so they cannot disagree. Returns null when the shared data module is absent (callers fall
+ * back to the static iaaData). */
+function getSingleLabelIaaState() {
+  if (!window.LabelSuiteAnnotationWorkspaceData) return null;
+  var listTask = ((window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [])
+    .filter(function(task) { return task.id === S_ROUTE.taskId; })[0];
+  var runType = (listTask && listTask.runType === 'official_run') ? 'official_run' : 'dry_run';
+  var result = window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(S_ROUTE.taskId, runType, 'single_label');
+  var threshold = OUTPUT_TYPE_IAA_REGISTRY.single_label.defaultThreshold;
+  return {
+    computable: !!result.computable,
+    alpha: result.alpha,
+    threshold: threshold,
+    pass: !!result.computable && result.alpha >= threshold
+  };
+}
+
+/* Set card-<state> on every .iaa-score-card from its own .iaa-card-value state class (#1451). */
+function syncIaaCardStates(scope) {
+  Array.prototype.forEach.call(scope.querySelectorAll('.iaa-score-card'), function(card) {
+    var valueEl = card.querySelector('.iaa-card-value');
+    var match = valueEl && /\b(pass|warn|fail)\b/.exec(valueEl.className);
+    card.classList.remove('card-pass', 'card-warn', 'card-fail');
+    if (match) card.classList.add('card-' + match[1]);
+  });
+}
+
 /* ── Composite IAA badge (FR-024A/B/C, SC-021/022/023) ────────────── */
 function computeCompositeBadge(taskMeta) {
   var outputs = (taskMeta && taskMeta.outputs) || [];
@@ -1608,7 +1636,16 @@ function updateSummaryBadge() {
   // SC-006B: entity_recognition's partial-overlap F1 display toggle (S.seqMode) is
   // display-only and must never change the composite gate state — strict Span F1 is
   // the only metric that gates pass/fail (iaaData.pass is fixed regardless of S.seqMode).
-  var result = computeCompositeBadge(taskMeta);
+  // #1451: computeCompositeBadge stays pure; the page feeds it the card's computed single_label
+  // state (uncomputable => not in x, still in y) so the badge and the card share one computation.
+  var effective = Object.assign({}, taskMeta);
+  var computed = getSingleLabelIaaState();
+  if (computed && taskMeta.iaaData && taskMeta.iaaData.single_label) {
+    effective.iaaData = Object.assign({}, taskMeta.iaaData, {
+      single_label: Object.assign({}, taskMeta.iaaData.single_label, { pass: computed.pass })
+    });
+  }
+  var result = computeCompositeBadge(effective);
   var cssState = (result.state === 'pending' || result.state === 'not_applicable') ? 'neutral' : result.state;
   badge.className = 'badge iaa-summary-badge badge-' + cssState;
   badge.textContent = compositeBadgeText(result);
@@ -1668,13 +1705,10 @@ function applySingleLabelIaaCard() {
   var thrTextEl = scope.querySelector('.iaa-threshold-item span:last-child');
   if (!valueEl || !barEl || !dotEl || !thrTextEl) return;
 
-  var listTask = ((window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [])
-    .filter(function(task) { return task.id === S_ROUTE.taskId; })[0];
-  var runType = (listTask && listTask.runType === 'official_run') ? 'official_run' : 'dry_run';
-  var result = window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(S_ROUTE.taskId, runType, 'single_label');
-  var threshold = OUTPUT_TYPE_IAA_REGISTRY.single_label.defaultThreshold;
+  var result = getSingleLabelIaaState();
+  var threshold = result.threshold;
 
-  var state = !result.computable ? 'warn' : (result.alpha >= threshold ? 'pass' : 'fail');
+  var state = !result.computable ? 'warn' : (result.pass ? 'pass' : 'fail');
   valueEl.className = 'iaa-card-value ' + state;
   valueEl.textContent = result.computable ? result.alpha.toFixed(2) : t('iaaNotComputable');
   barEl.className = 'iaa-bar-fill ' + state;
@@ -1970,6 +2004,7 @@ function loadQualityPanel() {
     updateSummaryBadge();
     applySmallSampleBadge();
     applySingleLabelIaaCard();
+    syncIaaCardStates(mount);
     applyAnnotatorModificationRates();
     syncRoleUi();
     wireQualityPanelInteractions();
