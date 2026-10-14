@@ -18,8 +18,8 @@
 
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.data.js`
 
-- [ ] 1.1 新增 `design/prototype/tests/annotation/issue-1371-dialogue-preview-no-output-entities.spec.ts` 的 Red：zh 與 en 皆有反白歧義專屬 key，且文案不含 `{n}`。 [@senior-qa]
-- [ ] 1.2 （Green）修改 `task-config.data.js` 補文案。 [@senior-frontend]
+- [x] 1.1 新增 `design/prototype/tests/annotation/issue-1371-dialogue-preview-no-output-entities.spec.ts` 的 Red：zh 與 en 皆有反白歧義專屬 key，且文案不含 `{n}`。 [@senior-qa]
+- [x] 1.2 （Green）修改 `task-config.data.js` 補文案。 [@senior-frontend]
 
 ## 2. 引擎：實體不預填與反白歧義（FR-107 第 14、15 點、AC-2.44 ~ AC-2.47）
 
@@ -28,13 +28,13 @@
 > **產品檔案（1）**：`design/prototype/pages/task-management/task-config.engine.js`
 > **相依**：群組 1。
 
-- [ ] 2.1 修改 `design/prototype/tests/annotation/issue-1371-dialogue-preview-no-output-entities.spec.ts`，補 Red：對話 Input＋`entities` 空＋Output 欄位含實體陣列時 `previewEntities` 為空且頁面不含其內容；字串 Input 同資料照舊預填（回歸）；對話 Input 自帶 `entities` 照常載入；反白歧義顯示新 key 文案（zh／en）；唯一出現時 fallback 採該位置。 [@senior-qa]
-- [ ] 2.2 （Green）修改 `task-config.engine.js`：`initPreviewState()` 以 `getObjectArrayInput()` 守門；反白歧義改用新 key。 [@senior-frontend]
+- [x] 2.1 修改 `design/prototype/tests/annotation/issue-1371-dialogue-preview-no-output-entities.spec.ts`，補 Red：對話 Input＋`entities` 空＋Output 欄位含實體陣列時 `previewEntities` 為空且頁面不含其內容；字串 Input 同資料照舊預填（回歸）；對話 Input 自帶 `entities` 照常載入；反白歧義顯示新 key 文案（zh／en）；唯一出現時 fallback 採該位置。 [@senior-qa]
+- [x] 2.2 （Green）修改 `task-config.engine.js`：`initPreviewState()` 以 `getObjectArrayInput()` 守門；反白歧義改用新 key。 [@senior-frontend]
 
 ## 3. 驗證與 archive（最終群組）
 
 **故事目標**（FR-107、SC-029）：獨立審查通過，並完成正典寫回與 Source-Verify。
 
-- [ ] 3.1 `senior-code-reviewer` 獨立審查。 [@senior-code-reviewer]
-- [ ] 3.2 執行 `/opsx:archive`，寫回正典 015 v12.11.0（版本、Changelog 指名 #1371 與承接 #1358 裁定 1）、同步 derived view Purpose 版號。 [@main]
-- [ ] 3.3 Source-Verify：新增 FR／AC ID 與引用條文於正典與 derived view 皆可 `grep` 到。 [@main]
+- [x] 3.1 `senior-code-reviewer` 獨立審查。 [@senior-code-reviewer]
+- [x] 3.2 執行 `/opsx:archive`，寫回正典 015 v12.11.0（版本、Changelog 指名 #1371 與承接 #1358 裁定 1）、同步 derived view Purpose 版號。 [@main]
+- [x] 3.3 Source-Verify：新增 FR／AC ID 與引用條文於正典與 derived view 皆可 `grep` 到。 [@main]

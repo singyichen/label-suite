@@ -16,7 +16,7 @@
 
 **是否需要存在（YAGNI 檢查）**：需要。Output 外露是 Data Fairness 違規；新增 AC 不符合 Lightweight Path，須走完整 OpenSpec change。
 
-**範圍外**：非對話路徑既有的預填行為（不變，另有回歸測試）；`task-config.engine.js` 含端點寫法（母單 #1337 已記錄另案）。
+**範圍外**：資料自帶的 `entities` 欄位若被指派為 Output 角色，其來源角色檢查（獨立審查發現，種子 T013 為 Input 角色，不受影響），將另開 issue 追蹤；非對話路徑既有的預填行為（不變，另有回歸測試）；`task-config.engine.js` 含端點寫法（母單 #1337 已記錄另案）。
 
 ## What Changes
 
