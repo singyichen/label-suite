@@ -2,12 +2,12 @@
   {
     "file": "design/prototype/pages/shared/sidebar.css",
     "token": "--navbar-mobile-top-height",
-    "reason": "Shared stylesheet consumes a layout variable that each host page declares itself (84px/64px in its own :root block, e.g. task-list.html:17); not defined in sidebar.css or tokens.css by design, so the per-file check cannot see it. A page that forgets to declare it silently loses the mobile navbar offset."
+    "reason": "Shared stylesheet consumes a layout variable that host pages are expected to declare themselves (e.g. task-list.html:17, dashboard.layout.css:5); not defined in sidebar.css or tokens.css, so the per-file check cannot see it. Not every host page declares it (annotation-workspace.html links sidebar.css without it), so this entry can hide a missing declaration there."
   },
   {
     "file": "design/prototype/pages/shared/sidebar.css",
     "token": "--navbar-mobile-height",
-    "reason": "Same host-page contract as --navbar-mobile-top-height: declared by every page that links sidebar.css (e.g. task-list.html:17, dashboard.layout.css:5), consumed at sidebar.css:832 and :837."
+    "reason": "Same host-page contract as --navbar-mobile-top-height (declared by e.g. task-list.html:17, dashboard.layout.css:5; consumed at sidebar.css:832 and :837). Some host pages such as annotation-workspace.html do not declare it, so this entry can hide a missing declaration there."
   },
   {
     "file": "design/prototype/pages/annotation/annotation-workspace.html",

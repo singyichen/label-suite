@@ -197,7 +197,7 @@ test('uppercase VAR and multi-line var( are detected (M2)', () => {
   const { status, out } = run(root);
   assert.equal(status, 1, out);
   assert.match(out, /a\.css:1: undefined token --upper/);
-  assert.match(out, /a\.css:4: undefined token --multi/);
+  assert.match(out, /a\.css:3: undefined token --multi/);
 });
 
 test('stale allowlist entry (never matched) fails (H1)', () => {
