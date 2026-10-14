@@ -2,7 +2,7 @@
 
 ## Purpose
 
-任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v12.2.4）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
+任務詳情頁（`task-detail`）是專案負責人設定審核模型、監看審核進度並判定任務可否結案的單一控制面。正典為 `specs/task-management/014-task-detail/spec.md`（v12.3.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR ID，不改動其正典措辭。目前收錄：change `align-014-review-model`（issue #688）之 FR-005j／FR-005k／FR-008b／FR-010s／FR-010s-1／FR-010s-2／FR-010t（修訂，issue #596 單人接力審核模型對齊）、FR-018（新增，最終例外池）；change `task-detail-url-view-state`（issue #726）之 FR-019（新增，頁籤與清單檢視狀態的網址同步）；change `task-detail-seq-tagging-export-dialog`（issue #742）之 FR-020（新增，`sequence_tagging` 匯出對話框與序列匯出欄位）；change `task-detail-export-history-redownload`（issue #772）之 FR-021（原新增條文，v8.0.0 已修訂為重新下載不可變原始產物）；change `task-detail-trial-round-from-waiting`（issue #791）之 FR-013（首次收錄修訂後全文，新增試標回合僅自待 IAA 確認狀態發起）；change `task-detail-iaa-precondition-and-override-scope`（issue #783）之 FR-010o-1（修訂，門檻覆寫排除未校準型別）、FR-010o-4（新增，待 IAA 確認頁顯示 IAA 計算狀態）；以及 change `validate-reviewer-arbiter-role-separation`（issue #868）之 FR-010s-1／FR-010t（修訂）；以及 change `1141-task-detail-quality-metrics-gate`（issue #1141）之 FR-008b（修訂，第 5 項引用品質指標就緒訊號）；以及 change `mvp-export-record-contract`（issue #1160）之 FR-009a／FR-010i／FR-015e／FR-015h（首次收錄）與 FR-010i-1／FR-010i-2／FR-020／FR-021／FR-024（修訂原檔下載與逐 run 追溯契約）。
 
 change `mvp-export-snapshot-isolation-correction`（issue #1160）補充 FR-010b／FR-010c 的跨 run 隔離語意，以及 FR-010i-1／FR-010i-2／FR-021 的請求接受時間與結果快照時間契約。
 
@@ -13,6 +13,8 @@ change `database-final-audit`（issue #1160）新增 FR-010o-5／FR-025、AC-3.5
 change `task-detail-overview-settings-split`（issue #1199）新增 FR-003、SC-019、FR-014i、FR-028、FR-026、FR-027，並修訂 FR-019 與 FR-006：任務詳情拆為共用標頭、概覽與設定分頁，分頁由五個改為六個；正典版本為 v12.0.0，正典驗收編號為 AC-3.53～AC-3.77。
 
 change `task-detail-lifecycle-roster-keys`（issue #1270）修訂 FR-024 與 FR-023：生命週期命令對應 `task.lifecycle.manage`，審核名冊寫入改用 `task.members.manage`，負責人裁定對應 `annotation.dispute.adjudicate`；兩個新鍵已登錄、待啟用，啟用前依未知鍵拒絕。正典版本為 v12.1.0，正典驗收編號為 AC-3.78～AC-3.79。
+
+change `task-detail-dialogue-fields`（issue #1386）新增 FR-014k-1（基本資料編輯模式的對話串確認區載入、儲存與取消還原）與 FR-014l-4（標記設定預覽以對話串呈現），對應 AC-3.80～AC-3.84；承接 `013-task-new` v8.5.0 所留「task-detail 載入與儲存另案」，正典版本為 v12.3.0。
 
 ## Requirements
 
@@ -1802,3 +1804,46 @@ Overview「標記設定」摘要區塊必須依當前 outputs[] 動態顯示摘�
 - **THEN** `設定` 分頁依序提供 基本資料／標記設定／標記說明／抽樣設定／審核設定 五個區塊的導覽
 - **AND** `概覽` 分頁只呈現 `任務狀態與執行控制`，不出現上述五個設定區塊
 - **AND** 匯出入口不出現在 `概覽` 與 `設定` 分頁
+
+### Requirement: FR-014k-1 基本資料編輯模式的對話串確認區載入、儲存與取消還原
+
+- **FR-014k-1**（**v12.3.0 新增**，對應 AC-3.80～AC-3.83，issue #1386）：設定分頁「基本資料」編輯模式的對話串確認區 MUST 與 `013-task-new` FR-002c-10 同構。(1) 進入編輯模式時，確認區 MUST 以任務已儲存的 `dialogue_fields` 初始化；`dialogue_fields` 為 `null` 或缺漏時，MUST 依 013 FR-002c-10 的偵測與預填規則決定是否提議，非對話任務 MUST NOT 顯示確認區且行為不變。(2) 儲存基本資料時，系統 MUST 將當下確認結果寫回任務設定鍵 `dialogue_fields`；使用者已取消提議或資料不是對話串時 MUST 寫入 `null`。(3) 取消編輯（含有未儲存變更時於頁內確認對話框選擇放棄）MUST 還原已儲存的 `dialogue_fields`，包含對話串開關與自動清單標題；重新進入編輯模式時 MUST 顯示已儲存狀態，不得沿用取消前的編輯或取消提議旗標。(4) 「自動」清單標題預覽 MUST 與 `annotation/015-annotation-workspace` FR-106 的 `getRecordSummaryText` 使用同一組對話串欄位得到相同摘要。確認區的文字來源 MUST 限於 Input 角色欄位（Data Fairness），且 MUST NOT 依欄位名稱硬編任務邏輯（Generalization-First）。
+
+#### Scenario: AC-3.80 編輯模式的對話串確認區以已儲存值初始化
+
+- **GIVEN** 對話串任務已儲存 `dialogue_fields = { text: "text", speaker: "speaker", utt_id: "utt_id", reply_to: null }`，`project_leader` 開啟設定分頁「基本資料」
+- **WHEN** 點擊「編輯」進入編輯模式
+- **THEN** 對話串確認區出現，文字、發言者、發言編號對應與已儲存值一致
+- **AND** 任務的 `dialogue_fields` 為 `null` 且資料不含可偵測對話串時，不顯示確認區，且其行為與修正前相同
+
+#### Scenario: AC-3.81 儲存時寫回 dialogue_fields
+
+- **GIVEN** 對話串任務位於基本資料編輯模式，使用者將發言者欄位改選為另一子欄位
+- **WHEN** 點擊「儲存」
+- **THEN** 任務的 `dialogue_fields` 為更新後的對應，重新進入編輯模式時確認區顯示該對應
+- **AND** 使用者取消提議後儲存，`dialogue_fields` 為 `null`
+
+#### Scenario: AC-3.82 取消編輯還原已儲存的 dialogue_fields
+
+- **GIVEN** 對話串任務已儲存 `dialogue_fields`，使用者進入編輯模式後修改對應並關閉對話串開關，使「自動」清單標題變成「N 筆資料」
+- **WHEN** 點擊「取消」，或在有未儲存變更時於頁內確認對話框選擇放棄變更
+- **THEN** 回到檢視狀態，任務的 `dialogue_fields` 仍為已儲存值
+- **AND** 重新進入編輯模式時，開關為開啟、對應為已儲存值、「自動」清單標題為第 1 則對話文字
+
+#### Scenario: AC-3.83 自動清單標題與 FR-106 一致
+
+- **GIVEN** 對話串任務的 `list_title_field` 為「自動」，已儲存 `dialogue_fields`
+- **WHEN** 基本資料編輯模式顯示「標記清單預覽」
+- **THEN** 每筆預覽摘要等於 015 FR-106 `getRecordSummaryText` 對同一筆資料的輸出（第 1 則 `text` 並依 FR-106 加發言者前綴），不出現「N 筆資料」或 `[object Object]`
+- **AND** 非對話任務的自動摘要與修正前相同
+
+### Requirement: FR-014l-4 標記設定預覽以對話串呈現
+
+- **FR-014l-4**（**v12.3.0 新增**，對應 AC-3.84，issue #1386）：對話串任務（已儲存或已確認 `dialogue_fields`，Input 為物件陣列）於設定分頁「標記設定」編輯模式的標記預覽，MUST 與 `013-task-new` Step 2 預覽同源，以對話串呈現，每則一列，含發言編號、發言者（若有）與文字，不得出現 `[object Object]`，文字來源 MUST NOT 含 Output 欄位。非對話任務的預覽 MUST 與修正前相同。
+
+#### Scenario: AC-3.84 標記設定預覽以對話串呈現
+
+- **GIVEN** 對話串任務已儲存 `dialogue_fields`，`project_leader` 開啟設定分頁
+- **WHEN** 進入「標記設定」編輯模式並檢視標記預覽
+- **THEN** 預覽以每則一列呈現發言編號、發言者與文字，且不出現 `[object Object]`
+- **AND** 預覽文字不含 Output 欄位內容；非對話任務的預覽與修正前相同
