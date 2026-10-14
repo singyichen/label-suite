@@ -359,6 +359,21 @@ test.describe('issue #1378 B1: entities / plain text toggle (AC-2.42, tasks 4.1)
     await viewEntities(page).click();
     await expect(highlights(page).first()).toBeVisible();
   });
+
+  test('keyboard toggle keeps focus on the toggle button after re-render (Enter on plain, Space on entities)', async ({ page }) => {
+    await openT013(page);
+    const activeTestId = () => page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? null);
+
+    await viewPlain(page).focus();
+    await page.keyboard.press('Enter');
+    await expect(viewPlain(page)).toHaveAttribute('aria-pressed', 'true');
+    expect(await activeTestId()).toBe('dialogue-view-plain');
+
+    await viewEntities(page).focus();
+    await page.keyboard.press('Space');
+    await expect(viewEntities(page)).toHaveAttribute('aria-pressed', 'true');
+    expect(await activeTestId()).toBe('dialogue-view-entities');
+  });
 });
 
 /* ---- 5. styling (tasks 5.1) ------------------------------------------ */
