@@ -5729,7 +5729,15 @@ function detectDialogueColumn() {
     var idKeys = keys.filter(function(k) {
       return elems.every(function(e) { return typeof e[k] === 'string' || typeof e[k] === 'number'; });
     });
-    return { col: cols[c], strKeys: strKeys, idKeys: idKeys };
+    /* #1378: reply_to candidates = string/number/null/missing values with >= 1 non-empty */
+    var replyKeys = keys.filter(function(k) {
+      var scalar = elems.every(function(e) {
+        var x = e[k];
+        return x === undefined || x === null || typeof x === 'string' || typeof x === 'number';
+      });
+      return scalar && elems.some(function(e) { return e[k] !== undefined && e[k] !== null && e[k] !== ''; });
+    });
+    return { col: cols[c], strKeys: strKeys, idKeys: idKeys, replyKeys: replyKeys };
   }
   return null;
 }
@@ -5748,13 +5756,18 @@ function prefillDialogueFields(det) {
   var ids = det.idKeys.filter(function(k) {
     return k !== text && dialogueNameHit(k, DIALOGUE_FIELD_NAME_HINTS.uttId, true);
   });
-  return { text: text, speaker: speakers.length ? speakers[0] : null, utt_id: ids.length ? ids[0] : null };
+  return { text: text, speaker: speakers.length ? speakers[0] : null, utt_id: ids.length ? ids[0] : null, reply_to: null };
 }
 
 function dialogueFieldsValid(cfg, det) {
   return !!cfg && det.strKeys.indexOf(cfg.text) !== -1 &&
     (cfg.speaker === null || (cfg.speaker !== cfg.text && det.strKeys.indexOf(cfg.speaker) !== -1)) &&
     (cfg.utt_id === null || (cfg.utt_id !== cfg.text && det.idKeys.indexOf(cfg.utt_id) !== -1));
+}
+
+/* #1378: reply_to never counts toward validity; a stale one is cleared on its own */
+function dialogueReplyKeys(cfg, det) {
+  return det.replyKeys.filter(function(k) { return k !== cfg.text; });
 }
 
 function renderDialogueBlock() {
@@ -5769,6 +5782,16 @@ function renderDialogueBlock() {
   }
   if (state.dialogueDeclined) state.dialogueFields = null;
   else if (!dialogueFieldsValid(state.dialogueFields, det)) state.dialogueFields = prefillDialogueFields(det);
+  if (state.dialogueFields) {
+    var rk = dialogueReplyKeys(state.dialogueFields, det);
+    var curReply = state.dialogueFields.reply_to;
+    if (curReply === undefined || (curReply !== null && rk.indexOf(curReply) === -1)) {
+      state.dialogueFields = {
+        text: state.dialogueFields.text, speaker: state.dialogueFields.speaker,
+        utt_id: state.dialogueFields.utt_id, reply_to: null
+      };
+    }
+  }
   var cfg = state.dialogueFields || prefillDialogueFields(det);
   var on = !!state.dialogueFields;
 
@@ -5825,6 +5848,10 @@ function renderDialogueBlock() {
     det.strKeys.filter(function(k) { return k !== cfg.text; }), cfg.speaker, 'dialogueNoneOption');
   var idSel = addSelect('dialogueUttIdLabel', 'dialogue-field-utt-id',
     det.idKeys.filter(function(k) { return k !== cfg.text; }), cfg.utt_id, 'dialogueArrayIndexOption');
+  var replyKeys = dialogueReplyKeys(cfg, det);
+  var replySel = replyKeys.length
+    ? addSelect('dialogueReplyToLabel', 'dialogue-field-reply-to', replyKeys, cfg.reply_to, 'dialogueReplyToNoneOption')
+    : null;
 
   chk.addEventListener('change', function() {
     if (chk.checked) {
@@ -5841,12 +5868,13 @@ function renderDialogueBlock() {
     state.dialogueFields = {
       text: textSel.value,
       speaker: spkSel.value && spkSel.value !== textSel.value ? spkSel.value : null,
-      utt_id: idSel.value && idSel.value !== textSel.value ? idSel.value : null
+      utt_id: idSel.value && idSel.value !== textSel.value ? idSel.value : null,
+      reply_to: replySel && replySel.value && replySel.value !== textSel.value ? replySel.value : null
     };
     renderInlineDatasetPreview();
     markDirty();
   }
-  [textSel, spkSel, idSel].forEach(function(s) { s.addEventListener('change', onSelectChange); });
+  [textSel, spkSel, idSel, replySel].filter(Boolean).forEach(function(s) { s.addEventListener('change', onSelectChange); });
 }
 
 function renderInlineDatasetPreview() {
