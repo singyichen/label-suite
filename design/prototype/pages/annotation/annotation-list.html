@@ -468,8 +468,11 @@
     .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(3),
     .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(6) {
       white-space: normal;
-      overflow-wrap: anywhere;
     }
+    /* Only record ids are unbroken tokens; status and answer text break at spaces. */
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1) { overflow-wrap: anywhere; }
+    /* A label chip never breaks inside a word; the arbitration note still wraps. */
+    .task-table:has(.reviewer-stats-cell) td:nth-child(6) .annotator-result-tag { white-space: nowrap; }
     .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1) { min-width: 100px; max-width: 120px; }
     .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(3) { min-width: 96px; max-width: 110px; }
     .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(6) { min-width: 100px; max-width: 140px; }
