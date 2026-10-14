@@ -2,11 +2,11 @@
   {
     "file": "design/prototype/pages/shared/sidebar.css",
     "token": "--navbar-mobile-top-height",
-    "reason": "Host-page contract: sidebar.css consumes this layout variable but annotation-workspace.html and dashboard.html deliberately leave it undeclared, so the mobile body padding / navbar height resolve to their initial values there. Declaring a sidebar.css :root default changes their mobile layout (issue #1388 attempt broke RESP-01 and issue-928 at 390x844), so the entry stays."
+    "reason": "Host-page contract: sidebar.css consumes this layout variable but annotation-workspace.html deliberately leaves it undeclared (dashboard.html gets it from dashboard.layout.css:5), so the mobile body padding / navbar height resolve to their initial values there. Declaring a sidebar.css :root default changes the workspace mobile layout (issue #1388 attempt broke RESP-01 and issue-928 at 390x844), so the entry stays."
   },
   {
     "file": "design/prototype/pages/shared/sidebar.css",
     "token": "--navbar-mobile-height",
-    "reason": "Host-page contract: sidebar.css consumes this layout variable but annotation-workspace.html and dashboard.html deliberately leave it undeclared, so the mobile body padding / navbar height resolve to their initial values there. Declaring a sidebar.css :root default changes their mobile layout (issue #1388 attempt broke RESP-01 and issue-928 at 390x844), so the entry stays."
+    "reason": "Host-page contract: sidebar.css consumes this layout variable but annotation-workspace.html deliberately leaves it undeclared (dashboard.html gets it from dashboard.layout.css:5), so the mobile body padding / navbar height resolve to their initial values there. Declaring a sidebar.css :root default changes the workspace mobile layout (issue #1388 attempt broke RESP-01 and issue-928 at 390x844), so the entry stays."
   }
 ]
