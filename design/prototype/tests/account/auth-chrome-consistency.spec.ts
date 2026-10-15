@@ -10,7 +10,7 @@
  * 3. Eye-toggle radius: shipped literal 4px; the canonical --radius-sm
  *    is 4px, so the pages define the local token and consume it.
  * 4. register submit button: inline `style="margin-top: 6px"` moves into
- *    the .submit-btn rule (spacing itself is unchanged).
+ *    the .submit-btn rule (spacing unified to 4px by #1467).
  */
 import { test, expect } from '../fixtures';
 
@@ -57,5 +57,5 @@ test('register submit button has no inline style; spacing kept in CSS', async ({
   await page.goto('/pages/account/register.html');
   const submitBtn = page.locator('#submitBtn');
   expect(await submitBtn.getAttribute('style')).toBeNull();
-  await expect(submitBtn).toHaveCSS('margin-top', '6px');
+  await expect(submitBtn).toHaveCSS('margin-top', '4px');
 });
