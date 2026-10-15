@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
   <script src="../../assets/theme-fouc.js"></script>
@@ -86,20 +87,8 @@
     .mini-btn-icon { padding: 0 6px; }
 
     /* ── Buttons ─────────────────────────────────────────────────── */
-    .btn-ghost {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 16px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500;
-      border: 1px solid var(--color-border); background: var(--color-white); color: var(--color-ink);
-      transition: background 150ms, border-color 150ms;
-    }
-    .btn-ghost:hover { background: var(--color-slate-50); border-color: var(--color-border); }
-    .btn-cta {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
-      border: none; background: var(--color-cta); color: var(--color-on-cta); transition: opacity 150ms;
-    }
-    .btn-cta:hover { opacity: 0.9; }
-    .btn-cta:disabled { opacity: 0.45; cursor: not-allowed; }
+    .page-actions .btn-ghost,
+    .page-actions .btn-cta { display: inline-flex; align-items: center; gap: 6px; }
 
     /* ── Mobile Notice ───────────────────────────────────────────── */
     /* ── Matrix Section ──────────────────────────────────────────── */
