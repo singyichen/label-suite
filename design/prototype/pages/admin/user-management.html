@@ -948,6 +948,13 @@
       disableConfirmPrefix: '確定要停用 ',
       disableConfirmSuffix: ' 的帳號嗎？',
       pageSizeAria: '每頁顯示',
+      closeAria: '關閉',
+      toastCloseAria: '關閉通知',
+      searchAria: '搜尋使用者',
+      roleFilterAria: '角色篩選',
+      statusFilterAria: '狀態篩選',
+      usersTableAria: '使用者列表',
+      auditDrawerAria: '異動紀錄',
       pageSizeOption: (n) => n + ' 筆/頁',
     });
     Object.assign(i18n.en, {
@@ -955,6 +962,13 @@
       disableConfirmPrefix: 'Are you sure you want to disable the account of ',
       disableConfirmSuffix: '?',
       pageSizeAria: 'Rows per page',
+      closeAria: 'Close',
+      toastCloseAria: 'Close notification',
+      searchAria: 'Search users',
+      roleFilterAria: 'Filter by role',
+      statusFilterAria: 'Filter by status',
+      usersTableAria: 'Users',
+      auditDrawerAria: 'Change History',
       pageSizeOption: (n) => n + ' / page',
     });
 
@@ -996,6 +1010,13 @@
 
       const pageSizeSelectEl = document.getElementById('pageSizeSelect');
       pageSizeSelectEl.setAttribute('aria-label', t.pageSizeAria);
+      document.querySelectorAll('.modal-close').forEach(b => b.setAttribute('aria-label', t.closeAria));
+      document.getElementById('toastClose').setAttribute('aria-label', t.toastCloseAria);
+      document.getElementById('searchInput').setAttribute('aria-label', t.searchAria);
+      document.getElementById('roleFilter').setAttribute('aria-label', t.roleFilterAria);
+      document.getElementById('statusFilter').setAttribute('aria-label', t.statusFilterAria);
+      document.querySelector('table[role="table"]').setAttribute('aria-label', t.usersTableAria);
+      document.getElementById('auditDrawer').setAttribute('aria-label', t.auditDrawerAria);
       Array.from(pageSizeSelectEl.options).forEach(o => { o.textContent = t.pageSizeOption(o.value); });
 
       const adminTabs = document.getElementById('adminTabs');
