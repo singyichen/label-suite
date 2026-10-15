@@ -17,7 +17,7 @@
       --navbar-mobile-top-height: 64px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    /* Shared list chrome lives in ../shared/list-page.css (#1448); the old reset kept UA cursors. */
+    /* Shared list chrome lives in ../shared/list-page.css (#1448); keep UA cursors instead of the shared pointer. */
     :where(button, input, select) { cursor: revert; }
     body {
       font-family: var(--font-sans);
