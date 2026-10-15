@@ -173,12 +173,6 @@
       background: #EDE9FE;
       border-color: #DDD6FE;
     }
-    .badge-task-type-single      { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
-    .badge-task-type-sequence    { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
-    .badge-task-type-relation    { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
-    .badge-task-type-pairs       { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
-    .badge-task-type-scoring     { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
-    .badge-task-type-default     { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     .progress {
       height: 6px;
       border-radius: var(--radius-full);
@@ -428,20 +422,13 @@
       .badge-dry-run  { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
       .badge-official { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
 
-      /* Task-type badges */
-      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
-      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
-      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
-      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
-
       /* Result tags with !important — need matching specificity */
       .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
       .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
       .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
     }
   </style>
+  <link rel="stylesheet" href="../shared/task-type-badge.css" />
 </head>
 <body>
 <div id="sharedSidebarMount"></div>

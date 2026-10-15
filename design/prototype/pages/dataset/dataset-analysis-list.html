@@ -126,13 +126,6 @@
       min-width: 0;
       max-width: 100%;
     }
-    /* Output type badges */
-    .badge-task-type-single   { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
-    .badge-task-type-sequence { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
-    .badge-task-type-relation { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
-    .badge-task-type-pairs    { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
-    .badge-task-type-scoring  { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
-    .badge-task-type-default  { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     /* IAA status badges */
     .badge-iaa-pass        { color: var(--color-success);      background: var(--color-success-bg);      border-color: var(--color-success-border); }
     .badge-iaa-fail        { color: var(--color-error);        background: var(--color-error-bg);        border-color: var(--color-error-border);   }
@@ -204,18 +197,8 @@
       .clear-btn.hide-clear { display: none; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
-
-    /* ── Dark mode overrides ──────────────────────────────────── */
-    html[data-theme="dark"] {
-      /* Output type badges */
-      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
-      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
-      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
-      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
-    }
   </style>
+  <link rel="stylesheet" href="../shared/task-type-badge.css" />
 </head>
 
 <body>
