@@ -123,7 +123,7 @@
 
     /* ── Action bar ── */
     .action-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-md) var(--space-lg); background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: var(--space-xl); }
-    .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); }
+    .action-bar-right { display: flex; align-items: stretch; gap: var(--space-sm); }
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
     /* Zero specificity so pages/shared/button.css wins for the standard buttons */
     :where(.btn) { padding: 10px 20px; border-radius: var(--radius-md); border: 1px solid transparent; font-weight: 600; font-size: 14px; transition: opacity var(--dur-fast), transform var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast); }
