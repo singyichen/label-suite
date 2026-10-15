@@ -100,8 +100,6 @@
       transition: opacity var(--dur-fast), transform var(--dur-fast),
                   border-color var(--dur-fast), background var(--dur-fast);
     }
-    /* modal.css .btn-danger (0,1,0) now outranks the zero-specificity :where(.btn); keep the pre-migration 10px 20px + 1px transparent border so confirm buttons stay level with their Cancel */
-    .btn.btn-danger { padding: 10px 20px; border: 1px solid transparent; }
     .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.18), 0 0 0 4px white; }
     .btn-icon { width: 16px; height: 16px; flex-shrink: 0; }
 
