@@ -5,7 +5,7 @@
  * Contract:
  *   - pages/shared/button.css exists, defines ONLY .btn-primary / .btn-secondary /
  *     .btn-ghost / .btn-cta, tokens only (no hex); .btn-danger stays in modal.css
- *   - account/profile and admin/role-settings link it; user-management does not
+ *   - account/profile and admin/role-settings link it; user-management adopted it in PR-C (see issue-1465-c spec)
  *   - neither adopter's inline <style> keeps a base rule for the four classes
  *   - runtime (zh + en): profile .btn-primary / .btn-secondary and role-settings
  *     .btn-ghost (#editBtn) / .btn-cta (#saveBtn) compute the shared chrome
@@ -23,7 +23,6 @@ const PROTO_ROOT = path.resolve(__dirname, '../..');
 const MASTER_PATH = path.resolve(PROTO_ROOT, '../system/MASTER.md');
 const CSS_PATH = path.join(PROTO_ROOT, 'pages/shared/button.css');
 const ADOPTERS = ['pages/account/profile.html', 'pages/admin/role-settings.html'];
-const NON_ADOPTERS = ['pages/admin/user-management.html'];
 const CLASSES = ['btn-primary', 'btn-secondary', 'btn-ghost', 'btn-cta'];
 const LINK_RE =
   /<link[^>]+rel="stylesheet"[^>]+href="\.\.\/shared\/button\.css"|<link[^>]+href="\.\.\/shared\/button\.css"[^>]+rel="stylesheet"/;
@@ -59,13 +58,6 @@ test.describe('Issue #1465 shared button: static contract', () => {
           new RegExp(`^\\s*\\.${c}\\s*\\{`, 'm'),
         );
       }
-    });
-  }
-
-  for (const file of NON_ADOPTERS) {
-    test(`${file} does not link button.css`, () => {
-      const html = fs.readFileSync(path.join(PROTO_ROOT, file), 'utf8');
-      expect(html).not.toMatch(/shared\/button\.css/);
     });
   }
 

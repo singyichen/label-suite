@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
@@ -33,7 +34,7 @@
     }
     html[lang="en"] body { line-height: 1.6; }
     a { color: inherit; text-decoration: none; }
-    button, input, select { font: inherit; }
+    :where(button, input, select) { font: inherit; }
     button, input[type="checkbox"], select { cursor: pointer; }
     .hidden { display: none !important; }
 
@@ -164,6 +165,9 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
       padding: 10px 20px;
       border-radius: var(--radius-md);
       border: 1px solid transparent;
@@ -171,17 +175,13 @@
       font-weight: 600;
       transition: background var(--dur-fast), color var(--dur-fast), opacity var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast);
     }
+    /* modal.css .btn-danger (0,1,0) now outranks the zero-specificity :where(.btn); keep the pre-migration 10px 20px + 1px transparent border so confirm buttons stay level with their Cancel */
+    .btn.btn-danger { padding: 10px 20px; border: 1px solid transparent; }
     .btn:hover { transform: translateY(-1px); }
     /* issue #1252: hover-only rectangle (border box + 2px below) keeps the hit area stable under the -1px lift, incl. the rounded corners */
     .btn:hover::after { content: ""; position: absolute; inset: -1px -1px -2px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; pointer-events: none; }
     .btn-disabled-tip { display: inline-block; }
-    .btn-primary { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
-    .btn-primary:hover:not(:disabled) { opacity: 0.9; }
-    .btn-cta { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
-    .btn-cta:hover:not(:disabled) { opacity: 0.9; }
-    .btn-secondary { color: var(--color-ink); background: var(--color-white); border-color: var(--color-border); }
-    .btn-secondary:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
     .btn-link { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
     .btn-link:hover:not(:disabled) { background: transparent; text-decoration: underline; }
 
