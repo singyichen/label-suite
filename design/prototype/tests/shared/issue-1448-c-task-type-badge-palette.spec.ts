@@ -6,15 +6,16 @@
  *
  * Contract:
  *   - pages/shared/task-type-badge.css is the single definition (6 light + 6 dark triples)
- *   - dashboard.html links it (PR-C1; the other three rendering pages follow in PR-C2)
- *   - dashboard.layout.css, dashboard.components.css and dataset-analysis-detail.html (dead
- *     dark-only copy) own no `.badge-task-type-*` rule any more (PR-C2 covers the other pages)
+ *   - dashboard.html, task-list.html, annotation-list.html, dataset-analysis-list.html link it
+ *   - dashboard.layout.css, dashboard.components.css, task-list.html, annotation-list.html,
+ *     dataset-analysis-list.html and dataset-analysis-detail.html (dead dark-only copy) own no
+ *     `.badge-task-type-*` rule any more
  *   - cascade: the page `.badge { border: 1px solid transparent }` shorthand resets border-color
  *     when the shared file loads earlier at equal specificity, so the shared file must load AFTER
  *     each page's badge base rule. Pinned through the border-color computed values, not link order.
- *   - runtime half pins all 4 rendering pages (unchanged pages are a regression guard)
+ *   - MASTER.md changelog has a v1.44 row naming #1448 and task-type-badge.css
  *
- * Traceability: issue #1448 (split from the original senior-qa Red 3c89ed80)
+ * Traceability: design/system/MASTER.md changelog; issue #1448
  */
 import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
@@ -23,6 +24,7 @@ import * as path from 'path';
 import { buildListUrl } from '../annotation/_workspace-helpers';
 
 const PROTO_ROOT = path.resolve(__dirname, '../..');
+const MASTER_PATH = path.resolve(PROTO_ROOT, '../system/MASTER.md');
 const SHARED_FILE = 'pages/shared/task-type-badge.css';
 const read = (rel: string) => fs.readFileSync(path.join(PROTO_ROOT, rel), 'utf8');
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/<!--[\s\S]*?-->/g, '');
@@ -79,9 +81,17 @@ function paletteRule(css: string, theme: 'light' | 'dark', kind: Kind): Rule | u
 const COPY_OWNERS = [
   'pages/dashboard/dashboard.layout.css',
   'pages/dashboard/dashboard.components.css',
+  'pages/task-management/task-list.html',
+  'pages/annotation/annotation-list.html',
+  'pages/dataset/dataset-analysis-list.html',
   'pages/dataset/dataset-analysis-detail.html',
 ];
-const RENDERING_PAGES = ['pages/dashboard/dashboard.html'];
+const RENDERING_PAGES = [
+  'pages/dashboard/dashboard.html',
+  'pages/task-management/task-list.html',
+  'pages/annotation/annotation-list.html',
+  'pages/dataset/dataset-analysis-list.html',
+];
 
 test.describe('Issue #1448-C task-type-badge.css: static contract', () => {
   test('shared file exists', () => {
@@ -119,6 +129,13 @@ test.describe('Issue #1448-C task-type-badge.css: static contract', () => {
     });
   }
 
+  test('MASTER.md changelog has a v1.44 row naming #1448 and task-type-badge.css', () => {
+    const master = fs.readFileSync(MASTER_PATH, 'utf8');
+    const row = master.split('\n').find((l) => /^\|\s*v1\.44\s*\|/.test(l));
+    expect(row, 'v1.44 changelog row').toBeDefined();
+    expect(row).toContain('#1448');
+    expect(row).toContain('task-type-badge.css');
+  });
 });
 
 // --- runtime ------------------------------------------------------------------------------
