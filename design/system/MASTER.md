@@ -542,6 +542,8 @@ Direct read from `design-system.pen` (`reusable: true`, total `45`):
 
 ### Buttons
 
+Shared definition: `pages/shared/button.css` (`.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-cta`; `.btn-danger` stays in `pages/shared/modal.css`). Adopted by `account/profile` and `admin/role-settings`; other pages still carry local button styles. `.btn-cta` is an alias of `.btn-primary` (same rule); font size comes from `--text-caption` (14px).
+
 ```css
 /* Primary Button */
 .btn-primary {
@@ -3014,3 +3016,4 @@ Before delivering any UI code, verify:
 | v1.36 | 2026-10-15 | **Metric KPI Tile adopted by dataset-analysis-detail stats tab (issue #1453)** — the page-local `.stats-metric-card` / `-label` / `-value` / `-desc` and `.stats-inline-card` families are removed in favour of the shared `.metric`; `pages/shared/metric.css` gains `.metric-desc` and `.metric-lg strong` (defaults only, no new tokens); §Metric KPI Tile lists the adopting pages and documents both modifiers. |
 | v1.37 | 2026-10-15 | **Shared input.css (issue #1447)** — §Inputs now points to `pages/shared/input.css` (`.input` / `.input-textarea`: 12px 16px padding, 16px font, `--radius-md`, `--color-border`, primary focus ring); `annotation/annotation-workspace` converges its three text inputs (T009 free-text answer, reviewer reason, bypass reason) on it; no token value changed. |
 | v1.38 | 2026-10-15 | **Standalone auth pages light `--color-cta` WCAG AA fix (issue #1466)** — the four standalone auth pages (`login`/`register`/`forgot-password`/`reset-password`, none of which import `tokens.css`) still declared light `--color-cta: #10B981` (2.54:1 against the white CTA label), the same pre-#973 value `tokens.css` had already raised — the fix never reached these pages because they define their own local `:root` tokens. Light `--color-cta` raised to `#047857` and `--color-cta-hover` to `#065F46` to match `tokens.css` (5.48:1); dark values unchanged. Rule 9's ✅ list updated to record the light CTA values. |
+| v1.39 | 2026-10-15 | **Shared button.css (issue #1465)** — §Buttons now points to `pages/shared/button.css` (`.btn-primary` / `.btn-cta`: `--color-cta` fill, 10px 20px padding, 14px/600, `--radius-md`, hover lift; `.btn-secondary`: transparent with `--color-border` outline, 10px 20px; `.btn-ghost`: borderless `--color-primary` text, 8px 12px, hover underline); `account/profile` and `admin/role-settings` converge on it and their page-local duplicates are removed; visible change: profile primary/secondary padding 10px 22px -> 10px 20px, role-settings ghost (Edit / Cancel and the dirty-modal Continue-editing button) becomes the MASTER borderless text button, cta padding 8px 20px -> 10px 20px, cta disabled opacity 0.45 -> 0.4 and cta gains the hover lift. |
