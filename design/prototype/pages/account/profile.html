@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     /* ── Design Tokens ─────────────────────────────────────────── */
@@ -302,21 +303,7 @@
     /* ── Buttons ─────────────────────────────────────────────────── */
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
 
-    .btn-primary {
-      background: var(--color-cta);
-      color: var(--color-on-cta);
-      border: none;
-      padding: 10px 22px;
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.15s;
-    }
-
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
     .btn-primary:focus { outline: 2px solid var(--color-cta); outline-offset: 3px; }
-    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
     /* UXC-06 / MASTER Loading state: opacity-70 + spinner while pending */
     .btn-primary.is-loading {
@@ -344,19 +331,6 @@
 
     #saveProfileBtn, #savePwBtn, #saveNotifBtn { margin-left: auto; }
 
-    .btn-secondary {
-      background: transparent;
-      color: var(--color-primary);
-      border: 1px solid var(--color-border);
-      padding: 10px 22px;
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .btn-secondary:hover { background: var(--color-primary-soft-bg); }
     .btn-secondary--back { width: auto; padding: 10px 28px; }
     .btn-secondary:focus { outline: 2px solid var(--color-primary); outline-offset: 3px; }
 
