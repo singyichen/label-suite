@@ -56,8 +56,8 @@ test.describe('auth pages — spacing parity at 1440px (light)', () => {
 });
 
 const FORGOT_SUBTITLES = [
-  { lang: 'zh', toggle: false, text: '重設連結已寄出，請查看信箱', cjk: true },
-  { lang: 'en', toggle: true, text: 'Reset link sent. Check your inbox.', cjk: false },
+  { lang: 'zh', toggle: false, text: '請查看你的信箱', cjk: true },
+  { lang: 'en', toggle: true, text: 'Check your inbox', cjk: false },
 ];
 
 test.describe('forgot-password — success-state subtitle', () => {
@@ -83,12 +83,12 @@ test.describe('forgot-password — success-state subtitle', () => {
     await page.getByTestId('send-reset-btn').click();
     await expect(page.locator('#successPanel')).toHaveClass(/visible/, { timeout: 5000 });
     const subtitle = page.locator('#cardSubtitle');
-    await expect(subtitle).toHaveText('重設連結已寄出，請查看信箱');
+    await expect(subtitle).toHaveText('請查看你的信箱');
     await page.getByTestId('lang-toggle').click();
     await expect(subtitle).toBeVisible();
-    await expect(subtitle).toHaveText('Reset link sent. Check your inbox.');
+    await expect(subtitle).toHaveText('Check your inbox');
     await page.getByTestId('lang-toggle').click();
-    await expect(subtitle).toHaveText('重設連結已寄出，請查看信箱');
+    await expect(subtitle).toHaveText('請查看你的信箱');
   });
 });
 
