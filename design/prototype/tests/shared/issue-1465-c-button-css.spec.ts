@@ -269,6 +269,19 @@ for (const lang of ['zh', 'en'] as const) {
       await expectBtnFont(page, '#deleteTaskConfirmBtn');
     });
 
+    test('task-new: #prevBtn and #nextBtn share one height', async ({ page }) => {
+      await page.goto(NEW);
+      await page.evaluate(() => {
+        (document.getElementById('nextBtn') as HTMLButtonElement).disabled = false;
+        document.getElementById('prevBtn')!.classList.remove('hidden');
+      });
+      const prev = await page.locator('#prevBtn').boundingBox();
+      const next = await page.locator('#nextBtn').boundingBox();
+      expect(prev, 'prev box').not.toBeNull();
+      expect(next, 'next box').not.toBeNull();
+      expect(Math.abs(prev!.height - next!.height)).toBeLessThanOrEqual(1);
+    });
+
     test('task-detail: #publishOfficialRunBtn and #publishDryRunBtn are equal height', async ({ page }) => {
       await page.goto(`${DETAIL}?task_id=T002&task_role=project_leader`);
       await expect(page.locator('#publishOfficialRunBtn')).toBeVisible();
