@@ -22,6 +22,8 @@
 
     /* ── Reset ─────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Form controls ignore the page font by default (UA Arial); inherit it. */
+    button, input, select, textarea { font: inherit; }
     html { font-size: 16px; scroll-behavior: smooth; }
     body {
       font-family: var(--font-sans);
@@ -302,14 +304,13 @@
 
     .btn-primary {
       background: var(--color-cta);
-      color: #fff;
+      color: var(--color-on-cta);
       border: none;
       padding: 10px 22px;
       border-radius: var(--radius-md);
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
       transition: opacity 0.15s, transform 0.15s;
     }
 
@@ -332,7 +333,7 @@
       margin-right: 8px;
       vertical-align: -1px;
       border: 2px solid rgba(255,255,255,0.35);
-      border-top-color: #fff;
+      border-top-color: currentColor;
       border-radius: 50%;
       animation: btn-spin 0.6s linear infinite;
     }
@@ -346,17 +347,17 @@
     .btn-secondary {
       background: transparent;
       color: var(--color-primary);
-      border: 2px solid var(--color-primary);
+      border: 1px solid var(--color-border);
       padding: 10px 22px;
       border-radius: var(--radius-md);
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      font-family: 'Inter', sans-serif;
       transition: background 0.15s;
     }
 
     .btn-secondary:hover { background: var(--color-primary-soft-bg); }
+    .btn-secondary--back { width: auto; padding: 10px 28px; }
     .btn-secondary:focus { outline: 2px solid var(--color-primary); outline-offset: 3px; }
 
     /* ── Back Navigation ─────────────────────────────────────────── */
@@ -628,6 +629,7 @@
       .sent-card    { padding: 32px 16px; }
       .btn-row { flex-direction: column; }
       .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+      .btn-secondary--back { width: auto; }
       #saveProfileBtn, #savePwBtn { margin-left: 0; }
     }
 
@@ -637,10 +639,6 @@
          dark counterpart stays a manual override. */
       .eye-toggle { color: var(--color-ink-muted); }
       .eye-toggle:hover { color: var(--color-ink); }
-
-      /* CTA button */
-      .btn-primary { color: #064E3B; background: #34D399; }
-      .btn-primary:hover { opacity: 0.9; }
 
       /* Skeleton gradient */
       .skeleton {
@@ -1080,7 +1078,7 @@
           <p class="sent-hint" id="emailSentHint">請前往信箱點擊驗證連結，完成 Email 切換</p>
 
           <div class="sent-actions">
-            <button class="btn-secondary" type="button" onclick="setState('email')" style="width:auto; padding:10px 28px;">
+            <button class="btn-secondary btn-secondary--back" type="button" onclick="setState('email')">
               <span id="backToProfileBtn">返回個人設定</span>
             </button>
             <button class="resend-link" type="button" onclick="handleResendVerification()">
@@ -1108,6 +1106,7 @@
         pageSubtitle:            '管理您的個人資料與帳號安全',
         userName:                'Mandy Chen',
         roleIndicator:           '一般使用者',
+        roleSuperAdmin:          '系統管理員',
         langLabel:               'ZH',
         mobileLangLabel:         'ZH',
         langToggleAria:          '切換語言',
@@ -1192,6 +1191,7 @@
         pageSubtitle:            'Manage your profile and account security',
         userName:                'Mandy Chen',
         roleIndicator:           'User',
+        roleSuperAdmin:          'Super Admin',
         langLabel:               'EN',
         mobileLangLabel:         'EN',
         langToggleAria:          'Switch language',
@@ -1287,7 +1287,7 @@
       document.title = t('pageTitle');
 
       const ids = [
-        'langLabel', 'mobileLangLabel', 'roleIndicator',
+        'langLabel', 'mobileLangLabel',
         'pageTitle', 'pageSubtitle',
         'profileSectionTitle', 'profileSectionDesc',
         'prefSectionTitle', 'prefSectionDesc', 'prefAppearance',
@@ -1310,6 +1310,12 @@
         'notifE6Name', 'notifE6Trigger',
         'saveNotifLabel',
       ];
+
+      window.LabelSuiteSharedSidebar.updateUserChip({
+        roleLabel: window.LabelSuiteSharedSidebar.getStoredSystemRole() === 'super_admin'
+          ? t('roleSuperAdmin')
+          : t('roleIndicator'),
+      });
 
       ids.forEach(id => {
         const el = document.getElementById(id);
