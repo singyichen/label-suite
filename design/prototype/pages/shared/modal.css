@@ -92,3 +92,8 @@
   transition: opacity 150ms;
 }
 .btn-danger:hover { opacity: .9; }
+/* Pages that combine `.btn` with `.btn-danger` (confirm buttons beside Cancel): `.btn-danger`
+   (0,1,0) outranks the zero-specificity `:where(.btn)` and would drop `.btn`'s 10px 20px padding
+   and 1px border; restore them so the confirm button keeps the same geometry as Cancel (#1448).
+   A standalone `.btn-danger` (admin pages) is unaffected. */
+.btn.btn-danger { padding: 10px 20px; border: 1px solid transparent; }

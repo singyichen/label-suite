@@ -175,8 +175,6 @@
       font-weight: 600;
       transition: background var(--dur-fast), color var(--dur-fast), opacity var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast);
     }
-    /* modal.css .btn-danger (0,1,0) now outranks the zero-specificity :where(.btn); keep the pre-migration 10px 20px + 1px transparent border so confirm buttons stay level with their Cancel */
-    .btn.btn-danger { padding: 10px 20px; border: 1px solid transparent; }
     .btn:hover { transform: translateY(-1px); }
     /* issue #1252: hover-only rectangle (border box + 2px below) keeps the hit area stable under the -1px lift, incl. the rounded corners */
     .btn:hover::after { content: ""; position: absolute; inset: -1px -1px -2px; }
