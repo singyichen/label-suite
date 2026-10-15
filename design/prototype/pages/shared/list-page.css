@@ -2,7 +2,7 @@
    data table and pagination, moved verbatim from dataset-analysis-list. Pages link this
    file BEFORE their own <style> so same-specificity page rules still win. Values are the
    dataset-analysis-list ones; the page-owned `min-width` of `.filter-select` and `.task-table`
-   stay page-local. task-list / annotation-list adopt it in PR-B (#1448).
+   stay page-local. dataset-analysis-list, task-list and annotation-list adopt it (#1448).
    The element reset is wrapped in :where() so it stays at zero specificity (see #1465). */
 :where(button, input, select) { font: inherit; cursor: pointer; }
 
