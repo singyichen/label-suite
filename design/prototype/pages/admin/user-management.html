@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
   <script src="../../assets/theme-fouc.js"></script>
@@ -27,7 +28,7 @@
     }
     html[lang="en"] body { line-height: 1.6; }
     a { color: inherit; text-decoration: none; }
-    button, input, select { font: inherit; cursor: pointer; }
+    :where(button, input, select) { font: inherit; cursor: pointer; }
     .hidden { display: none !important; }
 
     /* ── Main Layout ────────────────────────────────────────────── */
@@ -49,22 +50,8 @@
     .page-header-actions { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
 
     /* ── Buttons ─────────────────────────────────────────────────── */
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--color-cta); color: var(--color-on-cta);
-      padding: 10px 20px; border-radius: var(--radius-md);
-      font-size: 14px; font-weight: 600; border: none;
-      transition: opacity 150ms, transform 150ms; cursor: pointer;
-    }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-ghost {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: transparent; color: var(--color-ink-muted); border: none;
-      padding: 8px 14px; border-radius: var(--radius-md);
-      font-size: 14px; font-weight: 500;
-      transition: color 150ms, background 150ms; cursor: pointer;
-    }
-    .btn-ghost:hover { color: var(--color-ink); background: var(--color-slate-50); }
+    /* Layout only; the look comes from pages/shared/button.css */
+    .btn-primary, .btn-ghost { display: inline-flex; align-items: center; gap: 6px; }
 
     /* ── Filter Bar ─────────────────────────────────────────────── */
     .filter-bar {
