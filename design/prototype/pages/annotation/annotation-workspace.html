@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
   <link rel="stylesheet" href="../shared/input.css" />
@@ -336,12 +337,15 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+      cursor: pointer;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
       padding: 8px 14px;
       border-radius: var(--radius-md);
       font-size: 13px;
       font-weight: 600;
       border: 1px solid transparent;
-      cursor: pointer;
       transition: opacity var(--dur-fast), transform var(--dur-fast);
     }
     .btn:hover:not(:disabled) { transform: translateY(-1px); }
@@ -351,8 +355,6 @@
        aria-disabled; this is the visual layer only). Declared after the
        variant :hover rules so the :not(:disabled) guards below win cleanly. */
     .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-    .btn-cta { background: var(--color-cta); color: var(--color-on-cta); border-color: var(--color-cta); }
-    .btn-cta:hover:not(:disabled) { background: var(--color-cta-hover); border-color: var(--color-cta-hover); }
     .btn-outline { background: var(--color-white); color: var(--color-ink); border-color: var(--color-border); }
     .btn-outline[aria-pressed="true"] { background: var(--color-primary); color: var(--color-white); border-color: var(--color-primary); }
 

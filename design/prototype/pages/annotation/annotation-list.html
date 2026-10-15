@@ -7,6 +7,7 @@
   <title>Label Suite — 標記清單</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
@@ -118,23 +119,17 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
       padding: 10px 20px;
       border-radius: var(--radius-md);
       border: 1px solid transparent;
       font-weight: 600;
       font-size: 14px;
-      white-space: nowrap;
-      cursor: pointer;
       transition: opacity var(--dur-fast), transform var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
-    }
-    .btn-primary {
-      color: var(--color-white);
-      background: var(--color-cta);
-      border-color: var(--color-cta);
-    }
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
     }
     .btn-primary.slim {
       padding: 10px 18px;

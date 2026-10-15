@@ -7,6 +7,7 @@
   <title>Label Suite — 資料集分析詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
   <link rel="stylesheet" href="../shared/content-tabs.css" />
   <link rel="stylesheet" href="../shared/metric.css" />
@@ -158,12 +159,12 @@
     .stats-placeholder{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center;color:var(--color-text-soft);font-size:14px}
 
     /* Buttons */
-    .btn{display:inline-flex;position:relative;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--radius-md);border:1px solid transparent;font-size:14px;font-weight:600;transition:background var(--dur-fast),color var(--dur-fast),opacity var(--dur-fast),border-color var(--dur-fast),transform var(--dur-fast)}
+    .btn{display:inline-flex;position:relative;align-items:center;justify-content:center;gap:8px}
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn){padding:10px 16px;border-radius:var(--radius-md);border:1px solid transparent;font-size:14px;font-weight:600;transition:background var(--dur-fast),color var(--dur-fast),opacity var(--dur-fast),border-color var(--dur-fast),transform var(--dur-fast)}
     .btn:hover{transform:translateY(-1px)}
     /* issue #1252: hover-only rectangle (border box + 2px below) keeps the hit area stable under the -1px lift, incl. the rounded corners */
     .btn:hover::after{content:"";position:absolute;inset:-1px -1px -2px}
-    .btn-secondary{color:var(--color-ink);background:var(--color-white);border-color:var(--color-border)}
-    .btn-secondary:hover{border-color:var(--color-primary);color:var(--color-primary)}
     .btn-sm{padding:6px 12px;font-size:13px}
 
     /* Toast (top-center, UXC-07 / MASTER §Toast) */

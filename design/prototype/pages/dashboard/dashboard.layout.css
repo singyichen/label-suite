@@ -214,52 +214,22 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      white-space: nowrap;
+    }
+
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
       padding: 10px 20px;
       border-radius: var(--radius-md);
       border: 1px solid transparent;
       font-weight: 600;
       font-size: 14px;
-      white-space: nowrap;
       transition: opacity 150ms, transform 150ms, border-color 150ms, background 150ms;
-    }
-
-    .btn-primary {
-      color: var(--color-white);
-      background: var(--color-cta);
-      border-color: var(--color-cta);
-    }
-
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      color: var(--color-ink);
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
     }
 
     .btn-secondary.slim {
       padding: 10px 18px;
       min-width: 138px;
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--color-primary);
-      color: var(--color-primary);
-      transform: translateY(-1px);
-    }
-
-    .btn-ghost {
-      color: var(--color-primary);
-      background: transparent;
-      border-color: transparent;
-      padding: 8px 0;
-    }
-
-    .btn-ghost:hover {
-      text-decoration: underline;
     }
 
     .btn:focus-visible {
