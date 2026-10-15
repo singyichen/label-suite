@@ -287,42 +287,6 @@
       border-color: #DDD6FE;
     }
 
-    .badge-task-type-single {
-      color: #0E7490;
-      background: #ECFEFF;
-      border-color: #A5F3FC;
-    }
-
-    .badge-task-type-sequence {
-      color: #7C2D12;
-      background: #FFF7ED;
-      border-color: #FDBA74;
-    }
-
-    .badge-task-type-relation {
-      color: #155E75;
-      background: #ECFEFF;
-      border-color: #67E8F9;
-    }
-
-    .badge-task-type-pairs {
-      color: #065F46;
-      background: #ECFDF5;
-      border-color: #A7F3D0;
-    }
-
-    .badge-task-type-scoring {
-      color: #7E22CE;
-      background: #FAF5FF;
-      border-color: #E9D5FF;
-    }
-
-    .badge-task-type-default {
-      color: #334155;
-      background: #F8FAFC;
-      border-color: #CBD5E1;
-    }
-
     /* ── Metrics ───────────────────────────────────────────────– */
     .metrics {
       display: grid;
