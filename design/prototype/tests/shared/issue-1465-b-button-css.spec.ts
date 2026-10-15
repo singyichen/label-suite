@@ -236,3 +236,53 @@ for (const lang of ['zh', 'en'] as const) {
 function SECONDARY_BLOCK_SM(): Expected {
   return { ...SECONDARY_BLOCK, padding: '6px 6px', fontSize: '13px' };
 }
+
+// Regression: the pages' element reset `button, input, select { font: inherit }`
+// (specificity 0,0,1) beats the zero-specificity `:where(.btn)` font rule, so
+// non-standard .btn variants lost the page's .btn size/weight. Values below
+// equal each page's `:where(.btn)` rule (and origin/main behaviour).
+for (const lang of ['zh', 'en'] as const) {
+  test.describe(`Issue #1465-B shared button: non-standard variant font (${lang})`, () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await seed(page, lang);
+    });
+
+    test('annotation-workspace: #wsSaveBtn (.btn-outline) keeps .btn font 13px / 600', async ({ page }) => {
+      await page.goto(
+        '/pages/annotation/annotation-workspace.html?task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run',
+      );
+      const save = page.locator('#wsSaveBtn');
+      await expect(save).toBeVisible();
+      const got = await save.evaluate((n) => {
+        const cs = getComputedStyle(n);
+        return { size: cs.fontSize, weight: cs.fontWeight };
+      });
+      expect(got.size, '#wsSaveBtn font-size').toBe('13px');
+      expect(got.weight, '#wsSaveBtn font-weight').toBe('600');
+    });
+
+    test('dashboard: #ctaLeaderBtn (.btn-emerald.btn-full) keeps .btn font 14px / 600', async ({ page }) => {
+      await page.goto('/pages/dashboard/dashboard.html');
+      const cta = page.locator('#ctaLeaderBtn');
+      await expect(cta).toBeVisible();
+      const got = await cta.evaluate((n) => {
+        const cs = getComputedStyle(n);
+        return { size: cs.fontSize, weight: cs.fontWeight };
+      });
+      expect(got.size, '#ctaLeaderBtn font-size').toBe('14px');
+      expect(got.weight, '#ctaLeaderBtn font-weight').toBe('600');
+    });
+
+    test('annotation-workspace: #wsSaveBtn and #wsSubmitBtn are equal height', async ({ page }) => {
+      await page.goto(
+        '/pages/annotation/annotation-workspace.html?task_id=T001&sample_id=sent-001&role=annotator&run_type=official_run',
+      );
+      const save = await page.locator('#wsSaveBtn').boundingBox();
+      const submit = await page.locator('#wsSubmitBtn').boundingBox();
+      expect(save, 'save box').not.toBeNull();
+      expect(submit, 'submit box').not.toBeNull();
+      expect(Math.abs(save!.height - submit!.height)).toBeLessThanOrEqual(1);
+    });
+  });
+}
