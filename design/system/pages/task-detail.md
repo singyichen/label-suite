@@ -17,7 +17,7 @@ Six-tab bar `.admin-tabs` (`role="tablist"`, arrow keys move between tabs): this
 ## Settings Tab (FR-026)
 
 - **Layout** (`.settings-layout`): grid `140px minmax(0, 1fr)`, `gap: 28px`. Left: plain-text section nav (`#settingsSectionNav`, `role="tablist"`, vertical, arrow keys); right: one visible section at a time.
-- **Nav item** (`.settings-nav-item`): `padding: var(--space-sm) var(--space-md)`, `border-radius: 4px`, no border, transparent, `14px`, centered, `var(--color-ink-muted)`. Active (`aria-selected="true"`): `background: var(--color-white)`, `var(--color-ink)`, `600`.
+- **Nav item** (`.settings-nav-item`): `padding: var(--space-sm) var(--space-md)`, `border-radius: 8px`, no border, transparent, `14px`, centered, `var(--color-ink-muted)`. Active (`aria-selected="true"`): `background: var(--color-primary-soft-bg)`, `var(--color-primary-strong)`, `600`.
 - **Section card** (`.settings-section.panel`): `var(--color-white)` fill, `1px solid var(--color-border)`, `var(--radius-lg)`, `box-shadow: none`. View and edit states look the same. No pills, colored callouts, eyebrow labels, emoji or shadow.
 - **Section header**: title `16px/600`; 「編輯」 is a text link (no border/background, `var(--color-primary)`, underline on hover).
 - **Definition list** (`.kv-dl`): columns `160px minmax(0, 1fr)`; each key and value row has a `1px solid var(--color-border-muted)` bottom divider. The fixed label of the config-file row is 「設定檔」 (was 「設定檔版本」).
