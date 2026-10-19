@@ -77,6 +77,7 @@ The latest `design-system.pen` defines the following variable set. Keep these na
 | State | `color-info` / `color-info-bg` / `color-info-border` | `#1D4ED8` / `#EFF6FF` / `#BFDBFE` |
 | Extended | `color-cta-hover` | `#065F46` |
 | Extended | `color-primary-soft-bg` | `#EEF2FF` |
+| Extended | `color-primary-strong` | `#4F46E5` |
 | Extended | `color-primary-border` | `#C7D2FE` |
 | Extended | `color-border-muted` | `#F1F5F9` |
 | Extended | `color-text-soft` | `#64748B` |
