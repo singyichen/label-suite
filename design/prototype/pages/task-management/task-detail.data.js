@@ -462,6 +462,7 @@
         relation_types: 'output',
         triples: 'output'
       },
+      prefill_fields: { entities: 'entities', triples: null },
       datasetFileName: 'relation-identification.json',
       datasetRecords: [
         {

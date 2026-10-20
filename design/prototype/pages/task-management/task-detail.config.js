@@ -166,6 +166,7 @@ function ensureTaskConfigSeeded() {
      task-new uses) so the auto list title / dialogue preview resolve the
      first turn instead of the count text (#1386). */
   state.dialogueFields = TASK_DATA.dialogue_fields ? Object.assign({}, TASK_DATA.dialogue_fields) : null;
+  state.prefillFields = TASK_DATA.prefill_fields ? Object.assign({}, TASK_DATA.prefill_fields) : null;
   state.dialogueDeclined = false;
   state.itemPairLabels = Array.isArray(TASK_DATA.itemPairLabels) ? TASK_DATA.itemPairLabels.slice() : null;
   /* seedDatasetFromProfile() below bumps _datasetVersion, so the next
