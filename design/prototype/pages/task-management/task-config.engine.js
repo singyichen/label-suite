@@ -1923,6 +1923,15 @@ function renderMultiDimPreview(container, config, outKey) {
 }
 
 /* ── Interactive unified preview (Entity Recognition + Relation Identification) ── */
+/* #1430: value of the dataset column declared in state.prefillFields[kind] ('entities' | 'triples'), or undefined.
+   Role gate (#1413): the declared column needs a known non-Output role; Output or unknown role => no prefill (fail-closed). */
+function getPrefillColumnValue(kind) {
+  var col = state.prefillFields && state.prefillFields[kind];
+  var role = (typeof col === 'string' && col !== '') ? state.fieldRoleMap[col] : '';
+  if (typeof role !== 'string' || role === '' || role === 'output') return undefined;
+  return (state.datasetRawFirstRow || {})[col];
+}
+
 function initPreviewState() {
   var rawRow = state.datasetRawFirstRow || {};
   var spanCfg = state.outputConfigs['entity_recognition'] || {};
@@ -1934,9 +1943,9 @@ function initPreviewState() {
   var outputParsed = null;
   if (outputVal) { try { outputParsed = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
 
-  /* #1413 Data Fairness: load the dataset's own entities column only when its role is a known non-Output role (fail-closed) */
-  var entitiesRole = state.fieldRoleMap.entities;
-  var dataEnts = (typeof entitiesRole === 'string' && entitiesRole !== '' && entitiesRole !== 'output' && Array.isArray(rawRow.entities)) ? rawRow.entities : [];
+  /* #1430: prefill entities come only from the column declared in prefill_fields.entities (#1413 role gate, fail-closed) */
+  var declaredEnts = getPrefillColumnValue('entities');
+  var dataEnts = Array.isArray(declaredEnts) ? declaredEnts : [];
   /* #1371 Data Fairness: object-array (dialogue) Input never prefills entities from the Output column */
   if (dataEnts.length === 0 && !getObjectArrayInput() && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].text) {
     dataEnts = outputParsed;
@@ -1957,7 +1966,7 @@ function initPreviewState() {
     return null;
   }
   var trips = [], tripShape = null;
-  [rawRow.triples, rawRow.gold_triplets, rawRow.gold_triples, outputParsed].some(function(cand) {
+  [getPrefillColumnValue('triples'), outputParsed].some(function(cand) {
     var shape = tripleShapeOf(cand);
     if (shape) { trips = cand; tripShape = shape; return true; }
     return false;
@@ -3799,7 +3808,7 @@ function renderSchemaFields() {
   var _relCfg = state.outputConfigs['relation_identification'];
   if (_relCfg && !_relCfg._autoPopulated) {
     var _rawRow = state.datasetRawFirstRow || {};
-    var _tripCands = [_rawRow.triples, _rawRow.gold_triplets, _rawRow.gold_triples];
+    var _tripCands = [getPrefillColumnValue('triples')];
     if (_outCols.length > 0) _tripCands.unshift(_rawRow[_outCols[0]]);
     var _trips = null;
     _tripCands.some(function(cand) {
