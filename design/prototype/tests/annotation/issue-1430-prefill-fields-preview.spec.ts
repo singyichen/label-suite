@@ -82,6 +82,20 @@ async function expectNoLeak(page: Page, sentinel: string) {
   expect(textContent, `DOM text leaks ${sentinel}`).not.toContain(sentinel);
 }
 
+/* Evidence-role columns are legitimately displayed by the workspace's reference card
+ * (ws-evidence-card), so for an undeclared column that keeps the Evidence role the leak check
+ * must exclude that card: it proves the value never reaches any other surface (entity list,
+ * triple list, relation panel). The previewEntities/previewTriples state assertions stay. */
+async function expectNoLeakOutsideEvidenceCard(page: Page, sentinel: string) {
+  const { innerText, textContent } = await page.evaluate(() => {
+    const clone = document.body.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('[data-testid="ws-evidence-card"]').forEach((n) => n.remove());
+    return { innerText: clone.innerText ?? '', textContent: clone.textContent ?? '' };
+  });
+  expect(textContent, `DOM text leaks ${sentinel} outside the evidence card`).not.toContain(sentinel);
+  expect(innerText, `text leaks ${sentinel} outside the evidence card`).not.toContain(sentinel);
+}
+
 async function openT008(page: Page, patch: string) {
   await patchDataFile(page, 'task-detail.data.js', patch);
   await page.goto(T008_URL);
@@ -180,7 +194,7 @@ test.describe('issue #1430: prefilled entities come only from the declared colum
       `,
     );
     expect((await previewEntities(page)).map((e) => e.text)).toEqual([DECL_ENT]);
-    await expectNoLeak(page, UNDECL_ENT);
+    await expectNoLeakOutsideEvidenceCard(page, UNDECL_ENT);
   });
 
   test('declared column wins even when its name differs from the legacy key and the legacy column is Input', async ({ page }) => {
@@ -304,7 +318,7 @@ test.describe('issue #1430: undeclared prefill source never prefills by column n
           expect(trips.map((t) => String(t.subj))).toEqual([expect.stringContaining(DECL_SUBJ)]);
         } else {
           expect(trips).toEqual([]);
-          await expectNoLeak(page, DECL_SUBJ);
+          await expectNoLeakOutsideEvidenceCard(page, DECL_SUBJ);
         }
       });
     }

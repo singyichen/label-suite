@@ -1168,7 +1168,21 @@ test.describe('Step 2 preview: composite task data files', () => {
       outputType: ['entity_recognition', 'relation_identification'],
       inputType: 'single_item',
       dataFile: 'medical-ner-re.json',
-      roles: { text: 'input', entities: 'output', triples: 'output' },
+      roles: { text: 'input', entities: 'output', triples: 'evidence' },
+    });
+
+    /* issue #1430: task-new has no UI to declare prefill_fields, so the declaration is set at
+       the engine boundary (triples column, Evidence role) to keep this test about composite
+       type actions on prefilled triples. */
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        state: Record<string, unknown>;
+        initPreviewState: () => void;
+        updateAnnotationPreview?: () => void;
+      };
+      w.state.prefillFields = { entities: null, triples: 'triples' };
+      w.initPreviewState();
+      w.updateAnnotationPreview?.();
     });
 
     const relationAccordion = page.locator(
