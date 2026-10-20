@@ -1511,6 +1511,7 @@
       if (v !== null && typeof v === 'object' && !isObjectArrayValue(v)) delete state.fieldRoleMap[col];
     });
     state.dialogueFields = profile.dialogueFields || null;
+    state.prefillFields = profile.prefillFields || null;
   }
 
   /*

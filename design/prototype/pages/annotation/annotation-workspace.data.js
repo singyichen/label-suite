@@ -59,6 +59,7 @@
       outputs: detail.outputs || [],
       fieldRoleMap: detail.fieldRoleMap || {},
       dialogueFields: detail.dialogue_fields ?? null,
+      prefillFields: detail.prefill_fields ?? null,
       listTitleField: detail.list_title_field ?? null,
       datasetRecords: detail.datasetRecords || [],
       datasetFileName: detail.datasetFileName || '',
@@ -78,9 +79,8 @@
    * dataset record is assigned to the engine's state.datasetRawFirstRow
    * for annotator-facing rendering, keep ONLY fields explicitly mapped to
    * a non-output role in field_role_map. Unmapped fields are dropped too
-   * (not just output-role ones) so engine readers that inspect literal
-   * keys (initPreviewState's rawRow.entities/rawRow.triples) can never
-   * pick up an unmapped answer column. Mapped output-role fields are
+   * (not just output-role ones) so engine readers that fall back to literal
+   * keys can never pick up an unmapped answer column. Mapped output-role fields are
    * re-added by buildAnnotatorRecord (config.js) as creator-designated
    * annotator-visible preannotation per 013 FR-003g-5. Reviewer mode
    * reads the raw record separately for diff/comparison. */

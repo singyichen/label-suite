@@ -1094,10 +1094,13 @@ test.describe('Step 2 preview: composite task data files', () => {
       roles: { text: 'input', entities: 'output', triples: 'output' },
     });
 
+    /* issue #1430: task-new has no UI to declare prefill_fields (state.prefillFields is always
+       null), and the `triples` column here is Output-role, so the preview no longer reads
+       triples by column name. The 11 entities still arrive via the unchanged Output-column
+       parse path (the first Output column holds the entity array). */
+    expect(await getState(page, 'prefillFields') ?? null).toBeNull();
     const triples = (await getState(page, 'previewTriples')) as Triple[];
-    expect(triples.length).toBe(8);
-    expect(triples[0].subj).toContain('左心耳');
-    expect(triples[0].obj).toContain('左心房');
+    expect(triples).toEqual([]);
 
     const entities = (await getState(page, 'previewEntities')) as Entity[];
     expect(entities.length).toBe(11);
@@ -1113,7 +1116,10 @@ test.describe('Step 2 preview: composite task data files', () => {
     await expect(preview).toContainText('實體列表');
 
     // relation_types is auto-populated from the distinct semantic type labels
-    // in the pre-labeled triples — NOT trigger words or hardcoded defaults.
+    // in the data — NOT trigger words or hardcoded defaults. issue #1430: the
+    // triples are no longer a candidate here (no declared prefill_fields), so
+    // the labels now come from the record-level `relation_types` array, which
+    // lists the same labels in the same order (auto-fill path 2, unchanged).
     const cfg = (await getState(page, 'outputConfigs')) as WindowState['outputConfigs'];
     const relTypes = (cfg.relation_identification as { relation_types: string[] }).relation_types;
     expect(relTypes).toEqual(['bodyLocation', 'causes', 'adverseOutcome']);
@@ -1162,7 +1168,21 @@ test.describe('Step 2 preview: composite task data files', () => {
       outputType: ['entity_recognition', 'relation_identification'],
       inputType: 'single_item',
       dataFile: 'medical-ner-re.json',
-      roles: { text: 'input', entities: 'output', triples: 'output' },
+      roles: { text: 'input', entities: 'output', triples: 'evidence' },
+    });
+
+    /* issue #1430: task-new has no UI to declare prefill_fields, so the declaration is set at
+       the engine boundary (triples column, Evidence role) to keep this test about composite
+       type actions on prefilled triples. */
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        state: Record<string, unknown>;
+        initPreviewState: () => void;
+        updateAnnotationPreview?: () => void;
+      };
+      w.state.prefillFields = { entities: null, triples: 'triples' };
+      w.initPreviewState();
+      w.updateAnnotationPreview?.();
     });
 
     const relationAccordion = page.locator(

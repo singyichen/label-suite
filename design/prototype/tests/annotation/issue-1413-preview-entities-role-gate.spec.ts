@@ -42,6 +42,7 @@ async function previewEntities(page: Page): Promise<Ent[]> {
 function dialoguePatch(role: string | undefined, entitiesValue = `[{ text: '${SENTINEL}', type: 'Aspect', start: 0, end: 4 }]`) {
   return `
     var p = window.LabelSuiteTaskDetailData.profiles.T013;
+    p.prefill_fields = { entities: 'entities', triples: null };
     p.datasetRecords[0].entities = ${entitiesValue};
     ${role === undefined ? 'delete p.fieldRoleMap.entities;' : `p.fieldRoleMap.entities = '${role}';`}
   `;
@@ -54,6 +55,7 @@ function stringInputPatch(role: string | undefined, entitiesValue = `[{ text: '$
     p.fieldRoleMap = { text: 'input', utterances: 'unused', gold_triplets: 'output' };
     ${role === undefined ? '' : `p.fieldRoleMap.entities = '${role}';`}
     p.dialogue_fields = null;
+    p.prefill_fields = { entities: 'entities', triples: null };
     p.datasetRecords[0].entities = ${entitiesValue};
   `;
 }
@@ -77,10 +79,12 @@ async function reinitWithRole(page: Page, role: string | undefined): Promise<Ent
   return page.evaluate(
     ({ role, sentinel }) => {
       const w = window as unknown as {
-        state: { datasetRawFirstRow: Record<string, unknown>; fieldRoleMap: Record<string, string>; previewEntities: unknown[] };
+        state: { datasetRawFirstRow: Record<string, unknown>; fieldRoleMap: Record<string, string>; previewEntities: unknown[]; prefillFields?: unknown };
         initPreviewState: () => void;
       };
       w.state.datasetRawFirstRow.entities = [{ text: sentinel, type: 'Aspect', start: 0, end: 4 }];
+      // issue #1430: the column is a prefill source only when declared; the role gate is under test here
+      w.state.prefillFields = { entities: 'entities', triples: null };
       if (role === undefined) delete w.state.fieldRoleMap.entities;
       else w.state.fieldRoleMap.entities = role;
       w.initPreviewState();

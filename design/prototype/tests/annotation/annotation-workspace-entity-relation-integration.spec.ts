@@ -37,10 +37,19 @@ test.describe('entity_recognition + relation_identification integrated mode (T01
   });
 
   test('deleting an entity in entity_recognition removes any triple that referenced it', async ({ page }) => {
+    // issue #1430: prefilled triples are read only from the column declared in prefill_fields.
+    // The seed `triples` column is Output-role (Data Fairness: an Output column must not be
+    // declared), so this cascade test supplies its own declared Evidence-role copy at runtime.
+    // The 11 entities still arrive through the unchanged Output-column parse path.
+    await patchDataFile(page, 'task-detail.data.js', `
+      var p = window.LabelSuiteTaskDetailData.profiles.T010;
+      p.fieldRoleMap.triples = 'evidence';
+      p.prefill_fields = { entities: null, triples: 'triples' };
+    `);
     await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001' }));
     await dismissGuidelineModal(page);
 
-    // med-001 ships 8 pre-annotated (output-role) triples.
+    // med-001 ships 8 pre-annotated triples (declared prefill source, Evidence role).
     await expect(page.getByTestId('ws-ri-triple-item')).toHaveCount(8);
 
     // The first entity, 左心耳 (1,3), is the subject of 3 of the 8 fixture
