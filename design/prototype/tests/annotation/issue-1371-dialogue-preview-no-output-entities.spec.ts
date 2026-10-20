@@ -122,6 +122,8 @@ test.describe('issue #1371: non-dialogue prefill behavior unchanged (AC-2.45, ta
       `
       var rec = window.LabelSuiteTaskDetailData.profiles.T013.datasetRecords[0];
       window.LabelSuiteTaskDetailData.profiles.T013.fieldRoleMap.entities = 'input';
+      // issue #1430: the entities column is a prefill source only when declared
+      window.LabelSuiteTaskDetailData.profiles.T013.prefill_fields = { entities: 'entities', triples: null };
       rec.entities = [{ text: '唬爛', type: 'Opinion', utt_id: 1, start: 17, end: 19 }];
       `,
     );
