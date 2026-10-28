@@ -316,16 +316,16 @@ test('assignment display status is derived in exclusion, submission, empty, save
     'Annotation record keeps its own lifecycle states');
 });
 
-test('NoteCraft and inventory project 40 tables with 351 columns and no assignment status', () => {
+test('NoteCraft and inventory project 40 tables with 352 columns and no assignment status', () => {
   const data = erData();
   const assignment = data.tables.find((table) => table.name === 'task_annotation_assignment');
   assert.equal(assignment.columns.some((column) => column.name === 'status'), false);
   assert.equal(data.tables.length, 40);
-  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 351);
+  assert.equal(data.tables.reduce((sum, table) => sum + table.columns.length, 0), 352);
   assert.equal(data.tables.reduce((sum, table) => sum + table.columns.filter((column) => column.fk).length, 0), 34);
-  assert.match(data.meta.description, /40 張候選表、351 欄、34 個候選單欄 FK/);
-  assert.match(inventory(), /40 張候選表、351 欄與 34 個候選單欄 FK/);
-  assert.match(inventory(), /任務／執行資料結構[^\n]*14 張／117 欄／16 單欄 FK/);
+  assert.match(data.meta.description, /40 張候選表、352 欄、34 個候選單欄 FK/);
+  assert.match(inventory(), /40 張候選表、352 欄與 34 個候選單欄 FK/);
+  assert.match(inventory(), /任務／執行資料結構[^\n]*14 張／118 欄／16 單欄 FK/);
 });
 
 test('assignment A-01 declares the parent candidate key for six annotation/review FKs', () => {
@@ -625,4 +625,21 @@ test('ADR-038 open items cite #1244 and the iaa_rejected free text is in anonymi
 
 test('table inventory no longer pins the 014 v8.0.1 version (#1242)', () => {
   assert.ok(!inventory().includes('014 v8.0.1'), 'Inventory must not pin 014 v8.0.1');
+});
+
+test('trial round persists a write-once completion time that gates FR-096 disclosure', () => {
+  const round = taskSource().tables.find((table) => table.name === 'task_trial_round');
+  const completedAt = round.columns.find((column) => column.name === 'completed_at');
+  assert.ok(completedAt, 'FR-027 (5) completion time and FR-096 disclosure need a persisted round end');
+  assert.equal(completedAt.type, 'timestamptz');
+  assert.equal(completedAt.nullable, true, 'An in-progress round has no completion time');
+  const taskMarkdown = read('../../docs/diagrams/architecture/task-run-db-schema.md');
+  const constraints = taskMarkdown.split('## 4. 限制清單')[1]?.split('## 5.')[0];
+  const rule = constraints?.split('\n').find((line) => /^\| Q-09 \|/.test(line));
+  assert.ok(rule, 'Q-09 must govern completed_at');
+  assert.match(rule, /waiting_iaa_confirmation/);
+  assert.match(rule, /FR-096/);
+  assert.match(rule, /fail closed/i, 'A missing completion time must keep the round undisclosed');
+  const json = erData().tables.find((table) => table.name === 'task_trial_round');
+  assert.ok(json.columns.some((column) => column.name === 'completed_at' && column.required === 'nullable'));
 });
