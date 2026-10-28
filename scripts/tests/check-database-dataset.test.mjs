@@ -431,11 +431,11 @@ test('NoteCraft projection shows protected_payload after hidden_answer and 32 da
   assert.equal(datasetColumns, 32);
 });
 
-test('inventory, README and account-admin doc carry the 351-column totals', () => {
+test('inventory, README and account-admin doc carry the 352-column totals', () => {
   assert.ok(inventoryDoc.includes('資料集資料結構](./dataset-db-schema.md)：5 張／32 欄／6 單欄 FK'));
-  assert.ok(inventoryDoc.includes('351 欄'));
-  assert.ok(diagramsReadme.includes('351 欄'));
-  assert.ok(accountAdminDoc.includes('351 欄'));
+  assert.ok(inventoryDoc.includes('352 欄'));
+  assert.ok(diagramsReadme.includes('352 欄'));
+  assert.ok(accountAdminDoc.includes('352 欄'));
   assert.ok(accountAdminDoc.includes('5 張／32 欄／6 FK'));
 });
 
