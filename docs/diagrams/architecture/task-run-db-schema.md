@@ -95,6 +95,7 @@ erDiagram
         varchar iaa_computation_status
         uuid created_by_user_id FK
         timestamptz created_at
+        timestamptz completed_at
     }
     task_trial_iaa_result {
         uuid trial_round_id PK,FK
@@ -291,6 +292,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | `iaa_computation_status` | varchar(16) | 否 | `pending`／`done`／`failed`；候選 pending 預設 | 發布；計算結果更新 | Q-06 |
 | `created_by_user_id` | uuid → users | 否 | 發布者 | 試標發布；不改 | Q-01 |
 | `created_at` | timestamptz | 否 | 發布時間 UTC | 試標發布 | X-01 |
+| `completed_at` | timestamptz | 是 | 回合結束（轉入一致性確認）的 UTC 時間；進行中為空 | 轉入 `waiting_iaa_confirmation` 時同交易寫入一次；不改 | Q-09 |
 
 ### 3.8 task_trial_iaa_result：一次試標回合的完整計算結果
 
@@ -430,6 +432,7 @@ R1 與 Rn 的序號只在發布週期內唯一；`sampling_value` 保存實際�
 | Q-06 | DB＋SVC | IAA 狀態僅 `pending/done/failed`；一致性機制為複合 FK 或 條件式 UPDATE（SQLite 與 PostgreSQL 皆可，不需新欄位）；EXISTS 守衛只證明結果列存在，不證明每個輸出皆完整，並非完全由 DB 強制，逐輸出完整性仍由服務核對：`UPDATE task_trial_round SET iaa_computation_status='done' WHERE id=:id AND iaa_computation_status='pending' AND EXISTS (SELECT 1 FROM task_trial_iaa_result WHERE trial_round_id=:id)`，須與結果列 INSERT 同一交易，影響列數為 0 即回滾；`failed → pending` 重試以 `WHERE iaa_computation_status='failed' AND NOT EXISTS (結果列)` 條件更新。`done` 列不可變：沒有任何寫入路徑以 `done` 為來源狀態，結果列僅 INSERT（PK 防重），不 UPDATE／DELETE，DB trigger 加固待 §7 核定。回合建立時為 `pending` 且無 `task_trial_iaa_result`，失敗時為 `failed` 且不留可誤認為成功的結果。只有在同一資料庫交易寫入完整結果列並核對所有應計算輸出後才改為 `done`；`De = 0` 的「無法計算」亦屬確定結果而非失敗，不表示達標。開始正式標記與新增試標回合均須核對最新回合的 `done` 及結果列 | 014 FR-010o-4／FR-010o-5、ADR-022 |
 | Q-07 | DB | `task_trial_iaa_result.trial_round_id` 同時為非空 PK 與真實 FK → `task_trial_round.id`，一回合至多一列；主鍵已覆蓋外鍵反查，不加重複索引；普通刪除先採 RESTRICT 候選 | 014 FR-010o-5 |
 | Q-08 | DB＋SVC＋SEC | DB CHECK `result_schema_version > 0`、`algorithm_version` 非空白及 `input_digest` 為 64 位十六進位；`result_payload` 由釘住的 task config／IAA registry 驗證，逐一涵蓋 `IAA_GATE_EXCLUDED_TYPES` 以外的輸出鍵，只有確定數值或 `De = 0` 原因，不存原始標記答案、hidden answer、gold/test 身分或受限來源。結果與輸入版本摘要成功後不可覆寫；精確 JSON schema、摘要位元組規範及演算法版本詞彙在 runtime 前定案 | 014 FR-010o-5、dataset-017 FR-039、主憲法 III |
+| Q-09 | DB＋SVC | `completed_at` 在該回合 `dry_run_in_progress → waiting_iaa_confirmation` 的同一交易寫入，與 `task.status_changed` 稽核事件同交易；條件式 `UPDATE ... WHERE id=:id AND completed_at IS NULL`，寫入後不改、不清除，退回草稿（cycle `rejected`）亦保留。DB CHECK `completed_at IS NULL OR completed_at >= created_at`。014 FR-013 只允許自 `waiting_iaa_confirmation` 建立下一回合，故同 cycle 至多最新一回合為 NULL。015 FR-096 的逐回合揭露閘門以本欄判定：非 NULL 才揭露該回合回饋；為 NULL 或無法判定所屬回合時 fail closed、不揭露；不以稽核事件或任務目前狀態反推（稽核列受 ADR-038 匿名化）。014 FR-027 (5) 回合表「完成時間」讀本欄，進行中顯示空白 | 014 FR-013／FR-027 (5)、015 FR-096 |
 | S-01 | DB | snapshot PK、cycle/locked_by user FK；UNIQUE `(task_run_cycle_id,id)` 供同 cycle run 參照 | 014 `SampleSnapshot` |
 | S-02 | SVC | snapshot 一旦發布不可覆寫；R1 不預先寫 Official ID 清單 | 014 FR-010f、ADR-022 |
 | S-03 | DB＋SVC | DB 只驗 `requested_sampling_value IS NULL OR requested_sampling_value > 0`；snapshot 沒有 `run_type`，所以 Dry 必填、Official 必為 null 須在發布交易由 SVC 對 run 驗證。threshold JSON 的 output type 也由 SVC 依釘住 config 驗證；snapshot 保存發布當下值 | 014 `SampleSnapshot`／FR-010o-1 |
