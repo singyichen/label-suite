@@ -547,3 +547,10 @@ test('every annotation/review note states that composite keys are not drawn and 
       `${name} note needs the "複合鍵與複合 FK 未畫在圖上，見各實體字典 §4" sentence`);
   }
 });
+
+test('V-03 derives the FR-023 leader-fallback source from the immutable membership role', () => {
+  const row = annotationRow('V-03');
+  assert.match(row, /FR-023 \(3\)/, 'Leader rulings must stay distinguishable from arbiter rulings');
+  assert.match(row, /task_role/);
+  assert.match(row, /M-02/, 'The derivation relies on task_role being immutable after creation');
+});
