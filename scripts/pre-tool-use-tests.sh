@@ -36,6 +36,26 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Sentinel stubs: every command the fixtures name is shadowed on PATH by a
+# stub that logs the call and fails. The hook only greps the command string,
+# so the log must stay empty -- if it ever fills, a fixture was executed
+# instead of inspected, and the run fails before anything real could fire.
+SENTINEL_BIN="$TMP_ROOT/sentinel-bin"
+SENTINEL_LOG="$TMP_ROOT/sentinel-executed.log"
+mkdir -p "$SENTINEL_BIN"
+for name in pip npm uv python psql terraform dd mkfs.ext4 find chmod ssh sudo docker docker-compose; do
+    printf '#!/bin/sh\necho "%s $*" >> "%s"\nexit 99\n' "$name" "$SENTINEL_LOG" > "$SENTINEL_BIN/$name"
+    chmod +x "$SENTINEL_BIN/$name"
+done
+export PATH="$SENTINEL_BIN:$PATH"
+
+# Self-check: prove the stubs actually shadow the real binaries.
+if docker version >/dev/null 2>&1 || [[ ! -s "$SENTINEL_LOG" ]]; then
+    echo "FAIL: sentinel stubs are not shadowing PATH" >&2
+    exit 1
+fi
+rm -f "$SENTINEL_LOG"
+
 assert_file() {
     local path="$1"
     if [[ ! -f "$path" ]]; then
@@ -356,6 +376,12 @@ for t in "${TESTS[@]}"; do
         FAILED=$((FAILED + 1))
     fi
 done
+
+if [[ -s "$SENTINEL_LOG" ]]; then
+    echo "FAIL: a fixture command was executed instead of inspected:" >&2
+    cat "$SENTINEL_LOG" >&2
+    FAILED=$((FAILED + 1))
+fi
 
 if [[ "$FAILED" -gt 0 ]]; then
     echo "" >&2
