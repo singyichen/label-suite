@@ -393,6 +393,11 @@ test_red_docker_prune_is_blocked_everywhere() {
     expect_command "ssh lab-host 'docker system prune -af'" 2 "docker prune quoted for ssh is blocked"
     expect_command "ssh -p 22 lab-host docker image prune -a" 2 "docker prune passed unquoted to ssh is blocked"
     expect_command "curl --unix-socket /var/run/docker.sock -X POST http://localhost/containers/prune" 2 "prune through the Docker socket is blocked"
+    # Shell quoting and line continuations do not change what runs.
+    expect_command "docker system \\\\\\nprune -af" 2 "docker prune split by a line continuation is blocked"
+    expect_command "\\\"docker\\\" system prune" 2 "docker prune with a quoted command name is blocked"
+    expect_command "docker system pr\\\\une" 2 "docker prune with a backslash inside the word is blocked"
+    expect_command "'docker' rm other" 2 "docker rm with a quoted command name on a foreign container is blocked"
 }
 
 test_red_docker_commands_on_foreign_resources_are_blocked() {
