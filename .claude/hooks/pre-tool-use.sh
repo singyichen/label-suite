@@ -44,6 +44,13 @@ GIT_OPT='(-C[[:space:]]+[^[:space:]]+|-c[[:space:]]+[^[:space:]]+|--git-dir[= ][
 GIT_PUSH="git([[:space:]]+${GIT_OPT})*[[:space:]]+push"
 AT_CMD='(^|[;&|]|\$\()[[:space:]]*'
 
+# CMD_START widens AT_CMD for the checks below, whose dangerous command often
+# sits inside a quoted string handed to another program — ssh '<cmd>',
+# bash -c '<cmd>', psql -c "<sql>". An opening quote therefore also starts a
+# command, and a leading sudo is skipped. Prose that names a command
+# mid-sentence still passes (issue #1487); prose that opens with one does not.
+CMD_START="(^|[;&|'\"]|\\\$\\()[[:space:]]*(sudo[[:space:]]+)?"
+
 # Block: any push while the branch it runs on is main/master (AGENTS.md Rule 2).
 # Branch detection closes the 'git push origin HEAD' gap a pure regex misses.
 if printf '%s\n' "$COMMAND" | grep -qE "${AT_CMD}${GIT_PUSH}([[:space:]]|$)"; then
@@ -113,7 +120,7 @@ if printf '%s\n' "$COMMAND" | grep -qE "${AT_CMD}${GIT_PUSH}[^|&;]*[[:space:]](-
 fi
 
 # Block: pip/npm install — wrong package managers (AGENTS.md Rule 3)
-if echo "$COMMAND" | grep -qE '\b(pip|npm)\s+install\b'; then
+if echo "$COMMAND" | grep -qE "${CMD_START}((uv|python3?[[:space:]]+-m)[[:space:]]+)?(pip|npm)[[:space:]]+install([^[:alnum:]]|$)"; then
   echo "❌ Blocked: use 'uv add' (backend) or 'pnpm add' (frontend) — not pip/npm install (AGENTS.md Rule 3)." >&2
   exit 2
 fi
@@ -126,18 +133,20 @@ fi
 
 # Block: additional destructive commands
 NORMALIZED=$(echo "$COMMAND" | tr -s ' \t' ' ')
+# Each entry is "label|regex"; the label is what the block message shows.
+# The fork bomb stays unanchored: its shape never occurs in prose.
 EXTRA_PATTERNS=(
-  "DROP (TABLE|DATABASE)"
-  "terraform destroy"
-  "dd.*of=/dev/"
-  "mkfs\."
-  ":\(\)\{.*\};"
-  "find.*-delete"
-  "chmod -R 777 /"
+  "DROP TABLE/DATABASE|${CMD_START}DROP (TABLE|DATABASE)"
+  "terraform destroy|${CMD_START}terraform destroy"
+  "dd of=/dev/|${CMD_START}dd [^;&|]*of=/dev/"
+  "mkfs|${CMD_START}mkfs\."
+  "fork bomb|:\(\)\{.*\};"
+  "find -delete|${CMD_START}find [^;&|]*-delete"
+  "chmod -R 777 /|${CMD_START}chmod -R 777 /"
 )
-for p in "${EXTRA_PATTERNS[@]}"; do
-  if echo "$NORMALIZED" | grep -qiE "$p"; then
-    echo "❌ Blocked: dangerous command detected — $p" >&2
+for entry in "${EXTRA_PATTERNS[@]}"; do
+  if echo "$NORMALIZED" | grep -qiE "${entry#*|}"; then
+    echo "❌ Blocked: dangerous command detected — ${entry%%|*}" >&2
     exit 2
   fi
 done
