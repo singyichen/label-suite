@@ -25,6 +25,10 @@
 # services here would reference images/build contexts that don't exist and
 # would be broken by construction. That full stack is a later change's scope.
 
+# Pin the project name instead of deriving it from the checkout directory:
+# teardowns must name a label-suite project (constitution XXIII, issue #1487).
+name: label-suite
+
 services:
   postgres:
     profiles:
