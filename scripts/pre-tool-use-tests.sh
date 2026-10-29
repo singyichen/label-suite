@@ -43,7 +43,7 @@ trap cleanup EXIT
 SENTINEL_BIN="$TMP_ROOT/sentinel-bin"
 SENTINEL_LOG="$TMP_ROOT/sentinel-executed.log"
 mkdir -p "$SENTINEL_BIN"
-for name in pip npm uv python python3.12 psql terraform dd mkfs.ext4 find chmod ssh sudo timeout nohup nice xargs docker docker-compose curl wget parallel watch; do
+for name in pip npm uv python python3.12 psql terraform dd mkfs.ext4 find chmod ssh sudo timeout nohup nice xargs docker docker-compose curl wget parallel watch python3 ln; do
     printf '#!/bin/sh\necho "%s $*" >> "%s"\nexit 99\n' "$name" "$SENTINEL_LOG" > "$SENTINEL_BIN/$name"
     chmod +x "$SENTINEL_BIN/$name"
 done
@@ -478,6 +478,17 @@ test_red_docker_evasions_are_blocked() {
     expect_command "git commit -m \\\"fix: block docker system prune on shared hosts\\\"" 2 "a command string naming docker prune is blocked"
 }
 
+test_red_docker_review2_evasions_are_blocked() {
+    # Issue #1487 second security review: a redirection needs an all-digit fd
+    # prefix, and the Docker socket is refused whatever client reaches it.
+    expect_command "docker stop label-suite-db 9evil>/dev/null" 2 "a foreign target glued to a redirection is blocked"
+    expect_command "docker rm label-suite-db 0abc123>/dev/null" 2 "a container ID glued to a redirection is blocked"
+    expect_command "python3 -c \\\"import socket; socket.socket(socket.AF_UNIX).connect('/var/run/docker.sock')\\\"" 2 "the Docker socket through python3 is blocked"
+    expect_command "ln -s /var/run/docker.sock /tmp/d" 2 "a link to the Docker socket is blocked"
+    expect_command "docker stop label-suite-db >/dev/null" 0 "a bare redirection after a label-suite target is allowed"
+    expect_command "docker stop label-suite-db 2> /dev/null" 0 "a spaced fd redirection after a label-suite target is allowed"
+}
+
 test_red_prose_mentioning_docker_bans_is_allowed() {
     # Issue #1487: naming a teardown mid-sentence is not running it.
     expect_command "gh issue comment 1 --body 'never run docker stop on other containers'" 0 "an issue comment naming docker stop is allowed"
@@ -511,6 +522,7 @@ TESTS=(
     test_red_compose_without_label_suite_project_is_blocked
     test_red_docker_commands_on_label_suite_resources_are_allowed
     test_red_docker_evasions_are_blocked
+    test_red_docker_review2_evasions_are_blocked
     test_red_prose_mentioning_docker_bans_is_allowed
 )
 
