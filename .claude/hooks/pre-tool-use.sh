@@ -48,18 +48,19 @@ AT_CMD='(^|[;&|]|\$\()[[:space:]]*'
 
 # CMD_START widens AT_CMD for the checks below, whose dangerous command often
 # sits inside a quoted string handed to another program — ssh '<cmd>',
-# bash -c '<cmd>', psql -c "<sql>" — so an opening quote, `(` and `{` also
-# start a command. It then skips whatever may legally precede the command
-# name: env assignments, wrappers with their options (sudo -E, timeout 60),
-# the shell keywords then/do/else, and a path (/usr/bin/pip). Prose that
-# names a command mid-sentence still passes (issue #1487); prose that opens
-# with one does not — over-blocking prose beats missing a real call.
+# bash -c '<cmd>', psql -c "<sql>" — so an opening quote, a backtick, `(`,
+# `{` and find's -exec also start a command. It then skips whatever may
+# legally precede the command name: env assignments, wrappers with their
+# options (sudo -E, timeout 60, watch), shell keywords (then, if, eval, !),
+# and a path (/usr/bin/pip). Prose that names a command mid-sentence still
+# passes (issue #1487); prose that opens with one does not — over-blocking
+# prose beats missing a real call.
 CMD_ASSIGN='[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+'
-CMD_WRAPPER='(sudo|env|nohup|nice|time|command|exec|xargs|timeout)([[:space:]]+-[^[:space:]]+([[:space:]]+[^-[:space:]][^[:space:]]*)?)*([[:space:]]+[0-9][^[:space:]]*)?[[:space:]]+'
-CMD_KEYWORD='(then|do|else)[[:space:]]+'
+CMD_WRAPPER='(sudo|env|nohup|nice|time|command|exec|xargs|parallel|watch|timeout)([[:space:]]+-[^[:space:]]+([[:space:]]+[^-[:space:]][^[:space:]]*)?)*([[:space:]]+[0-9][^[:space:]]*)?[[:space:]]+'
+CMD_KEYWORD='(then|do|else|if|elif|while|until|eval|!)[[:space:]]+'
 # ssh <options> <host> <cmd> runs <cmd> remotely without quoting it.
 CMD_REMOTE='ssh([[:space:]]+-[^[:space:]]+([[:space:]]+[^-[:space:]][^[:space:]]*)?)*[[:space:]]+[^-[:space:]][^[:space:]]*[[:space:]]+'
-CMD_START="(^|[;&|({'\"]|\\\$\\()[[:space:]]*(${CMD_ASSIGN}|${CMD_WRAPPER}|${CMD_KEYWORD}|${CMD_REMOTE})*([^[:space:]'\"]*/)?"
+CMD_START="(^|[;&|({'\"\`]|\\\$\\(|[[:space:]]-(exec|execdir|ok|okdir))[[:space:]]*(${CMD_ASSIGN}|${CMD_WRAPPER}|${CMD_KEYWORD}|${CMD_REMOTE})*([^[:space:]'\"]*/)?"
 
 # Block: any push while the branch it runs on is main/master (AGENTS.md Rule 2).
 # Branch detection closes the 'git push origin HEAD' gap a pure regex misses.
@@ -176,52 +177,73 @@ block_docker() {
 # Quotes, backslashes, brackets and separators glued to a token are syntax,
 # not its value: the shell strips them before docker ever sees the word.
 STRIP_CHARS="\\\\'\"\`(){};&|"
+# Target values are held to a stricter shape: with only quoting removed, a
+# target must be a plain label-suite name, so an expansion ($X, {a,b}, *)
+# that the shell would turn into something else is refused.
+QUOTE_CHARS="\\\\'\"\`"
+OURS_RE='^label-suite[A-Za-z0-9_.-]*$'
 # grep scans line by line, so rejoin backslash-newline continuations first.
 BACKSLASH_NEWLINE=$'\\\n'
 DOCKER_COMMAND="${COMMAND//"$BACKSLASH_NEWLINE"/ }"
 
 # Checks every target from token $1 onward; $2 names the command for the message.
 check_docker_targets() {
-  local k="$1" t count=0
+  local k="$1" r t count=0
+  (( fed == 0 )) || block_docker "$2 under xargs, parallel or find -exec takes targets the hook cannot read"
   while (( k < n )); do
-    t="${toks[k]//[$STRIP_CHARS]/}"
+    r="${toks[k]}"
+    t="${r//[$QUOTE_CHARS]/}"
+    # Redirections and comments count only when unquoted, so match the raw token.
+    case "$r" in
+      [0-9]*'>'*|'>'*|'<'*) [[ "$r" == *[\<\>] ]] && k=$((k + 1)); k=$((k + 1)); continue ;;
+      '#'*) break ;;
+    esac
     case "$t" in
-      '') ;;
       -t|--time|-s|--signal|--timeout) k=$((k + 1)) ;;
       -*) ;;
-      [0-9]*'>'*|'>'*|'<'*) [[ "$t" == *[\<\>] ]] && k=$((k + 1)) ;;
-      '#'*) break ;;
-      label-suite*) count=$((count + 1)) ;;
-      *) block_docker "$2 target '$t' is not a label-suite resource" ;;
+      *) [[ "$t" =~ $OURS_RE ]] || block_docker "$2 target '$r' is not a plain label-suite name"
+         count=$((count + 1)) ;;
     esac
     k=$((k + 1))
   done
   (( count > 0 )) || block_docker "$2 needs explicit label-suite targets, not stdin or a substitution"
 }
 
-if printf '%s\n' "$DOCKER_COMMAND" | grep -oE "${CMD_START}curl([[:space:]][^;&|]*)?" | grep 'docker\.sock' | grep -q 'prune'; then
-  block_docker "prune through the Docker socket is banned"
+# Prune and raw socket access are checked across the whole command with the
+# quoting removed, not per invocation: quotes can split the words
+# (do""cker, pr''une) and a variable can hold the command name (D=docker;
+# $D system prune). Prose naming both words is refused too — the ban has no
+# escape hatch, so write such text to a file and pass it with -F / --body-file.
+DOCKER_PLAIN="${DOCKER_COMMAND//[$QUOTE_CHARS]/}"
+if printf '%s\n' "$DOCKER_PLAIN" | grep -qE '(^|[^[:alnum:]_-])docker' \
+  && printf '%s\n' "$DOCKER_PLAIN" | grep -qE '(^|[^[:alnum:]_-])prune([^[:alnum:]_-]|$)'; then
+  block_docker "docker prune is banned on every host"
+fi
+if printf '%s\n' "$DOCKER_PLAIN" | grep -q 'docker\.sock' \
+  && printf '%s\n' "$DOCKER_PLAIN" | grep -qE '(^|[^[:alnum:]_-])(curl|wget|socat|nc|ncat)([^[:alnum:]_-]|$)'; then
+  block_docker "raw Docker socket access is banned; use the docker CLI so these checks apply"
 fi
 
 while IFS= read -r seg; do
   read -r -a toks <<< "$seg"
   n=${#toks[@]}
   names=()
+  fed=0
   i=0
-  # Skip the CMD_START prefix, keeping any COMPOSE_PROJECT_NAME it sets.
+  # Skip the CMD_START prefix, keeping any COMPOSE_PROJECT_NAME it sets and
+  # noting a feeder that would append targets the hook never sees.
   while (( i < n )); do
     t="${toks[i]//[$STRIP_CHARS]/}"
-    case "$t" in COMPOSE_PROJECT_NAME=*) names+=("${t#*=}") ;; esac
+    case "$t" in
+      COMPOSE_PROJECT_NAME=*) names+=("${toks[i]#*=}") ;;
+      xargs|parallel|-exec|-execdir|-ok|-okdir|*/xargs|*/parallel) fed=1 ;;
+    esac
     case "${t##*/}" in docker|docker-compose) break ;; esac
     i=$((i + 1))
   done
   (( i < n )) || continue
   word="${toks[i]//[$STRIP_CHARS]/}"
   word="${word##*/}"
-
-  for (( k = i + 1; k < n; k++ )); do
-    [[ "${toks[k]//[$STRIP_CHARS]/}" == prune ]] && block_docker "docker prune is banned on every host"
-  done
 
   j=$((i + 1))
   sub=compose
@@ -251,18 +273,19 @@ while IFS= read -r seg; do
     t="${toks[j]//[$STRIP_CHARS]/}"
     case "$t" in
       -p|--project-name)
-        names+=("$( (( j + 1 < n )) && printf '%s' "${toks[j + 1]//[$STRIP_CHARS]/}")")
+        names+=("$( (( j + 1 < n )) && printf '%s' "${toks[j + 1]}")")
         j=$((j + 1)) ;;
-      --project-name=*) names+=("${t#*=}") ;;
-      -p?*) names+=("${t#-p}") ;;
+      --project-name=*) names+=("${toks[j]#*=}") ;;
+      -p?*) names+=("${toks[j]#*-p}") ;;
       down|stop|rm|kill|restart) teardown="$t" ;;
     esac
     j=$((j + 1))
   done
   [[ -n "$teardown" ]] || continue
+  (( fed == 0 )) || block_docker "docker compose $teardown under xargs, parallel or find -exec is banned"
   (( ${#names[@]} > 0 )) || block_docker "docker compose $teardown must name a label-suite project with -p"
   for (( k = 0; k < ${#names[@]}; k++ )); do
-    [[ "${names[k]}" == label-suite* ]] || block_docker "docker compose $teardown project '${names[k]}' is not label-suite"
+    [[ "${names[k]//[$QUOTE_CHARS]/}" =~ $OURS_RE ]] || block_docker "docker compose $teardown project '${names[k]}' is not label-suite"
   done
 done < <(printf '%s\n' "$DOCKER_COMMAND" | grep -oE "${CMD_START}['\"\\\\]*docker(-compose)?['\"]*([[:space:]][^;&|)]*)?")
 
