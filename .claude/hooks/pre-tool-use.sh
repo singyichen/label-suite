@@ -182,6 +182,9 @@ STRIP_CHARS="\\\\'\"\`(){};&|"
 # that the shell would turn into something else is refused.
 QUOTE_CHARS="\\\\'\"\`"
 OURS_RE='^label-suite[A-Za-z0-9_.-]*$'
+# The shell reads a redirection only after an all-digit fd prefix; 9evil>x is
+# the target 9evil followed by a redirection.
+REDIR_RE='^[0-9]*[<>]'
 # grep scans line by line, so rejoin backslash-newline continuations first.
 BACKSLASH_NEWLINE=$'\\\n'
 DOCKER_COMMAND="${COMMAND//"$BACKSLASH_NEWLINE"/ }"
@@ -194,10 +197,12 @@ check_docker_targets() {
     r="${toks[k]}"
     t="${r//[$QUOTE_CHARS]/}"
     # Redirections and comments count only when unquoted, so match the raw token.
-    case "$r" in
-      [0-9]*'>'*|'>'*|'<'*) [[ "$r" == *[\<\>] ]] && k=$((k + 1)); k=$((k + 1)); continue ;;
-      '#'*) break ;;
-    esac
+    if [[ "$r" =~ $REDIR_RE ]]; then
+      [[ "$r" == *[\<\>] ]] && k=$((k + 1))
+      k=$((k + 1))
+      continue
+    fi
+    [[ "$r" == '#'* ]] && break
     case "$t" in
       -t|--time|-s|--signal|--timeout) k=$((k + 1)) ;;
       -*) ;;
@@ -219,8 +224,9 @@ if printf '%s\n' "$DOCKER_PLAIN" | grep -qE '(^|[^[:alnum:]_-])docker' \
   && printf '%s\n' "$DOCKER_PLAIN" | grep -qE '(^|[^[:alnum:]_-])prune([^[:alnum:]_-]|$)'; then
   block_docker "docker prune is banned on every host"
 fi
-if printf '%s\n' "$DOCKER_PLAIN" | grep -q 'docker\.sock' \
-  && printf '%s\n' "$DOCKER_PLAIN" | grep -qE '(^|[^[:alnum:]_-])(curl|wget|socat|nc|ncat)([^[:alnum:]_-]|$)'; then
+# Any client can speak to the socket (python, a symlink, a copy), so every
+# mention of it is refused rather than a list of known clients.
+if printf '%s\n' "$DOCKER_PLAIN" | grep -q 'docker\.sock'; then
   block_docker "raw Docker socket access is banned; use the docker CLI so these checks apply"
 fi
 
