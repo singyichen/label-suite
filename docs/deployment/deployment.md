@@ -631,7 +631,7 @@ sudo nginx -t && sudo systemctl reload nginx
 - [x] `curl -sk https://staging.label-suite.test/metrics` 回 `404`（2026-07-07）
 - [x] Mac 直接連 `http://<VM_IP>:8080` **連不上**（服務只綁 loopback，未繞過 Nginx）（2026-07-07）
 - [x] `docker compose ps` 中 postgres 與 redis 為 `healthy`（2026-07-07）
-- [x] `docker compose down && docker compose up -d` 後 PostgreSQL 資料仍在（volume 持久化）
+- [x] `docker compose -p label-suite-staging down && docker compose -p label-suite-staging up -d` 後 PostgreSQL 資料仍在（volume 持久化）
       （2026-07-07：寫入 42 → down/up → 讀回 42）
 - [x] VM 重開機（`multipass restart`）後所有服務自動恢復（`restart: unless-stopped` + Nginx systemd）
       （2026-07-07：8 容器全部自動恢復，HTTPS 回 200）
@@ -693,6 +693,51 @@ sudo nginx -t && sudo systemctl reload nginx
 **備份提醒**（ADR-023）：正式機備份寫入 `/data/label-suite/prod/backups/`，
 但**僅存於主資料磁碟的備份不足以災難復原**——必須另外複製到其他主機或外部儲存。
 備份目的地與保存策略屬 ADR-023 的待決事項，上線前必須定案。
+
+### 9.1 共用主機操作規範（絕對禁止事項）
+
+> ⚠️ **dell-7820 是實驗室共用機。** 2026-10-20 實測：主機上有 **19 個他人容器**
+> （`ainlp.tw` 官網對外提供的 Django demo 與一個 Elasticsearch），全部由 root 以
+> `docker run` 啟動、沒有 compose 檔；映像 40 個。部署帳號已加入 `docker` 群組（#1200），
+> **`docker` 群組在此等同 root**——下錯一條指令會讓其他實驗室的服務停擺，而且無法復原。
+
+依 [constitution XXIII](../../specs/_governance/constitution.md)（NON-NEGOTIABLE，issue #1487），
+以下兩條**不論人工、Claude Code 或其他 agent，一律不得違反，沒有例外**：
+
+1. **絕對禁止任何 `docker ... prune`**——`system`、`image`、`volume`、`container`、`network`、
+   `builder`、`buildx` 全部變體，本機與遠端皆然，也不得經 Docker socket（`curl --unix-socket`）繞過。
+   要清理本專案的資源，就逐一指名刪除。
+2. **絕對禁止操作非本專案建立的資源**：
+   - `docker rm|stop|kill|restart|rmi`、`docker container|image|volume|network rm` 的每個目標
+     都必須是 `label-suite` 前綴的明確名稱
+   - `docker compose` 的 `down|stop|rm|kill|restart` 一律帶 `label-suite` 開頭的專案名，例如
+     `-p label-suite-staging`（或 `--project-name`、`COMPOSE_PROJECT_NAME`）；production 專案上線時
+     也必須沿用這個前綴
+   - 不得用讀不出目標的寫法：`$(docker ps -q)`、萬用字元、`xargs`／`find -exec` 餵入、容器 ID
+
+本 repo 的 compose 檔都宣告了 `name:`（根目錄 `label-suite`、`deploy/develop/` 為
+`label-suite-staging`），專案名不會隨 checkout 目錄名改變。
+
+#### 機器強制的範圍與極限
+
+`.claude/hooks/pre-tool-use.sh` 會擋下 Claude Code（含 subagent）Bash 呼叫中違反上述規則的指令。
+但它**只是近似代理**，通過 hook 不代表指令安全：
+
+- **只攔 Claude Code**：Codex、其他 agent 與人工在終端機手打的指令都不經過這支 hook，
+  只能靠本節與 `AGENTS.md` 的文字約束
+- **只看指令字串、看不到容器歸屬**：取名為 `label-suite-x` 的他人容器照樣放行
+- **已知攔不住的寫法**：
+  - 指令名稱被反斜線或引號拆開時（`d\ocker stop …`）的目標檢查；prune 仍會被擋
+  - 由變數拼出的指令名稱（`${D}er system prune`）、ANSI-C 跳脫（`$'\x64ocker'`）、
+    萬用字元指令名稱（`/usr/bin/doc?er`）：shell 展開後才成形的字，純文字比對看不到
+  - podman 等其他容器 CLI、`docker exec`／`docker run` 內部的操作
+  - 在腳本檔裡打 Docker socket，或以萬用字元、變數拼出 socket 路徑
+  - 要完整封住只能靠主機端（socket 權限或 Docker authz plugin），不在 hook 的能力範圍
+- **刻意的誤擋**：
+  - 同一條指令裡只要同時出現 `docker` 與 `prune` 兩個字就會被擋，即使只是 commit message
+    或 issue 本文
+  - 指令只要提到 `docker.sock` 就會被擋，不論是哪個客戶端，也不論是不是在建立連結
+  - 這類文字請寫進檔案，再用 `-F`／`--body-file` 傳入
 
 ---
 
@@ -932,7 +977,7 @@ Self-hosted runner + 公開 repo 的組合有已知風險：fork 的 PR 若能�
 - [ ] **整棧起得來** — `docker compose ps` 顯示 `postgres`、`redis` 為 `healthy`（Step 3）
 - [ ] **啟動順序正確** — `postgres-exporter` / `redis-exporter` 為 `Up` 且未 crash-loop（`depends_on: service_healthy` 生效）
 - [ ] **Prometheus 可熱重載** — `POST /-/reload` 回 `200`（`--web.enable-lifecycle` 生效）
-- [ ] **環境清乾淨** — `docker compose down -v` 後無殘留 `ls-smoke-*` 容器（Step 4）
+- [ ] **環境清乾淨** — `docker compose -p label-suite-smoke down -v` 後無殘留 `label-suite-smoke-*` 容器（Step 4）
 
 #### Step 1 — 啟動 Docker Desktop 並等待 daemon 就緒
 
@@ -987,14 +1032,14 @@ POSTGRES_USER=smoke
 POSTGRES_PASSWORD=smokepass
 GRAFANA_ADMIN_PASSWORD=smokeadmin
 EOF
-docker compose -p ls-smoke -f "$WORK/smoke.yml" --env-file "$WORK/smoke.env" up -d
+docker compose -p label-suite-smoke -f "$WORK/smoke.yml" --env-file "$WORK/smoke.env" up -d
 ```
 
 驗證重點（對應 review 修正）：
 
 ```bash
 # postgres/redis 先 Healthy，exporter 才啟動且不 crash-loop（depends_on: service_healthy）
-docker compose -p ls-smoke -f "$WORK/smoke.yml" ps
+docker compose -p label-suite-smoke -f "$WORK/smoke.yml" ps
 # Prometheus --web.enable-lifecycle 生效：/-/reload 回 200（沒這旗標會是 403）
 curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://127.0.0.1:9090/-/reload
 ```
@@ -1007,9 +1052,9 @@ curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://127.0.0.1:90
 #### Step 4 — 拆除並清理
 
 ```bash
-docker compose -p ls-smoke -f "$WORK/smoke.yml" --env-file "$WORK/smoke.env" down -v
+docker compose -p label-suite-smoke -f "$WORK/smoke.yml" --env-file "$WORK/smoke.env" down -v
 rm -rf "$WORK"
-docker ps -a --filter "name=ls-smoke" --format '{{.Names}}'   # 應無輸出
+docker ps -a --filter "name=label-suite-smoke" --format '{{.Names}}'   # 應無輸出
 ```
 
 > 本機煙霧測試只驗證 Compose／Nginx 設定本身；整條 workflow ＋ self-hosted runner

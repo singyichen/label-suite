@@ -229,3 +229,9 @@ Each rule traces to a specific incident (Ratchet Principle — Mitchell Hashimot
   - Reason: security boundary; explicitly list allowed origins
 - ❌ Hardcoded API keys or secrets in source files
   - Reason: secret exposure risk; use environment variables only
+- ❌ Any `docker ... prune` variant, on any host, through the CLI or the Docker socket
+  - Reason: 2026-10-20 — the deploy host dell-7820 runs 19 containers of other labs (the public `ainlp.tw` demos), and Docker group access there equals root; one prune wipes their images and volumes irreversibly. Banned before any violation because the cost is not revertible (constitution XXIII, issue #1487)
+  - Enforcement: `.claude/hooks/pre-tool-use.sh` blocks it with no override — including a command string that only names it, so put such text in a file and pass it with `-F` / `--body-file`
+- ❌ Operating any container, image, volume, network, or compose project this project did not create
+  - Reason: same shared host as above; a mistyped name or a compose teardown missing its project name stops another lab's service (constitution XXIII, issue #1487)
+  - Enforcement: the hook requires every teardown target to be a plain `label-suite`-prefixed name and every compose teardown to pass `-p label-suite*`; it refuses substitutions, globs, IDs, and `xargs`/`find -exec` feeders. It reads only the command string and covers only Claude Code Bash calls — passing it is not proof a command is allowed; see `docs/deployment/deployment.md` §9
