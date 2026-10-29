@@ -43,7 +43,7 @@ trap cleanup EXIT
 SENTINEL_BIN="$TMP_ROOT/sentinel-bin"
 SENTINEL_LOG="$TMP_ROOT/sentinel-executed.log"
 mkdir -p "$SENTINEL_BIN"
-for name in pip npm uv python psql terraform dd mkfs.ext4 find chmod ssh sudo docker docker-compose; do
+for name in pip npm uv python python3.12 psql terraform dd mkfs.ext4 find chmod ssh sudo timeout nohup nice xargs docker docker-compose; do
     printf '#!/bin/sh\necho "%s $*" >> "%s"\nexit 99\n' "$name" "$SENTINEL_LOG" > "$SENTINEL_BIN/$name"
     chmod +x "$SENTINEL_BIN/$name"
 done
@@ -322,6 +322,22 @@ test_package_manager_install_is_still_blocked() {
     expect_command "ssh lab-host 'npm install'" 2 "npm install quoted for ssh is blocked"
 }
 
+test_red_wrapped_package_manager_install_is_blocked() {
+    # Security review on #1492: the first anchored version dropped every
+    # wrapper the old \b match caught. Anchoring may only narrow prose,
+    # never a real invocation.
+    expect_command "env PIP_INDEX_URL=x pip install requests" 2 "pip install behind env is blocked"
+    expect_command "CI=1 npm install" 2 "npm install behind an env assignment is blocked"
+    expect_command "time npm install" 2 "npm install behind time is blocked"
+    expect_command "nohup npm install" 2 "npm install behind nohup is blocked"
+    expect_command "timeout 60 pip install requests" 2 "pip install behind timeout is blocked"
+    expect_command "sudo -E pip install requests" 2 "pip install behind sudo with a flag is blocked"
+    expect_command "/usr/bin/pip install requests" 2 "pip install by absolute path is blocked"
+    expect_command "python3.12 -m pip install requests" 2 "pip install via python3.12 -m is blocked"
+    expect_command "( cd frontend && npm install )" 2 "npm install inside a subshell is blocked"
+    expect_command "if true; then pip install requests; fi" 2 "pip install after then is blocked"
+}
+
 test_red_prose_mentioning_package_manager_install_is_allowed() {
     # Issue #1487: the unanchored check blocked any command whose text named
     # the wrong package managers -- including the gh call that opened #1487.
@@ -339,6 +355,16 @@ test_destructive_commands_are_still_blocked() {
     expect_command "sudo mkfs.ext4 /dev/sdb1" 2 "mkfs is blocked"
     expect_command "find . -name '*.pyc' -delete" 2 "find -delete is blocked"
     expect_command "chmod -R 777 /" 2 "chmod -R 777 / is blocked"
+}
+
+test_red_wrapped_destructive_commands_are_blocked() {
+    # Security review on #1492: same wrapper gap in EXTRA_PATTERNS.
+    expect_command "terraform -chdir=infra destroy" 2 "terraform destroy behind a global option is blocked"
+    expect_command "TF_LOG=1 terraform destroy" 2 "terraform destroy behind an env assignment is blocked"
+    expect_command "timeout 600 terraform destroy -auto-approve" 2 "terraform destroy behind timeout is blocked"
+    expect_command "sudo -n dd if=disk.img of=/dev/sda" 2 "dd behind sudo with a flag is blocked"
+    expect_command "/sbin/mkfs.ext4 /dev/sdb1" 2 "mkfs by absolute path is blocked"
+    expect_command "{ find /data -delete; }" 2 "find -delete inside a brace group is blocked"
 }
 
 test_red_prose_mentioning_destructive_commands_is_allowed() {
@@ -365,8 +391,10 @@ TESTS=(
     test_prose_mentioning_a_push_is_not_a_push
     test_other_git_subcommands_are_not_pushes
     test_package_manager_install_is_still_blocked
+    test_red_wrapped_package_manager_install_is_blocked
     test_red_prose_mentioning_package_manager_install_is_allowed
     test_destructive_commands_are_still_blocked
+    test_red_wrapped_destructive_commands_are_blocked
     test_red_prose_mentioning_destructive_commands_is_allowed
 )
 
