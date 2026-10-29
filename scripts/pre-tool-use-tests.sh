@@ -281,6 +281,53 @@ test_other_git_subcommands_are_not_pushes() {
     echo "PASS: 'git log --grep push' is not treated as a push (exit 0)"
 }
 
+# Runs the hook from a throwaway feature-branch repo so only the non-push
+# checks can decide the outcome. $1 = command, $2 = expected exit, $3 = desc.
+expect_command() {
+    local repo
+    repo="$(make_repo feat/example)"
+    run_hook "$repo" "$(payload_with_cwd "$1" "$repo")"
+    assert_exit_code "$2" "$3"
+    echo "PASS: $3 (exit $2)"
+}
+
+test_package_manager_install_is_still_blocked() {
+    # Characterization: anchoring must not loosen the real cases, including
+    # the wrapped forms that hand the install to another program.
+    expect_command "pip install requests" 2 "a bare pip install is blocked"
+    expect_command "cd frontend && npm install" 2 "npm install after a separator is blocked"
+    expect_command "uv pip install requests" 2 "uv pip install is blocked"
+    expect_command "python -m pip install requests" 2 "python -m pip install is blocked"
+    expect_command "sudo pip install requests" 2 "sudo pip install is blocked"
+    expect_command "ssh lab-host 'npm install'" 2 "npm install quoted for ssh is blocked"
+}
+
+test_red_prose_mentioning_package_manager_install_is_allowed() {
+    # Issue #1487: the unanchored check blocked any command whose text named
+    # the wrong package managers -- including the gh call that opened #1487.
+    expect_command "git commit -m \\\"docs: explain why pip install is blocked\\\"" 0 "a commit message naming pip install is allowed"
+    expect_command "gh issue comment 1 --body \\\"Never run npm install here\\\"" 0 "an issue comment naming npm install is allowed"
+}
+
+test_destructive_commands_are_still_blocked() {
+    # Characterization: SQL and remote commands sit inside quotes, so an
+    # opening quote must keep counting as command position.
+    expect_command "psql -c \\\"DROP TABLE users\\\"" 2 "DROP TABLE quoted for psql is blocked"
+    expect_command "psql -c \\\"BEGIN; drop database app\\\"" 2 "drop database after a SQL separator is blocked"
+    expect_command "ssh lab-host 'terraform destroy'" 2 "terraform destroy quoted for ssh is blocked"
+    expect_command "sudo dd if=disk.img of=/dev/sda" 2 "dd writing to a device is blocked"
+    expect_command "sudo mkfs.ext4 /dev/sdb1" 2 "mkfs is blocked"
+    expect_command "find . -name '*.pyc' -delete" 2 "find -delete is blocked"
+    expect_command "chmod -R 777 /" 2 "chmod -R 777 / is blocked"
+}
+
+test_red_prose_mentioning_destructive_commands_is_allowed() {
+    # Issue #1487: EXTRA_PATTERNS matched anywhere in the command string.
+    expect_command "git commit -m \\\"docs: never run terraform destroy from CI\\\"" 0 "a commit message naming terraform destroy is allowed"
+    expect_command "gh pr comment 1 --body \\\"The hook blocks DROP TABLE and mkfs.ext4\\\"" 0 "a PR comment naming DROP TABLE and mkfs is allowed"
+    expect_command "echo 'avoid find with -delete here'" 0 "prose naming find -delete is allowed"
+}
+
 assert_file "$HOOK"
 
 TESTS=(
@@ -297,6 +344,10 @@ TESTS=(
     test_force_with_lease_is_allowed
     test_prose_mentioning_a_push_is_not_a_push
     test_other_git_subcommands_are_not_pushes
+    test_package_manager_install_is_still_blocked
+    test_red_prose_mentioning_package_manager_install_is_allowed
+    test_destructive_commands_are_still_blocked
+    test_red_prose_mentioning_destructive_commands_is_allowed
 )
 
 FAILED=0
