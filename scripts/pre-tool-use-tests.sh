@@ -43,7 +43,7 @@ trap cleanup EXIT
 SENTINEL_BIN="$TMP_ROOT/sentinel-bin"
 SENTINEL_LOG="$TMP_ROOT/sentinel-executed.log"
 mkdir -p "$SENTINEL_BIN"
-for name in pip npm uv python python3.12 psql terraform dd mkfs.ext4 find chmod ssh sudo timeout nohup nice xargs docker docker-compose curl; do
+for name in pip npm uv python python3.12 psql terraform dd mkfs.ext4 find chmod ssh sudo timeout nohup nice xargs docker docker-compose curl wget parallel watch; do
     printf '#!/bin/sh\necho "%s $*" >> "%s"\nexit 99\n' "$name" "$SENTINEL_LOG" > "$SENTINEL_BIN/$name"
     chmod +x "$SENTINEL_BIN/$name"
 done
@@ -450,9 +450,36 @@ test_red_docker_commands_on_label_suite_resources_are_allowed() {
     expect_command "docker logs label-suite-backend-1" 0 "docker logs is read-only"
 }
 
+test_red_docker_evasions_are_blocked() {
+    # Issue #1487 security review: shell expansion, quoting, stdin feeders and
+    # less common command positions must not slip a foreign target or a prune
+    # past the checks.
+    expect_command "docker rm {label-suite-db,other}" 2 "a brace expansion hiding a foreign target is blocked"
+    expect_command "docker stop label-suite\$SUFFIX" 2 "a variable expansion in a target is blocked"
+    expect_command "docker stop label-suite-*" 2 "a glob in a target is blocked"
+    expect_command "docker stop label-suite-db '#' other" 2 "a quoted # does not end the target list"
+    expect_command "docker stop label-suite-db '>' other" 2 "a quoted > is not a redirection"
+    expect_command "docker compose -p label-suite\$SUFFIX down" 2 "a variable expansion in a compose project is blocked"
+    expect_command "echo other | xargs docker stop label-suite-db" 2 "a teardown under xargs is blocked whatever its explicit targets"
+    expect_command "parallel docker stop ::: other" 2 "a teardown under parallel is blocked"
+    expect_command "find . -exec docker rm label-suite-db {} +" 2 "a teardown under find -exec is blocked"
+    expect_command "eval docker stop other" 2 "a teardown behind eval is blocked"
+    expect_command "if docker stop other; then :; fi" 2 "a teardown as an if condition is blocked"
+    expect_command "! docker stop other" 2 "a negated teardown is blocked"
+    expect_command "watch docker stop other" 2 "a teardown behind watch is blocked"
+    expect_command "do\\\"\\\"cker system prune -af" 2 "docker prune with quotes inside the command name is blocked"
+    expect_command "docker system pr''une" 2 "docker prune with quotes inside the subcommand is blocked"
+    expect_command "D=docker; \$D system prune -af" 2 "docker prune through a variable holding the command name is blocked"
+    expect_command "curl --unix-socket /var/run/docker.sock -X DELETE http://localhost/containers/abc" 2 "a container delete through the Docker socket is blocked"
+    expect_command "wget -qO- --post-data= http://localhost/containers/abc/stop --unix-socket /var/run/docker.sock" 2 "raw socket access through wget is blocked"
+    # Prune is refused even inside prose: the hook cannot tell a message from
+    # a disguised call, and the ban has no escape hatch. Write such text to a
+    # file and pass it with -F / --body-file instead.
+    expect_command "git commit -m \\\"fix: block docker system prune on shared hosts\\\"" 2 "a command string naming docker prune is blocked"
+}
+
 test_red_prose_mentioning_docker_bans_is_allowed() {
-    # Issue #1487: naming a banned command mid-sentence is not running it.
-    expect_command "git commit -m \\\"fix: block docker system prune on shared hosts\\\"" 0 "a commit message naming docker system prune is allowed"
+    # Issue #1487: naming a teardown mid-sentence is not running it.
     expect_command "gh issue comment 1 --body 'never run docker stop on other containers'" 0 "an issue comment naming docker stop is allowed"
     expect_command "echo 'ban: docker compose down without -p'" 0 "prose naming docker compose down is allowed"
 }
@@ -483,6 +510,7 @@ TESTS=(
     test_red_docker_commands_on_foreign_resources_are_blocked
     test_red_compose_without_label_suite_project_is_blocked
     test_red_docker_commands_on_label_suite_resources_are_allowed
+    test_red_docker_evasions_are_blocked
     test_red_prose_mentioning_docker_bans_is_allowed
 )
 
