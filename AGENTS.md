@@ -35,6 +35,7 @@ Tool choice and output-location conventions for new diagrams: [`docs/diagrams/RE
 7. **No `any` in TypeScript** — strict mode is enforced.
 8. **No `allow_origins=["*"]`** — list CORS origins explicitly.
 9. **No unconfirmed destructive Bash** — `rm`, `git reset --hard`, `git push --force`, `git branch -D` require explicit user confirmation in the same turn before executing.
+10. **No Docker prune, no foreign containers** — never run any `docker ... prune` variant on any host, and only tear down `label-suite`-prefixed resources and `-p label-suite*` compose projects; the deploy host is shared with other labs, and no hook guards agents outside Claude Code (Constitution XXIII — NON-NEGOTIABLE).
 
 ## Required Behaviors
 
