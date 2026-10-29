@@ -728,11 +728,16 @@ sudo nginx -t && sudo systemctl reload nginx
 - **只看指令字串、看不到容器歸屬**：取名為 `label-suite-x` 的他人容器照樣放行
 - **已知攔不住的寫法**：
   - 指令名稱被反斜線或引號拆開時（`d\ocker stop …`）的目標檢查；prune 仍會被擋
-  - 由變數拼出的指令名稱（`${D}er system prune`）
+  - 由變數拼出的指令名稱（`${D}er system prune`）、ANSI-C 跳脫（`$'\x64ocker'`）、
+    萬用字元指令名稱（`/usr/bin/doc?er`）：shell 展開後才成形的字，純文字比對看不到
   - podman 等其他容器 CLI、`docker exec`／`docker run` 內部的操作
-  - 用 Python 等語言直接打 Docker socket
-- **刻意的誤擋**：同一條指令裡只要同時出現 `docker` 與 `prune` 兩個字就會被擋，即使只是
-  commit message 或 issue 本文；這類文字請寫進檔案，再用 `-F`／`--body-file` 傳入
+  - 在腳本檔裡打 Docker socket，或以萬用字元、變數拼出 socket 路徑
+  - 要完整封住只能靠主機端（socket 權限或 Docker authz plugin），不在 hook 的能力範圍
+- **刻意的誤擋**：
+  - 同一條指令裡只要同時出現 `docker` 與 `prune` 兩個字就會被擋，即使只是 commit message
+    或 issue 本文
+  - 指令只要提到 `docker.sock` 就會被擋，不論是哪個客戶端，也不論是不是在建立連結
+  - 這類文字請寫進檔案，再用 `-F`／`--body-file` 傳入
 
 ---
 
