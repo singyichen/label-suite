@@ -46,10 +46,16 @@ AT_CMD='(^|[;&|]|\$\()[[:space:]]*'
 
 # CMD_START widens AT_CMD for the checks below, whose dangerous command often
 # sits inside a quoted string handed to another program — ssh '<cmd>',
-# bash -c '<cmd>', psql -c "<sql>". An opening quote therefore also starts a
-# command, and a leading sudo is skipped. Prose that names a command
-# mid-sentence still passes (issue #1487); prose that opens with one does not.
-CMD_START="(^|[;&|'\"]|\\\$\\()[[:space:]]*(sudo[[:space:]]+)?"
+# bash -c '<cmd>', psql -c "<sql>" — so an opening quote, `(` and `{` also
+# start a command. It then skips whatever may legally precede the command
+# name: env assignments, wrappers with their options (sudo -E, timeout 60),
+# the shell keywords then/do/else, and a path (/usr/bin/pip). Prose that
+# names a command mid-sentence still passes (issue #1487); prose that opens
+# with one does not — over-blocking prose beats missing a real call.
+CMD_ASSIGN='[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+'
+CMD_WRAPPER='(sudo|env|nohup|nice|time|command|exec|xargs|timeout)([[:space:]]+-[^[:space:]]+([[:space:]]+[^-[:space:]][^[:space:]]*)?)*([[:space:]]+[0-9][^[:space:]]*)?[[:space:]]+'
+CMD_KEYWORD='(then|do|else)[[:space:]]+'
+CMD_START="(^|[;&|({'\"]|\\\$\\()[[:space:]]*(${CMD_ASSIGN}|${CMD_WRAPPER}|${CMD_KEYWORD})*([^[:space:]'\"]*/)?"
 
 # Block: any push while the branch it runs on is main/master (AGENTS.md Rule 2).
 # Branch detection closes the 'git push origin HEAD' gap a pure regex misses.
@@ -120,7 +126,7 @@ if printf '%s\n' "$COMMAND" | grep -qE "${AT_CMD}${GIT_PUSH}[^|&;]*[[:space:]](-
 fi
 
 # Block: pip/npm install — wrong package managers (AGENTS.md Rule 3)
-if echo "$COMMAND" | grep -qE "${CMD_START}((uv|python3?[[:space:]]+-m)[[:space:]]+)?(pip|npm)[[:space:]]+install([^[:alnum:]]|$)"; then
+if echo "$COMMAND" | grep -qE "${CMD_START}((uv|python3?(\.[0-9]+)?[[:space:]]+-m)[[:space:]]+)?(pip|npm)[[:space:]]+install([^[:alnum:]]|$)"; then
   echo "❌ Blocked: use 'uv add' (backend) or 'pnpm add' (frontend) — not pip/npm install (AGENTS.md Rule 3)." >&2
   exit 2
 fi
@@ -137,7 +143,7 @@ NORMALIZED=$(echo "$COMMAND" | tr -s ' \t' ' ')
 # The fork bomb stays unanchored: its shape never occurs in prose.
 EXTRA_PATTERNS=(
   "DROP TABLE/DATABASE|${CMD_START}DROP (TABLE|DATABASE)"
-  "terraform destroy|${CMD_START}terraform destroy"
+  "terraform destroy|${CMD_START}terraform( -[^ ]+)* destroy"
   "dd of=/dev/|${CMD_START}dd [^;&|]*of=/dev/"
   "mkfs|${CMD_START}mkfs\."
   "fork bomb|:\(\)\{.*\};"
