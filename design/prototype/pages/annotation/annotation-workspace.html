@@ -1104,10 +1104,11 @@
 
     /* ── Reviewer mode: review reason (issue #552/#596, FR-016A) ────────── */
     .rv-review-reason { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
-    /* Blocked look while a modify/bypass decision still lacks its reason;
-       the click stays live so the FR-083 toast can name the output types. */
-    #wsReviewSubmitBtn[data-submit-blocked] { opacity: 0.55; cursor: not-allowed; }
-    .rv-review-reason-label { font-size: 12px; font-weight: 600; color: var(--color-error); }
+    /* issue #1494: the label is no longer an error-coloured "必填" marker --
+       the reason is optional (FR-016A v13.0.0), so it reads as an ordinary
+       field label. The matching #wsReviewSubmitBtn[data-submit-blocked]
+       blocked look went with the blocker itself. */
+    .rv-review-reason-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); }
 
     .rv-review-reason textarea {
       width: 100%;

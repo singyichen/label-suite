@@ -207,7 +207,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | `arbiter_membership_id` | uuid | 否 | 當次合格且非當事的仲裁者 | 建立；不改 | X-04 |
 | `review_revision_id` | uuid | 否 | 投票所見的不可變 reviewer 版本 | 建立；不改 | V-04 |
 | `choice` | varchar(16) | 否 | `adopt_a`／`adopt_b`／`reject` | 建立；不改 | V-05 |
-| `reason` | text | 否 | 每張仲裁票的裁定理由；三種 choice 都必填且非空白 | 建立；不改 | V-05 |
+| `reason` | text | 否 | 每張仲裁票的裁定理由；三種 choice 皆必須寫入此欄，值為選填故允許空字串 | 建立；不改 | V-05 |
 | `has_finalized_value` | boolean | 否 | 本票是否產生定案值；區分合法 JSON null | 建立；不改 | V-06 |
 | `finalized_value` | json | 是 | A／B 的定案值；SQL NULL 表示沒有值 | 建立；不改 | V-06 |
 | `source_digest` | char(64) | 否 | 標記提交與 reviewer revision 的來源摘要 | 建立；不改 | V-04 |
@@ -230,7 +230,7 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | `arbitration_vote_id` | uuid | 否 | 唯一 `reject` 票 | 建立；不改 | E-03 |
 | `resolved_by_membership_id` | uuid | 否 | 確認的 project leader membership | 建立；不改 | X-04 |
 | `action` | varchar(32) | 否 | 四種 `EXCEPTION_POOL_ACTIONS` 之一 | 建立；不改 | E-05 |
-| `reason` | text | 否 | 非空白的收尾理由 | 建立；不改 | E-05 |
+| `reason` | text | 否 | 收尾理由；必須寫入此欄，值為選填故允許空字串 | 建立；不改 | E-05 |
 | `has_finalized_value` | boolean | 否 | 是否有定案值；合法 JSON null 仍可為 true | 建立；不改 | E-06 |
 | `finalized_value` | json | 是 | 採用／自訂的已驗證答案；排除時 SQL NULL | 建立；不改 | E-06 |
 | `resolved_at` | timestamptz | 否 | 確認 UTC 時間 | 建立；不改 | X-03 |
@@ -298,23 +298,23 @@ UNIQUE 單位鍵阻擋兩位 reviewer 並列正式提交。首次提交者的 st
 | S-03 | DB＋SVC | head `version > 0`；同 reviewer 明示改判時更新 head、逐 outKey decision、完整 revision、history 與草稿失效同交易；有票後凍結已列入 015 FR-103／FR-105；交易與競爭測試待實作 | 015 FR-103、DBA 設計 |
 | J-01 | DB | decision PK、FK → submission；UNIQUE `(review_submission_id,output_key)` | 015 FR-092 |
 | J-02 | SVC | `output_key` 必須屬釘住 config 的 `outputs[]`，同次提交對每個 outKey 恰一列；跨表／JSON 範圍不能由單列 CHECK 保證 | 015 FR-044／FR-092 |
-| J-03 | DB＋SVC | CHECK decision 三值；`approve/bypass` 不帶 corrected_answer，`modify/bypass` 要非空白 reason；`modify` 的 corrected_answer 必須是經 registry 驗證的值，合法 JSON null 與 SQL NULL 不同。完整性由 SVC 檢查後同交易替換目前子列 | 015 FR-092／FR-103 |
+| J-03 | DB＋SVC | CHECK decision 三值；`approve/bypass` 不帶 corrected_answer；`modify/bypass` 的 reason 為選填，允許空字串（issue #1494，015 FR-016A v13.0.0：原要求非空白，該 CHECK 不得建立）；`modify` 的 corrected_answer 必須是經 registry 驗證的值，合法 JSON null 與 SQL NULL 不同。完整性由 SVC 檢查後同交易替換目前子列 | 015 FR-092／FR-103 |
 | V-01 | DB | vote PK、UNIQUE `(run_id,assignment_id,output_key,item_key)`；每鍵至多一票的 V1 候選阻止並發重投。另設 UNIQUE `(run_id,assignment_id,id)` 與 UNIQUE `(run_id,assignment_id,output_key,item_key,id)`，分別作 H-05 與 E-02 的父鍵 | DBA 設計 V1 單次裁定 |
 | V-02 | SVC | `output_key × item_key` 由 FR-052 差異推導；item_key 用型別化 canonical encoding、含版本且無分隔碰撞；sequence_tagging 粒度已由 015 收斂；entity_recognition 位置落差及精確鍵編碼待 §7 裁決 | 015 FR-052／FR-059 |
 | V-03 | DB＋SVC | arbiter membership 以 X-04 的 `(task_id,arbiter_membership_id)` 複合 FK 綁定同 task；仲裁者**豁免**候選名冊 FK，因 project_leader 的 FR-023 fallback 不在 `task_run_reviewer_candidate`。服務驗 active、可仲裁名冊、非當事與 ADR-037 資源條件；project leader 的 FR-023 fallback 同樣需服務授權 | 015 FR-060、014 FR-023 |
 | V-04 | DB＋SVC | `(run_id,assignment_id,review_revision_id)` 複合 FK → `annotation_review_submission_revision(run_id,assignment_id,id)`，使票與 revision 必在同單位；來源摘要包含該 revision、對應標記提交版本與 canonical A/B，讀寫驗 digest 未漂移 | 015 FR-052／FR-061、DBA 設計 |
-| V-05 | DB＋SVC | CHECK choice `adopt_a/adopt_b/reject`；所有三種 choice 的 reason 均 NOT NULL，CHECK trim(reason) <> ''；`adjudicated` history event 同交易帶入該票理由；票不可 UPDATE/DELETE 由 A-01 強制 | 015 FR-061／FR-089 |
+| V-05 | DB＋SVC | CHECK choice `adopt_a/adopt_b/reject`；所有三種 choice 的 reason 均 NOT NULL（欄位必須寫入），但**不得**建立 `CHECK trim(reason) <> ''`——理由為選填，空字串是合法值（issue #1494，015 FR-061 第 3 點 v13.0.0）；`adjudicated` history event 同交易帶入該票理由；票不可 UPDATE/DELETE 由 A-01 強制 | 015 FR-061／FR-089 |
 | V-06 | DB＋SVC | `reject` 時 `has_finalized_value=false` 且 `finalized_value` 為 SQL NULL；`adopt_a/b` 時 flag=true、JSON 值有效，**JSON null** 可為合法 B 值；SQLite／PG 序列化不得把 JSON null 轉成 SQL NULL | 015 FR-061、DBA 設計 |
 | V-07 | DB＋SVC | 同 batch 票共用 `decision_batch_id`／digest；`decision_batch_digest` 逐票重複是明示的不可變反正規化，SVC 同交易核對同 `(run_id,assignment_id,decision_batch_id)` 的所有票 digest 完全一致，否則整批拒絕／回滾。按此三欄查重送，完整同內容回原票，異內容拒絕；全部目前爭議鍵同交易一票為 V1 候選 | DBA 設計 V1 單次裁定 |
 | E-01 | DB | resolution PK、UNIQUE `(run_id,assignment_id,output_key,item_key)` 與 UNIQUE `(arbitration_vote_id)`；同 reject 票及同鍵只可確認一次。另設 UNIQUE `(run_id,assignment_id,id)` 作 H-05 的同單位父鍵 | 015 FR-095 |
 | E-02 | DB＋SVC | `(run_id,assignment_id,output_key,item_key,arbitration_vote_id)` 複合 FK → `annotation_arbitration_vote(run_id,assignment_id,output_key,item_key,id)`，由 DB 保證收尾的單位與鍵等於被參照 vote | 015 FR-059／FR-095 |
 | E-03 | DB＋SVC | `arbitration_vote_id` 參與 E-02 複合 FK；只能參照 `choice='reject'` 的票，後者由 SVC 驗證，不能把已定案票送進例外池 | 015 FR-095 |
 | E-04 | DB＋SVC | resolved_by membership 以 X-04 的 `(task_id,resolved_by_membership_id)` 複合 FK 綁定同 task；服務驗 active project_leader 與當前權限 | 015 FR-095、ADR-037 |
-| E-05 | DB＋SVC | CHECK `action IN ('adopt_annotator','adopt_reviewer','custom_answer','exclude_from_dataset')`、trim(reason) 非空；`custom_answer` 僅 Official，run_type 經 run 解析後由 SVC 驗 | 015 FR-095 |
+| E-05 | DB＋SVC | CHECK `action IN ('adopt_annotator','adopt_reviewer','custom_answer','exclude_from_dataset')`；reason NOT NULL 但**不得** CHECK 非空白——理由為選填（issue #1494，015 FR-095 v13.0.0）；`custom_answer` 僅 Official，run_type 經 run 解析後由 SVC 驗 | 015 FR-095 |
 | E-06 | DB＋SVC | `exclude_from_dataset` 時 flag=false 且 SQL 值 NULL；其他動作有已驗證定案值，`custom_answer` 不得為 JSON null；`adopt_reviewer` 的合法 JSON null 依 output schema 驗證 | 015 FR-095、DBA 設計 |
 | H-01 | DB＋SVC | event PK、UNIQUE `(run_id,assignment_id,event_no)`、CHECK `event_no>0`；序號與業務寫入同交易分配，事件 append-only（A-01） | 015 FR-016B／FR-097 |
 | H-02 | DB＋SVC | actor membership 以 X-04 的 `(task_id,actor_membership_id)` 複合 FK 綁定同 task；當次角色快照與 membership、權限矩陣同 task 驗證，不依事件中的角色快照賦予現時權限 | 015 FR-050、ADR-037 |
-| H-03 | DB＋SVC | CHECK action 僅 `draft_saved/submitted/modified/accepted/bypassed/adjudicated/exception_resolved/excluded`；另 CHECK `action <> 'draft_saved' OR actor_task_role = 'annotator'`，`draft_saved` 只屬標記員（事件已有當次角色快照欄，故以 DB 限制而非僅靠服務）；審核員草稿不寫任何 history 事件（SVC 規則，D-03 草稿存於 `annotation_review_draft`，不得產生 `draft_saved`，否則違反盲審隔離）；outKey、reason 是否必需按 action／FR-089 驗，歷史舊值若日後遷入需另有相容策略 | 015 FR-086／FR-089、FR-014S／FR-062 |
+| H-03 | DB＋SVC | CHECK action 僅 `draft_saved/submitted/modified/accepted/bypassed/adjudicated/exception_resolved/excluded`；另 CHECK `action <> 'draft_saved' OR actor_task_role = 'annotator'`，`draft_saved` 只屬標記員（事件已有當次角色快照欄，故以 DB 限制而非僅靠服務）；審核員草稿不寫任何 history 事件（SVC 規則，D-03 草稿存於 `annotation_review_draft`，不得產生 `draft_saved`，否則違反盲審隔離）；outKey 是否必需按 action 驗；reason 於 `modified`／`bypassed`／`adjudicated`／`exception_resolved`／`excluded` 五種 action 必須寫入該欄但值為選填、允許空字串（issue #1494，015 FR-097 v13.0.0），標記員答案層級 Bypass 理由（FR-089）維持必填不變，歷史舊值若日後遷入需另有相容策略 | 015 FR-086／FR-089、FR-014S／FR-062 |
 | H-04 | DB＋SVC＋SEC | `submitted`／`modified`／`adjudicated` 的 `result_snapshot` 必填非空，含完整 `outputs[]`，排除原始文本與資料集欄位；寫入前依 registry 驗證。CHECK `lead_time_ms IS NULL OR lead_time_ms>=0`；同一次作業的 `started_at` 與 `lead_time_ms` 恰寫一次：多筆 reviewer 決策事件共用 `review_revision_id` 時，僅第一筆事件（最小 `event_no`）帶 `started_at` 與 `lead_time_ms`，其餘事件的 `started_at` 與 `lead_time_ms` 均為 SQL NULL；單事件作業兩欄成對寫入，由 SVC 同交易驗證，舊版重複事件保留原樣。FR-090 在資料供給層先排除其他標記員的整筆事件（含列、摘要及計數），再按角色遮蔽允許事件的快照、理由與耗時 | 015 FR-087～FR-091、主憲法 III |
 | H-05 | DB＋SVC | 四個來源 ID 各為同單位複合 FK，ON DELETE RESTRICT：`(run_id,assignment_id,annotation_record_id)` → `annotation_record(run_id,assignment_id,id)`、`(run_id,assignment_id,review_revision_id)` → `annotation_review_submission_revision(run_id,assignment_id,id)`、`(run_id,assignment_id,arbitration_vote_id)` → `annotation_arbitration_vote(run_id,assignment_id,id)`、`(run_id,assignment_id,exception_resolution_id)` → `annotation_exception_resolution(run_id,assignment_id,id)`。來源欄位可空，採 MATCH SIMPLE（來源為 NULL 時該 FK 不檢查）；另設 DB CHECK `((annotation_record_id IS NOT NULL) + (review_revision_id IS NOT NULL) + (arbitration_vote_id IS NOT NULL) + (exception_resolution_id IS NOT NULL)) = 1`，每個事件恰有一個來源 ID。此寫法為 SQLite／PostgreSQL 可攜形式（不依賴 PostgreSQL 專有的計數函式）；PostgreSQL 不允許 boolean 相加時，改用 `(col IS NOT NULL)::int` 或 `CASE WHEN col IS NOT NULL THEN 1 ELSE 0 END`，語意不變。審核來源指向不可變 revision，經 revision → submission 回查 head，避免舊事件隨 head 改判而失去版本身分；各 action 與來源種類的對應仍由 SVC 在同交易先建立來源再寫事件時核對。舊 action 值與無來源列不能通過 H-03／本 CHECK，日後若有遷移須另訂政策 | 015 FR-097／FR-103 |
 | H-06 | DB＋SVC＋SEC | `account_session_id` 是可空真 FK → `account_session.id`，ON DELETE RESTRICT；舊／系統事件可空，新認證使用者動作須在同一交易從已驗證 `sid` 寫入，拒絕客戶端自報 ID。SVC 核對 session 的 `user_id` 等於 actor membership 所屬使用者；無法證實者不得猜測 session 歸屬。事件查詢以授權投影隔離其他人的工作階段與敏感答案，標記者 API 不下發跨人 session ID | 015 FR-088、FR-097；014 FR-007d |

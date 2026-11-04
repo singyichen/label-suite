@@ -326,7 +326,7 @@ erDiagram
         string reviewer_id "每個審核單位恰一位審核員"
         string decision "REVIEW_DECISIONS = approve 或 modify 或 bypass"
         json correction "八型全支援，含修正後結果與 diff"
-        string reason "decision 為 modify 或 bypass 時必填"
+        string reason "decision 為 modify 或 bypass 時寫入，值為選填，015 v13.0.0"
         datetime decided_at
     }
     ReviewUnit {

@@ -320,27 +320,23 @@ test.describe('issue #811: 答案值一律等於共用側欄匯出之答案值�
   });
 });
 
-test.describe('issue #811: 缺理由 toast 文案 (FR-083 / design.md D5, 鍵名 toastReasonRequired 不變)', () => {
-  /* T001 只有一個輸出類型 (single_label)，{list} 代入後即單一項目名稱。
-   * 選 modify 後不填理由再送出 -> reviewRowBlocker() 回傳 'reason' ->
-   * toastKey = toastReasonRequired。裁定後 zh 文案補回「審核」二字：
-   * `請填寫以下輸出類型的審核理由：{list}`（現況缺這兩個字）。本任務書
-   * (tasks.md 1.1) 只要求釘住 zh，en 由 Wave 2 之外的既有鍵本身處理，不在
-   * 本檔案斷言範圍內。
-   *
-   * issue #929（AC-3.47 對稱情形）：{list} 本身自 v6.22.0 起改代入輸出類型
-   * 顯示名稱而非原始 registry key，`toastSelectDecision` 與本測試所鎖定的
-   * `toastReasonRequired` 為同一條 AC 規範之兩種阻擋情形、共用同一段
-   * pendingOutputLabels 推導邏輯，因此隨之位移為 `單一標籤`；本條所鎖定的
-   * `toastReasonRequired` 鍵名本身、以及此檔案其餘鎖定 BYPASS_WORDING
-   * 答案值/決策值區分的斷言不受影響、一個字未動。 */
-  test('zh: the missing-reason toast reads 請填寫以下輸出類型的審核理由：單一標籤', async ({ page }) => {
+test.describe('issue #811 → #1494: 缺理由 toast 已退場 (FR-083 v13.0.0)', () => {
+  /* 本組原本釘住 `toastReasonRequired` 的 zh 文案（`請填寫以下輸出類型的審核
+   * 理由：{list}`）。issue #1494 將 FR-016A 的理由改為選填後，FR-083 的送出
+   * 驗證移除「缺理由」一類，`reviewRowBlocker()` 回傳值集合收斂為
+   * `null | 'undecided' | 'answer'`，該文案鍵因此沒有任何可達觸發路徑而一併
+   * 退場（鍵名保留不重用）。原斷言改寫為反向的退場守門：缺理由必須送得出去，
+   * 且畫面不得出現任何要求補填理由的提示。本檔其餘鎖定 BYPASS_WORDING
+   * 答案值／決策值區分的斷言不受影響、一個字未動。 */
+  test('zh: 選 modify 未填理由仍可送出，且不出現任何缺理由提示', async ({ page }) => {
     await gotoReviewerWorkspace(page, { task_id: 'T001', sample_id: 'sent-001', run_type: 'official_run' });
     await dismissGuidelineModal(page);
 
     await page.getByTestId('ws-review-row-modify').click();
+    await expect(page.getByTestId('ws-review-submit-btn')).not.toHaveAttribute('data-submit-blocked', 'reason');
     await page.getByTestId('ws-review-submit-btn').click();
 
-    await expect(page.locator('#toastMsg')).toHaveText('請填寫以下輸出類型的審核理由：單一標籤');
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
+    await expect(page.locator('#toastMsg')).not.toContainText('理由');
   });
 });

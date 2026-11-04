@@ -790,6 +790,7 @@
       dryRunFeedbackSummaryTpl: '共 {total} 筆，其中 {modified} 筆經審核修正（{pct}%）',
       dryRunFeedbackSourceTpl: '{action}・{actor}',
       dryRunFeedbackGuidelineLink: '查看指南段落',
+      reasonEmptyPlaceholder: '未填寫理由',
     },
     en: {
       pageTitle: 'Annotation List',
@@ -860,6 +861,7 @@
       dryRunFeedbackSummaryTpl: '{total} total, {modified} modified by review ({pct}%)',
       dryRunFeedbackSourceTpl: '{action}・{actor}',
       dryRunFeedbackGuidelineLink: 'View guideline section',
+      reasonEmptyPlaceholder: 'No reason given',
     }
   };
   function t(key, vars) {
@@ -2310,11 +2312,21 @@
     });
     rowEl.appendChild(sourceEl);
 
-    if (row.reason) {
+    /* FR-096 / issue #1494 (AC-3.67): the reviewer's reason is optional
+       now, so an empty one still renders -- as the placeholder, never as a
+       dropped element. The annotator must see that their answer was changed
+       even when nobody wrote down why. An empty reason carries no citation
+       syntax, so the whole-guideline fallback link below applies to it. */
+    if (row.reason !== undefined && row.reason !== null) {
       var reasonEl = document.createElement('span');
       reasonEl.className = 'dry-run-feedback-reason';
       reasonEl.setAttribute('data-testid', 'ws-dry-run-feedback-reason');
-      var hasCitationSyntax = renderGuidelineCitations(reasonEl, row.reason, profile, context, row);
+      var hasCitationSyntax = false;
+      if (row.reason) {
+        hasCitationSyntax = renderGuidelineCitations(reasonEl, row.reason, profile, context, row);
+      } else {
+        reasonEl.textContent = t('reasonEmptyPlaceholder');
+      }
       rowEl.appendChild(reasonEl);
 
       /* Preserve the pre-#620 whole-guideline affordance for legacy reasons
