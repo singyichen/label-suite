@@ -269,7 +269,7 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     await expect(item.locator('[data-testid^="ws-exception-pool-action-"]')).toHaveCount(actions.length);
   });
 
-  test('AC-4.56/AC-4.72/AC-4.75: custom_answer expands the config-driven single_label control; selecting alone does not write; empty reason disables Confirm', async ({ page }) => {
+  test('AC-4.56/AC-4.72/AC-4.75: custom_answer expands the config-driven single_label control; selecting alone does not write; Confirm enables on selection alone (issue #1494)', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
@@ -308,11 +308,13 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     expect(summaryAfterValue).not.toBe(summaryAfterSelect);
     expect(summaryAfterValue).toContain('neutral');
 
-    // AC-4.75: reason still empty -> Confirm stays natively disabled (no
-    // toast-blocked click-through anymore).
-    await expect(confirmBtn).toBeDisabled();
+    // AC-4.75 (issue #1494): the reason is optional, so Confirm is already
+    // enabled with it empty -- selecting a disposition is the only gate.
+    await expect(confirmBtn).toBeEnabled();
 
     await item.getByTestId('ws-exception-pool-reason').fill('自訂答案（測試理由）');
+    // Typing a reason does not re-disable it either (the old "switch
+    // re-disables until the reason fires input" rule was withdrawn).
     await expect(confirmBtn).toBeEnabled();
     await confirmBtn.click();
 
@@ -352,7 +354,7 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     await expect(item.getByRole('button', { name: 'neutral' })).toHaveCount(0);
   });
 
-  test('FR-063/FR-086/AC-4.72/AC-4.75: adopt_annotator select-then-confirm resolves the item and finalizes the unit, with a non-empty reason (issue #913 fix)', async ({ page }) => {
+  test('FR-063/FR-086/AC-4.72/AC-4.75: adopt_annotator select-then-confirm resolves the item and finalizes the unit, writing the reason field even when left empty (issue #913 / #1494)', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
@@ -373,28 +375,33 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
     expect(await unitStatus(page, 'official_run')).toBe('disputed');
 
-    // AC-4.75: reason required for ALL FOUR actions now, including this one
-    // -- Confirm stays natively disabled while it is empty.
-    await expect(confirmBtn).toBeDisabled();
-
-    await reasonField.fill('採用標記員原答案（測試理由）');
+    // AC-4.75 (issue #1494): the reason is optional for all four actions --
+    // Confirm is enabled the moment a disposition is selected. This case
+    // deliberately leaves the reason EMPTY, which is what separates #1494's
+    // contract from #913's: what #913 actually fixed is "clicking the
+    // action writes immediately", asserted above (nothing in the pool after
+    // the click). The `reason: ''` it also reported is now legal.
     await expect(confirmBtn).toBeEnabled();
+    await expect(reasonField).toHaveValue('');
     await confirmBtn.click();
 
     const pool = await readExceptionPool(page, 'official_run');
     expect(pool[OUT_KEY]).toMatchObject({ action: 'adopt_annotator', finalized_value: 'positive' });
-    // issue #913: the persisted reason MUST be non-empty, not the old
-    // `reason: ''`.
-    expect(pool[OUT_KEY].reason).toBeTruthy();
+    // FR-095 v13.0.0: the `reason` field itself is still always written --
+    // present-and-empty, never absent (absence is what would make it
+    // indistinguishable from "this action takes no reason").
+    expect(pool[OUT_KEY].reason).toBe('');
     expect(pool[OUT_KEY].resolver_id).toBeTruthy();
     expect(pool[OUT_KEY].resolved_at).toBeTruthy();
     expect(await unitStatus(page, 'official_run')).toBe('finalized');
 
     const history = await sampleHistory(page, 'official_run');
-    expect(history.some((e) => e.action === 'exception_resolved' && !!e.reason)).toBe(true);
+    const resolved = history.filter((e) => e.action === 'exception_resolved');
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].reason).toBe('');
   });
 
-  test('FR-063/FR-086/AC-4.72/AC-4.75: adopt_reviewer select-then-confirm resolves the item and finalizes the unit, with a non-empty reason (issue #913 fix)', async ({ page }) => {
+  test('FR-063/FR-086/AC-4.72/AC-4.75: adopt_reviewer select-then-confirm resolves the item and finalizes the unit, with an optional reason (issue #913 / #1494)', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
@@ -412,9 +419,10 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
     expect(await unitStatus(page, 'official_run')).toBe('disputed');
 
-    // AC-4.75: reason required -- Confirm stays natively disabled while
-    // empty.
-    await expect(confirmBtn).toBeDisabled();
+    // AC-4.75 (issue #1494): Confirm enables on selection alone; this case
+    // DOES fill a reason, so the write path for a supplied reason stays
+    // covered alongside adopt_annotator's empty-reason case above.
+    await expect(confirmBtn).toBeEnabled();
 
     await reasonField.fill('採用審核員答案（測試理由）');
     await expect(confirmBtn).toBeEnabled();
@@ -422,9 +430,7 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
 
     const pool = await readExceptionPool(page, 'official_run');
     expect(pool[OUT_KEY]).toMatchObject({ action: 'adopt_reviewer', finalized_value: 'negative' });
-    // issue #913: the persisted reason MUST be non-empty, not the old
-    // `reason: ''`.
-    expect(pool[OUT_KEY].reason).toBeTruthy();
+    expect(pool[OUT_KEY].reason).toBe('採用審核員答案（測試理由）');
     expect(pool[OUT_KEY].resolver_id).toBeTruthy();
     expect(pool[OUT_KEY].resolved_at).toBeTruthy();
     expect(await unitStatus(page, 'official_run')).toBe('finalized');
@@ -433,7 +439,7 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     expect(history.some((e) => e.action === 'exception_resolved' && !!e.reason)).toBe(true);
   });
 
-  test('FR-063/FR-095 point 4/FR-086/AC-4.72/AC-4.75: exclude_from_dataset select-then-confirm collects a reason, disables Confirm while empty, resolves the item but the unit MUST NOT read as finalized', async ({ page }) => {
+  test('FR-063/FR-095 point 4/FR-086/AC-4.72/AC-4.75: exclude_from_dataset select-then-confirm collects an optional reason, resolves the item but the unit MUST NOT read as finalized', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
@@ -459,11 +465,10 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     await expect(reasonField).toHaveCount(1);
     await expect(confirm).toHaveCount(1);
 
-    // AC-4.75: reason empty -> Confirm is natively disabled. This REPLACES
-    // the old "click while empty -> toast" pattern -- a disabled element
-    // cannot be clicked through, so the assertion is on the disabled state
-    // itself, and nothing is persisted yet.
-    await expect(confirm).toBeDisabled();
+    // AC-4.72 (issue #1494): selecting the action does not write, and the
+    // optional reason does not gate Confirm -- it is already enabled while
+    // the field is empty, yet nothing is persisted until Confirm is hit.
+    await expect(confirm).toBeEnabled();
     expect((await readExceptionPool(page, 'official_run'))[OUT_KEY]).toBeUndefined();
     expect(await unitStatus(page, 'official_run')).toBe('disputed');
 
@@ -488,7 +493,7 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
     ).toBe(true);
   });
 
-  test('AC-4.74/AC-4.75: summary line changes away from the no-selection state and Confirm disables while reason is empty, across all four official_run actions', async ({ page }) => {
+  test('AC-4.74/AC-4.75: summary line changes away from the no-selection state and Confirm enables on selection alone, across all four official_run actions', async ({ page }) => {
     await seedRejectedDisputeUnit(page, { runType: 'official_run', annotatorValue: 'positive', reviewerValue: 'negative' });
     await page.goto(buildProjectLeaderUrl('official_run'));
 
@@ -531,15 +536,16 @@ test.describe('issue #596: FR-095 final exception pool disposition screen', () =
       expect(selectedText).not.toBe(noSelectionText);
       expect(selectedText.length).toBeGreaterThan(0);
 
-      // AC-4.75 last bullet: switching to this action re-disables Confirm
-      // even though `reasonField` may still hold a previous iteration's
-      // leftover text (it is never cleared between iterations) -- a
-      // leftover reason typed for one disposition must not silently carry
-      // over as the reason for a different one. Filling the reason again
-      // re-enables it. Confirm is deliberately never clicked in this loop
-      // -- doing so would resolve the item and remove it from the queue,
-      // breaking the remaining iterations on the same item.
-      await expect(confirm).toBeDisabled();
+      // AC-4.75 (issue #1494): selecting a disposition is the whole gate,
+      // so Confirm is enabled immediately -- and switching to the next one
+      // must NOT re-disable it (the old "re-disable until the reason fires
+      // its own input event" rule was withdrawn with the reason's required
+      // status). `reasonField` deliberately keeps the previous iteration's
+      // text to prove the switch does not clear it either (design.md D1).
+      // Confirm is never clicked in this loop -- doing so would resolve the
+      // item and remove it from the queue, breaking later iterations.
+      await expect(confirm).toBeEnabled();
+      if (action !== actions[0]) await expect(reasonField).not.toHaveValue('');
       await reasonField.fill(`${action} 測試理由`);
       await expect(confirm).toBeEnabled();
     }

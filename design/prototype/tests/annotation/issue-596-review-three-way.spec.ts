@@ -145,8 +145,12 @@ test.describe('issue #596: AC-3.51 三向決策控件（通過／修正／無法
   });
 });
 
-test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不須，缺理由阻擋送出', () => {
-  test('選擇 修正 未填理由 -> 送出被阻擋，且未寫入任何審核狀態', async ({ page }) => {
+test.describe('issue #596／#1494: AC-3.53 修正／無法判定附選填理由欄，通過不出現該欄，缺理由不阻擋送出', () => {
+  /* issue #1494 (AC-3.53 v13.0.0): this case used to assert that an empty
+     reason BLOCKS the submit. FR-016A reversed that -- the reason is now
+     optional -- so the same scenario asserts the opposite outcome: the
+     submit lands, and nothing paints a blocked look on the way. */
+  test('選擇 修正 未填理由 -> 送出成功，送出鈕全程不帶 data-submit-blocked', async ({ page }) => {
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
@@ -162,14 +166,17 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await expect(reason).toHaveCount(1);
     await expect(reason).toHaveAttribute('data-outkey', 'single_label');
 
-    await page.getByTestId('ws-review-submit-btn').click();
-    const toast = page.locator('#toastMsg');
-    await expect(toast).not.toHaveText('審核已送出');
-    await expect(toast).toContainText('單一標籤');
-    await expect(page.getByTestId('ws-review-history')).not.toBeVisible();
+    /* FR-016A v13.0.0: `modify` still needs a non-empty ANSWER (AC-3.59),
+       so set one -- this case isolates the reason, not the answer gate. */
+    await row.getByTestId('ws-single-label-chip-positive').click();
+
+    const submitBtn = page.getByTestId('ws-review-submit-btn');
+    await expect(submitBtn).not.toHaveAttribute('data-submit-blocked', /.*/);
+    await submitBtn.click();
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 
-  test('選擇 無法判定 未填理由 -> 送出被阻擋，且未寫入任何審核狀態', async ({ page }) => {
+  test('選擇 無法判定 未填理由 -> 送出成功，送出鈕全程不帶 data-submit-blocked', async ({ page }) => {
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
@@ -185,11 +192,10 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await expect(reason).toHaveCount(1);
     await expect(reason).toHaveAttribute('data-outkey', 'single_label');
 
-    await page.getByTestId('ws-review-submit-btn').click();
-    const toast = page.locator('#toastMsg');
-    await expect(toast).not.toHaveText('審核已送出');
-    await expect(toast).toContainText('單一標籤');
-    await expect(page.getByTestId('ws-review-history')).not.toBeVisible();
+    const submitBtn = page.getByTestId('ws-review-submit-btn');
+    await expect(submitBtn).not.toHaveAttribute('data-submit-blocked', /.*/);
+    await submitBtn.click();
+    await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 
   test('選擇 通過 -> 不出現理由欄，且可直接送出成功', async ({ page }) => {
@@ -217,7 +223,12 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 
-  test('同一單位内，通過的 outKey 不受其他 outKey 缺理由拖累；補齊理由後可完整送出', async ({ page }) => {
+  /* issue #1494: the original case proved a 通過 outKey was not dragged down
+     by ANOTHER outKey's missing reason -- a blocker that no longer exists.
+     What survives the reversal, and is what this now pins, is the per-outKey
+     reason-field contract (FR-014N: one field per outKey inside a merged
+     span row, none on 通過) plus a clean submit with every reason blank. */
+  test('同一單位内，合併 span 列逐 outKey 各一個選填理由欄，通過列沒有；全部留空仍可送出', async ({ page }) => {
     // T013/absa-001: entity_recognition + relation_identification merge into
     // one ws-review-row (FR-014N), multi_dim gets its own -- 2 rows total.
     await gotoReviewerWorkspace(page, { task_id: 'T013', sample_id: 'absa-001', run_type: 'official_run' });
@@ -242,15 +253,9 @@ test.describe('issue #596: AC-3.53 修正／無法判定理由必填，通過不
     await dimRow.getByTestId('ws-review-row-approve').click();
     await expect(dimRow.getByTestId('ws-review-reason')).toHaveCount(0);
 
-    await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.locator('#toastMsg')).not.toHaveText('審核已送出');
-
-    const spanReasons = spanRow.getByTestId('ws-review-reason');
-    const spanReasonCount = await spanReasons.count();
-    for (let i = 0; i < spanReasonCount; i++) {
-      await spanReasons.nth(i).fill('無法判定（測試理由）');
-    }
-    await page.getByTestId('ws-review-submit-btn').click();
+    const submitBtn = page.getByTestId('ws-review-submit-btn');
+    await expect(submitBtn).not.toHaveAttribute('data-submit-blocked', /.*/);
+    await submitBtn.click();
     await expect(page.locator('#toastMsg')).toHaveText('審核已送出');
   });
 });

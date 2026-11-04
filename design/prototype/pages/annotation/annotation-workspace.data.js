@@ -610,7 +610,17 @@
     Object.keys(decisions).forEach(function (outKey) {
       var action = REVIEW_DECISION_EVENT_ACTION[decisions[outKey]];
       if (!action) return;
-      var extra = { result_snapshot: buildResultSnapshot(payload), reason: reasons[outKey] || null, outKey: outKey };
+      /* issue #1494 (FR-097 v13.0.0): an empty reason is a legal value now,
+         so it must reach the event as '' rather than collapsing to null and
+         being dropped by appendHistoryEvent -- absence is what distinguishes
+         "this decision takes no reason" (approve, no `reasons` entry) from
+         "the reviewer left it blank". */
+      var hasReason = Object.prototype.hasOwnProperty.call(reasons, outKey);
+      var extra = {
+        result_snapshot: buildResultSnapshot(payload),
+        reason: hasReason ? reasons[outKey] : null,
+        outKey: outKey,
+      };
       var attachingTiming = !timingWritten;
       if (attachingTiming) {
         Object.assign(extra, timingFields(payload && payload.timing));
@@ -868,7 +878,12 @@
    * arbitration `reject`/`兩者皆非` outcome) ends up with no
    * `result_snapshot` key at all, same as before this parameter existed. */
   function appendSampleTimelineEvent(taskId, runType, sampleId, action, role, reason, historySummary, identity, timing, resultSnapshot) {
-    if (!reason) return false;
+    /* issue #1494 (FR-061 point 3 / FR-097 v13.0.0): the arbiter's reason is
+       optional, so an empty one must NOT suppress the event -- the ruling
+       itself (who, which item, which choice) is the responsibility chain and
+       has to be recorded whether or not anyone wrote down why. Only a caller
+       passing no reason argument at all is still a no-op. */
+    if (reason == null) return false;
     /* FR-101 (issue #908): same guard as markSampleSubmitted -- see its
        comment for the trigger's reasoning. submitArbitration()'s reviewer-
        role call and any other non-annotator caller are unaffected. */
@@ -3099,7 +3114,9 @@
       'project_leader',
       'exception pool resolved: ' + key,
       DEFAULT_PROJECT_LEADER_ID,
-      { reason: reason || null }
+      /* issue #1494: FR-095 writes the reason field on every resolution,
+         empty included -- `|| null` would make it absent instead. */
+      { reason: reason == null ? '' : reason }
     );
     writeSubmissionBucket(bucketKey, bucket);
   }
@@ -3249,7 +3266,10 @@
       var entry = bucket[sampleId] || (bucket[sampleId] = { status: 'pending', answers: {} });
       appendHistoryEvent(
         entry, 'adjudicated', 'project_leader', 'leader adjudication: ' + step.decision.itemId,
-        DEFAULT_PROJECT_LEADER_ID, { reason: step.decision.reason || null, result_snapshot: snapshot }
+        /* issue #1494 (014 FR-023(3) v13.0.0): the ruling's reason is
+           optional, and an empty one must still reach the event. */
+        DEFAULT_PROJECT_LEADER_ID,
+        { reason: step.decision.reason == null ? '' : step.decision.reason, result_snapshot: snapshot }
       );
       writeSubmissionBucket(bucketKey, bucket);
     });

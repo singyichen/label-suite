@@ -196,7 +196,7 @@ test.describe('issue #596: FR-061 three-exit arbitration layout (AC-4.54)', () =
     await expect(item.getByTestId('ws-arbitration-choose-b')).toContainText('B・審核員：無法裁決');
   });
 
-  test('兩者皆非 requires a reason, then records a reject vote with the unit still 爭議中', async ({ page }) => {
+  test('兩者皆非 takes an optional reason and records a reject vote with the unit still 爭議中', async ({ page }) => {
     await seedDisputedUnit(page, labelPayload('fear'));
     await gotoAsArbiter(page);
 
@@ -205,11 +205,11 @@ test.describe('issue #596: FR-061 three-exit arbitration layout (AC-4.54)', () =
     await expect(item.getByTestId('ws-arbitration-choose-reject')).toHaveCount(1);
     await item.getByTestId('ws-arbitration-choose-reject').click();
 
-    // FR-061 point 3: reason REQUIRED -- submitting without one is blocked
-    // and writes nothing at all (point 4).
-    await page.getByTestId('ws-arbitration-submit').click();
-    expect(await arbitrationStateJson(page)).not.toContain('"choice":"reject"');
-    expect(await unitStatus(page)).toBe('disputed');
+    // FR-061 point 3 (issue #1494): the reason is optional, so the submit
+    // button is never reason-blocked. The reason IS filled below, because
+    // the assertions after the submit are about the vote carrying it --
+    // the empty-reason path is covered by issue-578-reason-required.spec.
+    await expect(page.getByTestId('ws-arbitration-submit')).not.toHaveAttribute('data-submit-blocked', 'reason');
 
     await item.getByTestId('ws-arbitration-reason').fill('兩者皆非（測試理由）');
     await page.getByTestId('ws-arbitration-submit').click();

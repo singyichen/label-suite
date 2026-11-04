@@ -151,13 +151,14 @@ test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });
 
-/* issue #596 FR-061 point 3 narrowed AC-3.50/FR-089: only the third exit
-   (兩者皆非 / reject) requires a reason now -- 採 A and 採 B finalize on an
-   answer already on the record. Canonical FR-089 still reads
-   "爭議仲裁（adjudicated）理由必填" unconditionally and the change carries no
-   MODIFIED delta for it; flagged for the archive group's write-back. These
-   tests follow FR-061, which is what the implementation does. */
-test.describe('AC-3.50: the 兩者皆非 arbitration exit requires a reason', () => {
+/* issue #596 FR-061 point 3 narrowed AC-3.50/FR-089 to the third exit
+   (兩者皆非 / reject); issue #1494 then made even that one OPTIONAL, and
+   amended FR-089 so its canonical text no longer reads "爭議仲裁
+   （adjudicated）理由必填" unconditionally -- the only action still required
+   to carry a reason is the ANNOTATOR's bypass (AC-2.29), which belongs to
+   the annotation screen, not this one. What survives for arbitration is the
+   field's presence and the `adjudicated` event's `reason` write. */
+test.describe('AC-3.50: the 兩者皆非 arbitration exit offers an optional reason', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(buildWorkspaceUrl({
       task_id: TASK, sample_id: SAMPLE, role: 'reviewer', run_type: 'official_run',
@@ -178,32 +179,34 @@ test.describe('AC-3.50: the 兩者皆非 arbitration exit requires a reason', ()
   test('adopting A or B submits without a reason (FR-061 point 3 scoping)', async ({ page }) => {
     const submitBtn = page.getByTestId('ws-arbitration-submit');
 
-    // issue #596 FR-061 point 3 narrowed the reason to the third exit only:
-    // 採 A / 採 B pick an answer that is already on the card and on the
-    // record, so there is nothing left to justify. Only 兩者皆非 introduces
-    // a value nobody proposed, and that is the one the blocker guards.
+    // issue #596 FR-061 point 3 narrowed the reason to the third exit, and
+    // issue #1494 removed the blocker from that one too -- so no choice
+    // ever paints the reason blocker. Kept as a regression guard on the
+    // 採 A / 採 B path specifically.
     await page.getByTestId('ws-arbitration-choose-a').click();
     await expect(submitBtn).not.toHaveAttribute('data-submit-blocked', 'reason');
     await page.getByTestId('ws-arbitration-choose-b').click();
     await expect(submitBtn).not.toHaveAttribute('data-submit-blocked', 'reason');
   });
 
-  test('finalizing without a reason is blocked, names the item, and writes no adjudicated event', async ({ page }) => {
+  /* issue #1494 (AC-3.50 v13.0.0): the inverse of the case this replaces.
+     The event assertion is the point -- an empty reason must not make the
+     whole `adjudicated` event vanish (the old appendSampleTimelineEvent
+     `if (!reason) return false` did exactly that), because the vote itself
+     is the responsibility chain FR-097 requires on the record. */
+  test('finalizing without a reason succeeds and still writes one adjudicated event with an empty reason', async ({ page }) => {
     await page.getByTestId('ws-arbitration-choose-reject').click();
 
     const submitBtn = page.getByTestId('ws-arbitration-submit');
-    // Choosing 兩者皆非 must already surface the reason blocker, same live
-    // refresh-on-decision convention as the reviewer reason field.
-    await expect(submitBtn).toHaveAttribute('data-submit-blocked', 'reason');
+    await expect(submitBtn).not.toHaveAttribute('data-submit-blocked', 'reason');
+    await expect(page.getByTestId('ws-arbitration-reason')).toHaveValue('');
 
     await submitBtn.click();
-    await expect(page.locator('#toast')).toHaveClass(/toast-warning/);
-    // AC-3.50: the block must NAME the item missing a reason, not just
-    // report "something is missing".
-    await expect(page.locator('#toastMsg')).toContainText('single_label');
 
     const history = await readHistory(page);
-    expect(history.some((e) => e.action === 'adjudicated')).toBe(false);
+    const adjudicated = history.filter((e) => e.action === 'adjudicated');
+    expect(adjudicated).toHaveLength(1);
+    expect(adjudicated[0].reason).toBe('');
   });
 
   test('finalizing with a reason writes exactly one adjudicated event carrying it', async ({ page }) => {
