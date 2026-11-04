@@ -265,10 +265,15 @@ expect_gate_failure "unregistered class in classList.add is rejected (issue #118
 
 # 8b. Classes under a registered / transitional / page-local prefix still pass.
 BTN_PREFIX="$(manifest_value 'm.classScan.componentClasses.button[0]')"
-TRANS_PREFIX="$(manifest_value 'm.classScan.transitionalClasses[0].classes[0]')"
+# The real manifest may carry no transitional entries (issue #1189 empties it),
+# so the transitional cases seed their own entry instead of reading [0].
+TRANS_PREFIX="zztrans"
 PAGE_PREFIX="$(manifest_value 'm.classScan.pageLocalClasses.classes[0]')"
 write_stray "const x = '<div class=\"${BTN_PREFIX}-zz\"></div>';"
 expect_gate_success "class under a componentClasses prefix passes (issue #1188)"
+patch_manifest '
+need(Array.isArray(m.classScan&&m.classScan.transitionalClasses),"classScan.transitionalClasses");
+m.classScan.transitionalClasses.push({component:"empty-state",classes:["zztrans"],reason:"Seeded transitional entry for the gate test (#1189)."});'
 write_stray "const x = '<div class=\"${TRANS_PREFIX}-zz\"></div>';"
 expect_gate_success "class under a transitionalClasses prefix passes (issue #1188)"
 write_stray "const x = '<div class=\"${PAGE_PREFIX}-zz\"></div>';"
@@ -296,8 +301,8 @@ m.classScan.classlessComponents[k]="";'
 CLASSLESS_KEY="$(manifest_value 'Object.keys(m.classScan.classlessComponents)[0]')"
 expect_gate_failure "classlessComponents entry with empty reason is rejected (issue #1188)" "$CLASSLESS_KEY"
 patch_manifest '
-need(m.classScan&&m.classScan.transitionalClasses&&m.classScan.transitionalClasses[0],"classScan.transitionalClasses[0]");
-m.classScan.transitionalClasses[0].reason="no pointer";'
+need(Array.isArray(m.classScan&&m.classScan.transitionalClasses),"classScan.transitionalClasses");
+m.classScan.transitionalClasses.push({component:"empty-state",classes:["zztrans"],reason:"no pointer"});'
 expect_gate_failure "transitional reason without #1189 is rejected (issue #1188)" "#1189"
 
 # 8e. inventory.md headings must be 1:1 with the registry via inventoryHeadings.

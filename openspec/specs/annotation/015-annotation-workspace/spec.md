@@ -1,7 +1,7 @@
 # annotation/015-annotation-workspace Specification
 
 ## Purpose
-Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v7.2.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）；以及 change `exception-pool-select-then-confirm`（issue #920，**MAJOR**）之 FR-095（修訂，新增「先選取、後確認的處置互動模型」段落，廢止 AC-4.56、AC-4.57，新增 AC-4.72 ~ AC-4.75）；以及 change `filter-review-workspace-units`（issue #956）之 FR-093（修訂，新增工作區左欄依審核指派過濾與仲裁可見性段落，對應新增 AC-4.76 ~ AC-4.79）；以及 change `fix-992-decision-summary-readable`（issue #992）之 FR-016B（修訂，新增審核決策摘要顯示層中文化段落）與新增 AC-2.28。
+Annotation List + Workspace（標記清單與標記作業，Annotator／Reviewer）的 derived view。正典為 `specs/annotation/015-annotation-workspace/spec.md`（v12.13.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `reviewer-action-hint`（issue #526）之 FR-084、AC-4.47 ~ AC-4.50 與 FR-064 第 7 點第 6 項之範圍註記；change `2026-09-01-single-owner-review-relay`（issue #596）之 FR-092 ~ FR-097（新增）、FR-014B／FR-016A／FR-044／FR-051／FR-053／FR-054／FR-055／FR-060／FR-061／FR-062／FR-063／FR-064／FR-070／FR-083／FR-086（修訂）、FR-014I／FR-069／FR-074／FR-085（移除）；change `seq-tagging-span-workspace`（issue #581）之 FR-024A／FR-024A-1／FR-024A-2／FR-024A-3／FR-052／FR-024L（修訂）；change `reserve-arbiters-from-review-assignment`（issue #868）之 FR-060／FR-073／FR-093／FR-099（修訂）；change `pl-exception-disposal-screen-shell`（issue #907）之 FR-095（修訂，新增最終例外處置畫面外殼段落與 AC-4.69）；change `gate-review-assignment`（issue #921）之 FR-093（修訂，新增工作區側送出指派閘門段落與 AC-4.70、AC-4.71）；以及 change `fix-910-review-unit-status-consistency`（issue #910）之 FR-064（修訂，補齊與 FR-053 同源之 FR-044a 遞補列限定語）與 FR-016B（新增，審核決策事件之 outKey 範圍雙送出去重）；以及 change `fix-908-annotator-finalized-lock`（issue #908）之 FR-101（新增，標記員定稿鎖定，首次以獨立標題收錄）與 FR-072（首次以獨立標題收錄，修訂第 3 點加入「未定稿單位」限定語）；以及 change `separate-review-decision-row`（issue #926／#927／#928）之 FR-014P（首次以獨立標題收錄，第 2/3/4 點修訂為決策列獨立於答案 Bypass 列，新增第 5/6 點視覺權重與鄰近送出，對應新增 AC-3.61 ~ AC-3.63）與 FR-053（修訂，列內決策控件位置措辭同步移除「Bypass 列上」）；以及 change `exception-pool-select-then-confirm`（issue #920，**MAJOR**）之 FR-095（修訂，新增「先選取、後確認的處置互動模型」段落，廢止 AC-4.56、AC-4.57，新增 AC-4.72 ~ AC-4.75）；以及 change `filter-review-workspace-units`（issue #956）之 FR-093（修訂，新增工作區左欄依審核指派過濾與仲裁可見性段落，對應新增 AC-4.76 ~ AC-4.79）；以及 change `fix-992-decision-summary-readable`（issue #992）之 FR-016B（修訂，新增審核決策摘要顯示層中文化段落）與新增 AC-2.28；以及 change `annotation-list-summary-shared`（issue #1339）之 FR-106（新增標記清單樣本摘要，對應新增 AC-1.35 ~ AC-1.38、SC-028）；以及 change `annotation-dialogue-thread-preview`（issue #1341）之 FR-107（新增整合預覽對話串與發言內座標，對應新增 AC-2.31 ~ AC-2.35、SC-029）；以及 change `annotation-dialogue-followups`（issue #1358）之 FR-106（修訂第 3 點，依 `dialogue_fields.text` 取文字）與 FR-107（修訂，新增第 8 ~ 10 點，對應新增 AC-2.36 ~ AC-2.38）；以及 change `annotation-dialogue-preview-no-output-entities`（issue #1371）之 FR-107（修訂，新增第 14 ~ 15 點，對應新增 AC-2.44 ~ AC-2.47）；以及 change `annotation-preview-entities-role-gate`（issue #1413）之 FR-107（修訂，新增第 16 點，對應新增 AC-2.48 ~ AC-2.49）。
 
 ## Requirements
 
@@ -372,7 +372,7 @@ Reviewer 審查列 MUST 僅呈現**受審標記員本人**的提交，MUST NOT �
 
 **空審核單位閘門**：審核單位「真空」——受審標記員無儲存提交（FR-051 推導為 null）**且**該樣本無 `REVIEWER_MOCK_ROWS` 遞補列——時，本條版面 MUST NOT 渲染決策控件、修正控件與送出按鈕，改渲染空狀態卡（`ws-review-empty-unit`）並保持送出按鈕隱藏（FR-058 快捷鍵同步失效）；「真空」判定 MUST 與 FR-064 橫幅顯示 `尚無標記提交` 的判定同源。
 
-**已定稿單位鎖定**：審核單位狀態推導為 `已定稿`（FR-051）時，本條版面 MUST NOT 渲染決策、修正或送出控件，改渲染 FR-094 之**純文字唯讀結果卡**；`handleReviewSubmit()` 之同源守衛於**進入時**判定，促成定稿的那一筆送出本身不受影響。已定稿單位**全面唯讀**——無決策、無直接修正、無送出；重啟流程延後至後端階段，原型 MUST NOT 發明任何解鎖入口。中間狀態（`待審`／`爭議中`）不受本鎖定影響。
+**已定稿單位鎖定**：審核單位狀態推導為 `已定稿`（FR-051）時，本條版面 MUST NOT 渲染決策、修正或送出控件，改渲染 FR-094 之**純文字唯讀結果卡**；`handleReviewSubmit()` 之同源守衛於**進入時**判定，促成定稿的那一筆送出本身不受影響。已定稿單位**全面唯讀**——無決策、無直接修正、無送出；重啟流程目前沒有正典條文定義（015 FR-016A 是審核修正與 Bypass 的稽核理由，並未定義重啟），待後端階段另行定義，追蹤於 #1421；原型 MUST NOT 發明任何解鎖入口。中間狀態（`待審`／`爭議中`）不受本鎖定影響。
 
 `dry_run` 原有之共識模型元件（`ws-review-stats`、`ws-review-consensus-badge`、`ws-review-apply-majority`、`ws-review-annotator-list` / `ws-review-annotator-row`、`ws-review-set-draft`、`ws-review-source-text`）MUST 完全不渲染，MUST NOT 以空殼 DOM 形式存在。
 
@@ -880,6 +880,8 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 
   **V1 單次收尾**：每個 `reject` 爭議鍵最多一筆已確認 resolution；確認時驗唯一 reject 票、來源 digest、PL 即時權限與動作合法性，同交易寫歷程。相同處置重送可回既有結果，異內容或覆寫終局排除拒絕；`exclude_from_dataset` 僅排除輸出項目，不刪公開 `dataset_item` 或 assignment。
 
+  **v12.4.0 修訂（issue #1270，處置動作的鍵）**：四種處置（`adopt_annotator`／`adopt_reviewer`／`custom_answer`／`exclude_from_dataset`）的「確認處置」寫入 MUST 對應 `annotation.exception.resolve`（`admin/007-role-settings` 任務層鍵，種子 PL ✅／RV ❌／AN ❌），MUST NOT 借用 `annotation.workspace.review`、`task.detail.edit` 或 `task.lifecycle.manage`。「V1 單次收尾」段所稱「PL 即時權限」，指處置者在該任務有當前 active `project_leader` membership，且 `project_leader × annotation.exception.resolve` 格為允許；處置者身分 MUST 取自受驗證帳號，不得取自路由參數或預設常數。該鍵處於「已登錄、待啟用」狀態：啟用前以它做的授權判斷 MUST 依未知鍵拒絕；處置 MUST 維持既有的角色與資源閘門（唯一 reject 票、來源 digest、項目仍待處置、動作合法），MUST NOT 改為只憑矩陣格放行。上文原文逐字保留。
+
 #### Scenario: reject 只收尾一次
 
 - **GIVEN** 同一 run／assignment 的有效當事者與目前來源
@@ -944,6 +946,15 @@ workspace reviewer 視圖 MUST 於審核卡（FR-053）、仲裁版面（FR-061�
 - **THEN** 該按鈕轉為可用，點擊後才依已選取之處置與已填理由執行對應資料寫入與歷程事件
 - **AND** 寫入之例外池紀錄的 `reason` 欄位非空字串——涵蓋 `adopt_annotator`／`adopt_reviewer` 兩者，修正其原「一鍵完成、`reason: ''`」之現行缺陷（issue #913）
 - **AND** 切換至另一個處置時，即使理由欄位仍留有前一個已選處置填入的文字，「確認處置」按鈕仍先回到停用狀態，須理由欄位再次觸發輸入事件才重新可用——避免某處置所填的理由被靜默沿用為另一處置的理由
+
+#### Scenario: 例外池處置的鍵與拒絕條件
+
+- **GIVEN** 某任務最終例外池有一筆待處置項目 E 與一筆已收尾項目 F，有 active `project_leader` P、active `reviewer` W、active `annotator` A，以及 membership 已停用的 `project_leader` Q
+- **WHEN** W、A、Q 各自確認處置 E，P 在 `annotation.exception.resolve` 啟用前確認處置 E，以及 P 對 F 以不同內容再次確認
+- **THEN** W、A、Q 的請求都拒絕，且不寫入定稿值或歷程事件
+- **AND** P 處置 E 只依既有的角色與資源閘門判斷，任何以該鍵作為必要條件的判斷依未知鍵拒絕
+- **AND** P 對 F 的異內容重送依「V1 單次收尾」拒絕，格為允許不足以放行
+- **AND** 寫入的處置者為 P 的受驗證帳號，不是路由參數或預設常數
 
 ### Requirement: FR-096 試標歷史回饋
 
@@ -1272,7 +1283,7 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 
 ### Requirement: FR-101 標記員定稿鎖定
 
-- **FR-101**（**v6.19.0 新增**，對應 AC-2.27，issue #908；**v10.0.0 修訂**，issue #1082）：**標記員定稿鎖定**。`official_run` 審核單位一旦依 FR-051 推導為 `已定稿`，且該推導成立之前提——受審標記員存在真實已儲存提交（FR-051 判定式首句：標記員未提交 → 不成立審核單位，推導為 `null`）——已滿足時，該標記員自身之後續寫入必須被鎖定，不得再變更已定稿之作答，亦不得使單位狀態翻回 `爭議中` 或 `待審`。**範圍限定**：本條僅適用 `official_run`；`dry_run` 因 `submissionBucketKey()` 無 round 維度，本條鎖定範圍不得涵蓋 `dry_run`，試標之後續回合不受影響。**觸發條件（不得誤觸的邊界）**：本條不得對僅由 FR-044a 示範標記員答案遞補、標記員本人尚無任何真實儲存提交的審核單位觸發鎖定。此類單位之 `getReviewUnitStatus()` 依 FR-051 判定式首句恆推導為 `null`，不成立「已定稿」狀態，本條鎖定天然不觸發；標記員本人之首次提交必須正常送出，不得因該單位已有示範列遞補或既有審核員決策而顯示定稿鎖定提示。本條鎖定判定必須沿用（或等價於）`getReviewUnitStatus()` 既有之判定式，使「存在真實已提交紀錄」這項前提結構性地成立，不得另立第二套不要求真實提交存在的判定捷徑（例如直接查詢審核決策記錄或 `REVIEWER_MOCK_ROWS` 遞補列本身是否存在）。**寫入側守衛**：`markSampleSubmitted()`、`markSampleSaved()`、`appendSampleTimelineEvent()`（`annotation-workspace.data.js`）三個標記員寫入點，於執行寫入前，當呼叫之 `role` 為 `annotator` 時，必須先以寫入前（pre-write）狀態呼叫上述判定；判定為 `已定稿` 時，必須直接回傳 `false`、不得寫入任何欄位、不得追加任何歷程事件，既有 bucket 內容維持原狀；未鎖定時必須回傳 `true` 並維持既有寫入行為不變。判定所需之 outKeys 必須由 `resolveTaskProfile(taskId).outputs`（`annotation-workspace.data.js:51`）內部推導取得，三個函式之既有簽章不得因本條新增參數。審核員或仲裁者之寫入路徑不屬本條範圍（FR-094、AC-3.39 已規範），不受本條三個函式之守衛約束於其 `role` 非 `annotator` 之呼叫。標記員自身促成單位轉為已定稿的那一筆提交，因寫入前狀態尚未轉為已定稿，必須正常寫入、不被本條擋下。**呈現**：鎖定生效時，畫面必須渲染鎖定提示（testid `ws-annotator-finalized-notice`），文案為「此標記結果已定稿，無法再修改或提交」（en: "This annotation is finalized and can no longer be edited or submitted."）；視覺必須沿用 FR-094 唯讀卡之語言慣例，但色階必須採資訊色（`--color-info`／`--color-info-bg`／`--color-info-border`），不得沿用 FR-094 之錯誤色——定稿是終態，不是錯誤。作答控制與**儲存草稿／提交**兩個既有控件（`wsSaveBtn`、`wsSubmitBtn`；**v10.0.0 修訂**，issue #1082：原列舉三個既有控件含 `wsSkipBtn`，該控件隨跳過功能整組移除，本點改為兩個既有控件）必須保留在畫面上並套用原生 `disabled` 屬性與 `aria-disabled="true"`，不得自 DOM 移除或隱藏，不得以非原生互動元素（例如 `div`）取代原生控件；兩者既有觸控高度不得因本條縮減。定稿當下已選定之作答必須維持可辨識，不得使已選與未選選項套用相同的視覺結果（例如整排轉灰致無法分辨曾選定何值）。自動儲存狀態列（`ws-autosave-status`）鎖定生效時必須改顯示「已定稿，不再自動儲存」（en: "Finalized — autosave stopped."），不得沿用鎖定前之 INITIAL／DIRTY／SAVED 三態文案。**不引入定稿快照**：本條判定必須沿用 FR-072(3) 既有之讀取時計算、不快取原則，不得引入任何持久化之定稿快照欄位。**不提供解鎖入口**：本條不得新增任何一般解鎖操作；重啟流程（FR-016A 審計理由）延後至後端階段，原型不提供任何解鎖入口。 **V1 來源完整性鎖**：除了既有 Official finalized 終態鎖，第一次 reviewer 正式提交後，同一 `run_id × assignment_id` 的 annotator 儲存與提交皆拒絕；Dry／Official 同樣適用，不同 Dry run 不互鎖。與首次審核競爭時序列化同一 assignment，僅先提交者成功，另一方回衝突。
+- **FR-101**（**v6.19.0 新增**，對應 AC-2.27，issue #908；**v10.0.0 修訂**，issue #1082；**v12.5.0 修訂**，對應 AC-2.27、AC-2.30，issue #1328）：**標記員定稿鎖定**。`official_run` 審核單位一旦依 FR-051 推導為 `已定稿`，且該推導成立之前提——受審標記員存在真實已儲存提交（FR-051 判定式首句：標記員未提交 → 不成立審核單位，推導為 `null`）——已滿足時，該標記員自身之後續寫入必須被鎖定，不得再變更已定稿之作答，亦不得使單位狀態翻回 `爭議中` 或 `待審`。**範圍限定**（**v12.5.0 修訂**，issue #1328）：上述「定稿終態鎖」僅適用 `official_run`；`dry_run` 因 `submissionBucketKey()` 無 round 維度，定稿終態鎖範圍不得涵蓋 `dry_run`，試標之後續回合不受影響。`dry_run` 不觸發定稿終態鎖，但仍受下述「V1 來源完整性鎖」約束（Dry／Official 同樣適用）。**觸發條件（不得誤觸的邊界）**：本條不得對僅由 FR-044a 示範標記員答案遞補、標記員本人尚無任何真實儲存提交的審核單位觸發鎖定。此類單位之 `getReviewUnitStatus()` 依 FR-051 判定式首句恆推導為 `null`，不成立「已定稿」狀態，本條鎖定天然不觸發；標記員本人之首次提交必須正常送出，不得因該單位已有示範列遞補或既有審核員決策而顯示定稿鎖定提示。本條鎖定判定必須沿用（或等價於）`getReviewUnitStatus()` 既有之判定式，使「存在真實已提交紀錄」這項前提結構性地成立，不得另立第二套不要求真實提交存在的判定捷徑（例如直接查詢審核決策記錄或 `REVIEWER_MOCK_ROWS` 遞補列本身是否存在）。**寫入側守衛**：`markSampleSubmitted()`、`markSampleSaved()`、`appendSampleTimelineEvent()`（`annotation-workspace.data.js`）三個標記員寫入點，於執行寫入前，當呼叫之 `role` 為 `annotator` 時，必須先以寫入前（pre-write）狀態呼叫上述判定；判定為 `已定稿` 時，必須直接回傳 `false`、不得寫入任何欄位、不得追加任何歷程事件，既有 bucket 內容維持原狀；未鎖定時必須回傳 `true` 並維持既有寫入行為不變。判定所需之 outKeys 必須由 `resolveTaskProfile(taskId).outputs`（`annotation-workspace.data.js:51`）內部推導取得，三個函式之既有簽章不得因本條新增參數。審核員或仲裁者之寫入路徑不屬本條範圍（FR-094、AC-3.39 已規範），不受本條三個函式之守衛約束於其 `role` 非 `annotator` 之呼叫。標記員自身促成單位轉為已定稿的那一筆提交，因寫入前狀態尚未轉為已定稿，必須正常寫入、不被本條擋下。**呈現**：鎖定生效時，畫面必須渲染鎖定提示（testid `ws-annotator-finalized-notice`），文案為「此標記結果已定稿，無法再修改或提交」（en: "This annotation is finalized and can no longer be edited or submitted."）；視覺必須沿用 FR-094 唯讀卡之語言慣例，但色階必須採資訊色（`--color-info`／`--color-info-bg`／`--color-info-border`），不得沿用 FR-094 之錯誤色，亦不得採 warning 色階——定稿是終態，不是錯誤也不是提醒（**v12.5.0 修訂**，issue #1328：AC-2.27 v12.1.2 原稱「warning 語氣」，與本句矛盾，以本句為準，AC-2.27 已更正為資訊色）。鎖定提示 `ws-annotator-finalized-notice` 必須帶 `data-lock-reason` 屬性標示鎖定原因，定稿終態鎖為 `finalized`。作答控制與**儲存草稿／提交**兩個既有控件（`wsSaveBtn`、`wsSubmitBtn`；**v10.0.0 修訂**，issue #1082：原列舉三個既有控件含 `wsSkipBtn`，該控件隨跳過功能整組移除，本點改為兩個既有控件）必須保留在畫面上並套用原生 `disabled` 屬性與 `aria-disabled="true"`，不得自 DOM 移除或隱藏，不得以非原生互動元素（例如 `div`）取代原生控件；兩者既有觸控高度不得因本條縮減。定稿當下已選定之作答必須維持可辨識，不得使已選與未選選項套用相同的視覺結果（例如整排轉灰致無法分辨曾選定何值）。自動儲存狀態列（`ws-autosave-status`）鎖定生效時必須改顯示「已定稿，不再自動儲存」（en: "Finalized — autosave stopped."），不得沿用鎖定前之 INITIAL／DIRTY／SAVED 三態文案。**不引入定稿快照**：本條判定必須沿用 FR-072(3) 既有之讀取時計算、不快取原則，不得引入任何持久化之定稿快照欄位。**不提供解鎖入口**：本條不得新增任何一般解鎖操作；重啟流程目前沒有正典條文定義（015 FR-016A 是審核修正與 Bypass 的稽核理由，並未定義重啟），待後端階段另行定義，追蹤於 #1421；原型不提供任何解鎖入口。 **V1 來源完整性鎖**：除了既有 Official finalized 終態鎖，第一次 reviewer 正式提交後，同一 `run_id × assignment_id` 的 annotator 儲存與提交皆拒絕；Dry／Official 同樣適用，不同 Dry run 不互鎖。與首次審核競爭時序列化同一 assignment，僅先提交者成功，另一方回衝突。**審核中鎖之標記員呈現**（**v12.5.0 新增**、AC-2.30，issue #1328）：V1 來源完整性鎖生效、但該單位尚未依 FR-051 推導為 `已定稿` 時（Dry／Official 皆可能發生），標記員重新開啟該單位，畫面必須沿用同一鎖定提示 testid `ws-annotator-finalized-notice`，並帶 `data-lock-reason="under_review"`；標題為「此標記已進入審核」（en: "This annotation is under review."），說明為「審核員已開始處理這筆作答，內容已鎖定，無法再修改或提交。」（en: "A reviewer has started working on this answer. The content is locked and can no longer be edited or submitted."）；色階必須採提醒色（`--color-warning`／`--color-warning-bg`／`--color-warning-border`），與定稿終態的資訊色區隔；`wsSaveBtn`、`wsSubmitBtn` 與作答區控件之禁用與視覺處理同 AC-2.27 視覺層；自動儲存狀態列（`ws-autosave-status`）必須顯示「審核中，不再自動儲存」（en: "Under review — autosave stopped."）。本呈現**不得**透露爭議中、等待仲裁、最終例外池，或任何審核員決策內容（決策類型、理由、審核員身分），以符合 Data Fairness。兩種鎖同時成立時（例如 `official_run` 已定稿），必須顯示定稿終態呈現（`data-lock-reason="finalized"`、「已定稿，不再自動儲存」），不得顯示審核中呈現。
 
 #### Scenario: 標記與首次審核競爭
 
@@ -1288,7 +1299,19 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 - **AND** 自動儲存狀態列 MUST 顯示「已定稿，不再自動儲存」
 - **AND** 該單位狀態於前後兩次讀取皆 MUST 維持 `已定稿`，MUST NOT 因上述任何嘗試翻回 `爭議中` 或 `待審`
 - **AND**〔示範列 seed 豁免〕**GIVEN** 另一個 `official_run` 審核單位僅由 FR-044a 示範標記員答案遞補構成一筆審核員已核可決策，該樣本對應之標記員本人尚無任何真實儲存提交，**WHEN** 該標記員以 annotator 身分首次開啟並提交該單位，**THEN** 提交前畫面 MUST NOT 渲染 `ws-annotator-finalized-notice`，兩個控件皆 MUST NOT 帶 `disabled` 或 `aria-disabled`；**AND** 該次提交 MUST 正常寫入成功（`markSampleSubmitted()` 回傳 `true`），MUST NOT 被本條鎖定機制阻擋
-- **AND**〔dry_run 不受影響〕同一組資料以 `dry_run` 開啟時，本條鎖定機制不生效，標記員之寫入不受任何額外阻擋
+- **AND**〔視覺呈現，v12.1.2 澄清，v12.5.0 更正色階，issue #1328〕鎖定提示 MUST 以資訊語氣呈現（採 `--color-info`／`--color-info-bg`／`--color-info-border`，含鎖頭圖示，標題「此標記結果已定稿」與說明兩行）並帶 `data-lock-reason="finalized"`，MUST NOT 採 warning 色階（v12.1.2 原稱「warning 語氣」已更正）
+- **AND**〔dry_run 不觸發定稿終態鎖，v12.5.0 修訂，issue #1328〕同一組資料以 `dry_run` 開啟時，Dry 不觸發定稿終態鎖，但仍受 V1 來源完整性鎖約束（審核員第一次正式提交後，同一 `run_id × assignment_id` 的標記員儲存與提交皆 MUST 被拒絕）；不同 Dry run 互不影響
+
+#### Scenario: AC-2.30 審核中鎖之標記員呈現不透露審核內容
+- **GIVEN** 某 `run_id × assignment_id` 已有審核員第一次正式提交（V1 來源完整性鎖生效），且該審核單位尚未依 FR-051 推導為 `已定稿`（`official_run` 或 `dry_run` 皆可）
+- **WHEN** 該標記員以 annotator 身分重新開啟該單位之工作區
+- **THEN** 畫面 MUST 渲染 `ws-annotator-finalized-notice` 且帶 `data-lock-reason="under_review"`，標題 MUST 為「此標記已進入審核」（en: "This annotation is under review."），說明 MUST 為「審核員已開始處理這筆作答，內容已鎖定，無法再修改或提交。」（en: "A reviewer has started working on this answer. The content is locked and can no longer be edited or submitted."）
+- **AND** 提示色階 MUST 採提醒色（`--color-warning`／`--color-warning-bg`／`--color-warning-border`）並含鎖頭圖示
+- **AND** `wsSaveBtn`、`wsSubmitBtn` 皆帶 `disabled` 屬性與 `aria-disabled="true"` 且仍存在於 DOM，控件與作答區之視覺處理同 AC-2.27 視覺層；`ws-autosave-status` MUST 顯示「審核中，不再自動儲存」（en: "Under review — autosave stopped."）
+- **AND** 嘗試儲存、提交或使用 `Ctrl/Cmd+S`、`Ctrl/Cmd+Enter` 皆 MUST NOT 改變該單位之儲存內容
+- **AND** 畫面 MUST NOT 出現「爭議中」、「等待仲裁」、「例外池」字樣，亦 MUST NOT 呈現審核員之決策類型、理由或身分（Data Fairness）
+- **AND**〔兩鎖同時成立〕`official_run` 單位已定稿時，提示 MUST 帶 `data-lock-reason="finalized"` 並顯示定稿終態呈現與「已定稿，不再自動儲存」，MUST NOT 顯示審核中文案
+- **AND**〔不同 Dry run 互不影響〕另一個 `dry_run` 的同一標記員作答，MUST NOT 因本單位之審核中鎖而顯示提示或被阻擋
 
 ### Requirement: FR-102 送出前即時後果提示
 
@@ -1603,3 +1626,286 @@ Reviewer 審查呈現 MUST 依 `outputs[].type` 對應下列規則之一：`sing
 - **GIVEN** 前任 annotator／reviewer 有未提交草稿
 - **WHEN** membership 失權、slot 重派或 reviewer 候選變動
 - **THEN** 繼任者看不到前任草稿，重新獲權不自動恢復，其他角色看不到 reviewer 草稿存在
+
+### Requirement: FR-106 標記清單樣本摘要
+
+工作區左欄標記清單（標記員項目、reviewer 分組表頭、例外池分組表頭，見 FR-013A、FR-071 第 2 點）與 `annotation-list` 資料表文本摘要（FR-007、FR-007I）MUST 共用同一個摘要 helper，不得各自實作。每筆樣本產出單一字串，規則依序如下：
+
+1. 任務設定 `list_title_field` 非 `null`，且該欄位角色為 Input 或 Evidence、或欄位名稱為 `id` 且角色不是 Output（specs/task-management/013-task-new/spec.md FR-002c-9 的選項集合）時，取該欄位的值產生摘要；該欄位不在此集合（例如已改為 Output 或不使用）時，視同 `null`，不得讀取。
+2. `list_title_field` 為 `null`（自動）時，依 `fieldRoleMap` 宣告順序取第一個角色為 Input、且能產生摘要文字的欄位。
+3. 取得欄位值後依值的形狀產生文字：字串、數字或布林值為其字串值；每一筆皆為物件且任務設定 `dialogue_fields.text` 指向的子欄位皆為字串的陣列，取第 1 筆該子欄位的文字（`dialogue_fields` 為 `null` 時不硬取 `text` 或任何欄位名稱，視為無文字欄位）；其他非空陣列為「`{n} 筆資料`」（英文 `{n} items`）；非空的純物件為「`{k} 個欄位`」（英文 `{k} fields`）。
+4. 欄位值為空（`null`、未定義、空字串、空陣列、空物件）或第 1 筆文字為空時視為無法產生文字；指定欄位無法產生文字時，改以第 2 點的自動規則補位；仍無任何文字時退回該筆的 `id`；無 `id`（或 `id` 角色為 Output）時為空字串，呼叫端自行顯示占位符。
+5. 摘要 MUST NOT 含 `[object Object]`；MUST NOT 讀取角色為 Output 的欄位值（Data Fairness，對應 FR-023、FR-024M-1）；摘要的截斷與展開沿用 FR-007I 與 CSS 截斷，helper 不另行截斷文字。
+6. **對話串發言者前綴與筆數標籤**：摘要取自第 3 點的對話串形態（物件陣列、`dialogue_fields.text` 指向的子欄位皆為字串），且 `dialogue_fields.speaker` 非 `null`、第 1 筆該子欄位值為非空字串時，摘要為「`{speaker}：{text}`」（英文介面 `{speaker}: {text}`）；其餘情況不加前綴。同一份 helper 另提供摘要標籤：`dialogue_fields` 非 `null` 且摘要取自對話串形態時為「`{n} 則發言`」（英文 `{n} turns`，n 為陣列長度）；`dialogue_fields.speaker` 非 `null` 且不重複的非空發言者數 m 至少為 1 時，再加「`{m} 位發言者`」（英文 `{m} speakers`）。標籤由工作區左欄三處顯示於摘要旁，`annotation-list` 摘要沿用前綴但不顯示標籤。前綴與標籤 MUST NOT 依任務編號或欄位名稱硬編，MUST NOT 讀取 Output 欄位，MUST NOT 由實體、關係或 `@名字` 推測；搜尋字串不含前綴與標籤。
+
+`annotation-list` 文本摘要自本條起為單一欄位摘要，不再串接多個 Input 欄位。`annotation-list` 搜尋框 MUST 另外比對該筆所有角色為 Input 的欄位文字（物件陣列串接每筆文字，規則同第 3 點，以 `dialogue_fields.text` 為準，不得輸出 `[object Object]`），不得比對 Output 與 Evidence 欄位，顯示的摘要不變（AC-1.38）；比對字串與摘要共用同一份資料層實作，`annotation-list` 不另行字串化。
+
+#### Scenario: AC-1.35 自動摘要不出現 [object Object]
+
+- **GIVEN** 任務 T013，Input 欄位 `utterances` 為物件陣列（每筆含 `speaker` 與 `text`），`list_title_field` 為 `null`
+- **WHEN** 開啟 `annotation-workspace` 左欄標記員清單與 `annotation-list`
+- **THEN** 每筆樣本的摘要為 `utterances` 第 1 筆的 `text`，並依第 6 點加上發言者前綴（AC-1.39）
+- **AND** 任何摘要皆不含 `[object Object]`
+
+#### Scenario: AC-1.36 指定清單標題欄位後各處一致且永不讀取 Output
+
+- **GIVEN** 任務設定 `list_title_field` 為某 Input 欄位，且資料中另有 Output 欄位含不同文字
+- **WHEN** 開啟工作區左欄（標記員項目、reviewer 分組表頭、例外池分組表頭）與 `annotation-list`
+- **THEN** 四處摘要皆為該指定欄位的值
+- **AND** 當 `list_title_field` 指向角色為 Output 的欄位時，摘要改依自動規則產生，且任何摘要都不含該 Output 欄位的值
+
+#### Scenario: AC-1.37 非文字結構的型別摘要與 id 退回
+
+- **GIVEN** 某任務 Input 欄位的值為不含文字欄位的物件陣列（共 3 筆）
+- **WHEN** 渲染該樣本摘要
+- **THEN** 摘要為 `3 筆資料`（英文介面為 `3 items`）
+- **AND** 所有 Input 欄位皆為空時，摘要為該筆的 `id`
+
+#### Scenario: AC-1.38 搜尋比對所有 Input 欄位且不含 Output 與 Evidence
+
+- **GIVEN** item_pair 任務（Input 欄位為 Premise 與 Hypothesis），摘要顯示第一個 Input（Premise）
+- **WHEN** 在 `annotation-list` 搜尋框輸入只出現在 Hypothesis 的文字
+- **THEN** 該筆樣本的列出現在結果中，且顯示的摘要不變
+- **AND** 輸入只出現在 Output 或 Evidence 欄位的文字時，結果為 0 列
+
+#### Scenario: AC-1.39 對話串摘要加發言者前綴並顯示筆數標籤
+
+- **GIVEN** 任務 T013，`dialogue_fields` 非 `null` 且指定 `speaker` 子欄位，樣本 `absa-001` 的 `utterances` 共 5 則、3 位不同發言者
+- **WHEN** 開啟 `annotation-workspace` 左欄
+- **THEN** 摘要為「第 1 則的發言者：第 1 則的文字」，旁邊顯示「5 則發言」與「3 位發言者」兩個小標籤（英文介面 `5 turns`、`3 speakers`）
+- **AND** `annotation-list` 的摘要帶同樣前綴、不顯示標籤
+
+#### Scenario: AC-1.40 不適用時不加前綴與標籤
+
+- **GIVEN** 某任務的 `dialogue_fields` 為 `null`，Input 為物件陣列
+- **WHEN** 渲染該樣本摘要
+- **THEN** 摘要維持「`{n} 筆資料`」，不加前綴、不顯示任何標籤
+- **AND** 當 `dialogue_fields.speaker` 為 `null` 時，摘要不加前綴、只顯示發言數標籤，不顯示發言者數標籤
+
+#### Scenario: AC-1.41 前綴與標籤不讀 Output 且搜尋字串不變
+
+- **GIVEN** 任務 T013 的 Output 欄位含不同於 Input 的文字
+- **WHEN** 渲染摘要與標籤，並於 `annotation-list` 以發言者名稱搜尋
+- **THEN** 前綴、標籤皆不含 Output 欄位的值
+- **AND** 搜尋比對的字串不含前綴與標籤，與 AC-1.38 的規則一致
+
+#### Scenario: SC-028 工作區與清單共用同一個摘要實作
+
+- **GIVEN** 同一任務、同一筆樣本、相同的 `list_title_field`
+- **WHEN** 分別於 `annotation-list` 文本摘要與工作區左欄取得該筆摘要
+- **THEN** 兩處文字完全相同
+- **AND** 兩頁的摘要皆經由 `LabelSuiteAnnotationWorkspaceData` 的同一個 helper 產生
+
+### Requirement: FR-107 整合預覽對話串與發言內座標
+
+工作區中央「整合預覽」（FR-013E、FR-024I）對 Input 欄位為物件陣列的樣本，MUST 依下列規則呈現與記錄，且 MUST NOT 依任務編號或欄位名稱硬編：
+
+1. **對話串（2-A）**：任務設定 `dialogue_fields`（`{text, speaker, utt_id, reply_to}`，specs/task-management/013-task-new/spec.md FR-002c-10）非 `null` 時，整合預覽每則發言一列，顯示發言者、`#` 加發言編號與發言文字；所有發言皆可標記，不得截斷。發言編號取 `dialogue_fields.utt_id` 指向的子欄位值，未設定時為該則的位置編號（自 1 起）。
+2. **座標資料契約**：在對話串內標記的實體 MUST 記為 `{text, type, utt_id, start, end}`，`start`／`end` 為**該則發言文字內**的半開區間 `[start, end)`（`end = start + text.length`），與 FR-098、FR-024A-3 同一座標語意。關係識別的三元組 MUST 於 `subjStart`／`subjEnd`／`objStart`／`objEnd` 之外攜帶 `subjUttId`、`objUttId`。
+3. **跨發言**：反白起訖落在不同則發言 MUST 被拒絕，顯示提示且不新增實體或關係選取；跨發言的關聯 MUST 以關係識別表達。
+4. **原始 JSON 後備（2-C）**：Input 為物件陣列但 `dialogue_fields` 為 `null` 時，整合預覽 MUST 以可摺疊、等寬字的原始 JSON 呈現該 Input 欄位，不得出現 `[object Object]`。
+5. **Data Fairness**：對話串與原始 JSON MUST 只渲染角色為 Input 的欄位；Output（如 `gold_triplets`）與 Evidence 不得因此路徑外露（FR-023、FR-024M-1）。
+6. **不含端點範圍**：既有非對話路徑的 offset 寫法不在本條範圍（#1341）；本條新增的 `utt_id` 座標一律半開區間。
+7. **種子合規**：任務 T013 的 `text` 欄位角色 MUST 為「不使用」、`utterances` 為唯一 Input，並設定 `dialogue_fields`（specs/task-management/013-task-new/spec.md FR-002c-2）。
+8. **不從 Output 預填**：Input 為物件陣列時，整合預覽 MUST NOT 以 Output 欄位內容（含 `entity1` 形狀與 `subj`／`rel`／`obj` 形狀的三元組）預填關係三元組；與 ABSA 三元組同一處理（AC-2.35、Data Fairness）。
+9. **定位規則**：實體已帶 `utt_id`、`start`、`end` 時 MUST 照座標定位；未帶座標時，其文字在整份對話的發言中恰出現一次才定位到該位置；出現多次或找不到時 MUST NOT 猜測（不得取第一次出現的位置），該實體不標示，並顯示「無法定位」提示與數量。
+10. **重疊實體**：同一則發言內區間重疊的實體，後者 MUST NOT 默默略過；儲存格式不變，畫面 MUST 顯示因重疊而未標示的實體數。
+11. **發言版面（草圖 2-A）**：對話串每則發言 MUST 顯示頭像、標頭行與發言文字三部分：頭像為圓形、取發言者文字的第一個字元（`dialogue_fields.speaker` 為 `null` 或該則發言者為空時不顯示頭像）；標頭行依序顯示發言者與 `#` 加發言編號；發言文字 MUST 另起一行並保留換行。頭像底色由發言者文字決定（同一發言者同一顏色），不得依發言者名稱硬編顏色。
+12. **回覆縮排與回應標記**：`dialogue_fields.reply_to` 非 `null`，且該則發言的 `reply_to` 子欄位值等於**同一樣本內另一則**發言的發言編號時，該則發言 MUST 縮排並顯示「跨發言 · 回應 #n」標記（`n` 為被回覆發言的發言編號，英文介面為 `Cross-turn · replies to #n`）。`reply_to` 為 `null`、該則的值缺漏或為空、值找不到對應發言、或值等於該則自己的發言編號時，MUST NOT 縮排也 MUST NOT 顯示標記。MUST NOT 由實體、關係或 `@名字` 文字推測回覆關係；`dialogue_fields` 缺少 `reply_to` 鍵時視同 `null`。
+13. **顯示切換**：對話串上方 MUST 提供「顯示已標實體」與「純文字」兩個按鈕（以 `aria-pressed` 表示目前模式），預設為「顯示已標實體」。「純文字」模式下發言文字不繪製實體標示與關係選取標示，已記錄的實體資料不變，反白標記仍可進行。
+
+14. **不從 Output 預填實體**：Input 為物件陣列（對話）時，整合預覽 MUST NOT 以角色為 Output 的欄位內容預填實體。守門 MUST 沿用既有的物件陣列 Input 判斷，不另立判斷。Input 非物件陣列的任務，由 Output 欄位解析預填的既有行為 MUST 不變（Data Fairness，承接 #1358 裁定 1 之範圍外項目）；預填實體與預填三元組是否載入，依第 16 點的宣告與角色守門。
+15. **反白歧義提示**：反白選取的 DOM 位置與發言文字不符，而該選取文字在該則發言中出現多次（或找不到）時，MUST NOT 取第一次出現的位置，且 MUST 顯示專屬的反白歧義提示（中英文案，不得顯示未替換的 `{n}` 佔位符）；僅在該則發言中恰出現一次時，才以該唯一位置記錄。
+16. **預填來源由設定宣告並套用角色守門**（v12.12.0 新增、v12.13.0 修訂，issue #1413、#1430）：整合預覽的預填實體與預填三元組 MUST 只從任務設定 `prefill_fields`（`{entities, triples}`，specs/task-management/013-task-new/spec.md FR-002c-11）宣告的欄位讀取，MUST NOT 依固定鍵名（`entities`、`triples`、`gold_triplets`、`gold_triples`）讀取；`prefill_fields` 為 `null`、缺鍵，或對應子鍵缺漏或為 `null` 時，該類預填 MUST NOT 發生。宣告的欄位載入前，MUST 依 `fieldRoleMap` 查該欄位的角色，僅在角色是已知且不是 Output 時才載入；角色為 Output，或角色未知（`fieldRoleMap` 未指派、為空字串或無法判定）一律 MUST NOT 預填（fail-closed，Data Fairness），不分 Input 為字串或物件陣列，不分實體或三元組。關係類型清單由預填三元組自動帶入時，候選同樣只能來自宣告且通過守門的三元組欄位。本點只管資料自帶欄位的載入路徑，非物件陣列 Input 由 Output 欄位解析預填的既有路徑（第 14 點、AC-2.45）不在本點範圍。
+
+#### Scenario: AC-2.31 對話串一則一列
+
+- **GIVEN** 任務 T013，Input `utterances` 為物件陣列（共 5 則），`dialogue_fields` 為 `{text: 'text', speaker: 'speaker', utt_id: 'utt_id'}`
+- **WHEN** 開啟 `annotation-workspace` 的整合預覽
+- **THEN** 顯示 5 列，每列各有發言者、`utt_id` 與該則文字
+- **AND** 不出現 `[object Object]`，且各則文字不被串成同一段
+
+#### Scenario: AC-2.32 反白座標記為發言編號加該則內半開區間
+
+- **GIVEN** 已選取實體類型，T013 第 `utt_id` 為 0 的發言文字內含「過熱問題」
+- **WHEN** 在該則發言內反白「過熱問題」
+- **THEN** 新增的實體為 `{text: '過熱問題', type, utt_id: 0, start, end}`，且 `end - start` 等於 4，`start` 為該則文字內的位置
+- **AND** 該則文字 `slice(start, end)` 等於「過熱問題」
+
+#### Scenario: AC-2.33 跨發言反白被拒絕
+
+- **GIVEN** 已選取實體類型
+- **WHEN** 反白範圍起點在一則發言、終點在另一則發言
+- **THEN** 不新增任何實體
+- **AND** 顯示跨發言提示
+
+#### Scenario: AC-2.34 無對話設定時退回原始 JSON
+
+- **GIVEN** 任務 Input 為物件陣列且 `dialogue_fields` 為 `null`
+- **WHEN** 開啟整合預覽
+- **THEN** 顯示可摺疊、等寬字的原始 JSON，內容含該 Input 欄位的值
+- **AND** 不出現 `[object Object]`
+
+#### Scenario: AC-2.35 只渲染 Input 且 T013 種子合規
+
+- **GIVEN** T013 資料含角色為 Output 的 `gold_triplets`
+- **WHEN** 開啟整合預覽（對話串與原始 JSON 兩種呈現）
+- **THEN** 頁面文字不含任何 `gold_triplets` 的內容
+- **AND** T013 的 `text` 角色為「不使用」、`utterances` 為唯一 Input
+
+#### Scenario: AC-2.36 物件陣列 Input 不從 Output 預填關係三元組
+
+- **GIVEN** 任務 Input 為物件陣列（對話），資料另有角色為 Output 的欄位含 `entity1` 形狀或 `subj`／`rel`／`obj` 形狀的三元組
+- **WHEN** 開啟整合預覽
+- **THEN** 不預填任何關係三元組
+- **AND** 頁面文字不含該 Output 欄位的內容
+
+#### Scenario: AC-2.37 無座標時只在唯一位置定位
+
+- **GIVEN** 某實體無 `utt_id`、`start`、`end`，其文字在整份對話的發言中恰出現一次
+- **WHEN** 開啟整合預覽
+- **THEN** 該實體標示在該唯一位置，且座標為該則發言內的半開區間
+- **AND** 若該文字出現多次，則不標示該實體，顯示「無法定位」提示與數量，不取第一次出現的位置；已帶座標者照座標定位
+
+#### Scenario: AC-2.38 重疊實體顯示未標示數量
+
+- **GIVEN** 同一則發言內有兩個區間重疊的實體
+- **WHEN** 開啟整合預覽
+- **THEN** 儲存的實體資料不變
+- **AND** 畫面顯示因重疊而未標示的實體數
+
+#### Scenario: SC-029 座標以發言編號為單位且與 FR-098 同語意
+
+- **GIVEN** 對話串內標記的任一實體
+- **WHEN** 讀取其 `utt_id`、`start`、`end`
+- **THEN** 發言文字 `slice(start, end)` 等於該實體 `text`
+- **AND** `start`、`end` 皆不超出該則發言文字長度
+
+#### Scenario: AC-2.39 發言版面為頭像、標頭行與另起一行的文字
+
+- **GIVEN** 任務 T013，`dialogue_fields` 含 `speaker` 與 `utt_id`
+- **WHEN** 開啟 `annotation-workspace` 的整合預覽
+- **THEN** 每則發言顯示頭像（內容為發言者文字的第一個字元）、含發言者與 `#` 加發言編號的標頭行，以及另起一行的發言文字
+- **AND** 同一發言者的頭像顏色相同，`speaker` 為 `null` 的對話串不顯示頭像
+
+#### Scenario: AC-2.40 有效 reply_to 的發言縮排並顯示回應標記
+
+- **GIVEN** `dialogue_fields.reply_to` 非 `null`，某則發言的 `reply_to` 值等於同一樣本另一則的發言編號
+- **WHEN** 開啟整合預覽
+- **THEN** 該則發言縮排，並顯示「跨發言 · 回應 #n」，`n` 為被回覆發言的發言編號
+- **AND** 沒有 `reply_to` 值的發言不縮排、不顯示標記
+
+#### Scenario: AC-2.41 無效的 reply_to 不縮排也不標記
+
+- **GIVEN** 某則發言的 `reply_to` 值屬下列之一：缺漏或空值、找不到對應發言、等於該則自己的發言編號；或 `dialogue_fields` 缺少 `reply_to` 鍵
+- **WHEN** 開啟整合預覽
+- **THEN** 該則發言不縮排，也不顯示回應標記
+- **AND** 回覆關係不由實體、關係或 `@名字` 文字推測
+
+#### Scenario: AC-2.42 顯示已標實體與純文字切換
+
+- **GIVEN** 該樣本已有實體標示，兩個切換按鈕預設「顯示已標實體」為 `aria-pressed="true"`
+- **WHEN** 按下「純文字」
+- **THEN** 發言文字不再繪製實體標示，「純文字」為 `aria-pressed="true"`，且已記錄的實體資料不變
+- **AND** 再按「顯示已標實體」後標示恢復
+
+#### Scenario: AC-2.43 T013 種子宣告 reply_to 並有回覆前一則的發言
+
+- **GIVEN** 任務 T013 種子
+- **WHEN** 檢視其 `dialogue_fields` 與 `utterances`
+- **THEN** `dialogue_fields.reply_to` 非 `null`，且至少一則發言的 `reply_to` 等於前一則的發言編號
+- **AND** 所有 `reply_to` 值皆不等於該則自己的發言編號
+
+#### Scenario: AC-2.44 對話 Input 不從 Output 欄位預填實體
+
+- **GIVEN** 任務 Input 為物件陣列（對話），資料的 `entities` 為空，另有角色為 Output 的欄位含 `{text, type}` 形狀的實體陣列
+- **WHEN** 開啟整合預覽
+- **THEN** 不預填任何實體，`previewEntities` 為空
+- **AND** 頁面文字不含該 Output 欄位的內容
+
+#### Scenario: AC-2.45 非對話 Input 的預填行為不變
+
+- **GIVEN** 任務 Input 為字串（非物件陣列），資料的 `entities` 為空，角色為 Output 的欄位含實體陣列；或對話 Input 的 `prefill_fields.entities` 宣告了某欄位，且該欄位角色不是 Output
+- **WHEN** 開啟整合預覽
+- **THEN** 字串 Input 照既有行為由 Output 欄位預填實體
+- **AND** 對話 Input 宣告欄位的實體（角色非 Output）照常載入
+
+#### Scenario: AC-2.46 反白歧義顯示專屬提示
+
+- **GIVEN** 反白選取文字在該則發言中出現多次，且反白的 DOM 位置與發言文字不符
+- **WHEN** 完成反白
+- **THEN** 不新增實體，顯示反白歧義提示（中英各有專屬文案，且不含未替換的 `{n}`）
+- **AND** 切換語言後提示文案隨之切換
+
+#### Scenario: AC-2.47 反白 fallback 僅在唯一出現時採用
+
+- **GIVEN** 反白的 DOM 位置與發言文字不符，但選取文字在該則發言中恰出現一次
+- **WHEN** 完成反白並已選取實體類型
+- **THEN** 新增的實體座標為該唯一出現的位置，`slice(start, end)` 等於選取文字
+- **AND** 該文字出現多次時不新增（見 AC-2.46）
+
+### Requirement: AC-2.48 角色為 Output 的 entities 欄位不預填
+
+`prefill_fields.entities` 宣告的欄位在 `fieldRoleMap` 中的角色為 Output 時，整合預覽不得把它載入為預填實體（FR-107 第 16 點）。
+
+#### Scenario: AC-2.48 角色為 Output 的 entities 欄位不預填
+
+- **GIVEN** 任務 Input 為物件陣列（對話），`prefill_fields.entities` 宣告 `entities` 欄位且該欄位非空，而 `fieldRoleMap` 中 `entities` 的角色為 Output
+- **WHEN** 開啟整合預覽
+- **THEN** 不預填任何實體，`previewEntities` 為空
+- **AND** 頁面文字不含該欄位的內容
+
+### Requirement: AC-2.49 角色未知的 entities 欄位不預填
+
+`prefill_fields.entities` 宣告的欄位角色未知時一律不預填（fail-closed），角色為 Input 或 Evidence 等非 Output 的已知角色時照常載入（FR-107 第 16 點）。
+
+#### Scenario: AC-2.49 角色未知的 entities 欄位不預填
+
+- **GIVEN** `prefill_fields.entities` 宣告 `entities` 欄位且該欄位非空，而 `fieldRoleMap` 沒有 `entities` 這個鍵或其值為空字串，並且沒有角色為 Output 的欄位
+- **WHEN** 開啟整合預覽（Input 為字串或物件陣列皆然）
+- **THEN** 不預填任何實體，`previewEntities` 為空
+- **AND** 宣告欄位的角色為 Input 或 Evidence 時，該欄位內容照常載入為預填實體
+
+### Requirement: AC-2.50 預填實體只讀宣告的欄位
+
+整合預覽的預填實體只從 `prefill_fields.entities` 宣告的欄位讀取，同名但未宣告的欄位不是預填來源（FR-107 第 16 點）。
+
+#### Scenario: AC-2.50 預填實體只讀宣告的欄位
+
+- **GIVEN** `prefill_fields.entities` 宣告欄位 `ents_x`（角色為 Evidence），資料另有一個未宣告、名為 `entities` 的欄位含不同的實體陣列
+- **WHEN** 開啟整合預覽
+- **THEN** `previewEntities` 只含 `ents_x` 的實體
+- **AND** 頁面文字不含 `entities` 欄位的內容
+
+### Requirement: AC-2.51 預填三元組只讀宣告的欄位並套用角色守門
+
+整合預覽的預填三元組只從 `prefill_fields.triples` 宣告的欄位讀取，並與實體套用相同的角色守門（FR-107 第 16 點）。
+
+#### Scenario: AC-2.51 預填三元組只讀宣告的欄位並套用角色守門
+
+- **GIVEN** `prefill_fields.triples` 宣告欄位 `rels_x`
+- **WHEN** `rels_x` 的角色為 Evidence 並開啟整合預覽
+- **THEN** `previewTriples` 由 `rels_x` 載入
+- **AND** `rels_x` 的角色為 Output，或 `fieldRoleMap` 未指派、為空字串時，不預填任何三元組，頁面文字不含該欄位的內容
+
+### Requirement: AC-2.52 未宣告預填來源時不預填
+
+`prefill_fields` 為 `null`、缺鍵或子鍵缺漏時，整合預覽不得依固定鍵名從資料欄位預填（FR-107 第 16 點）。
+
+#### Scenario: AC-2.52 未宣告預填來源時不預填
+
+- **GIVEN** 資料含名為 `entities`、`triples`、`gold_triplets`、`gold_triples` 的欄位且角色為 Input 或 Evidence，而 `prefill_fields` 為 `null`、缺鍵，或對應子鍵缺漏或為 `null`
+- **WHEN** 開啟整合預覽
+- **THEN** 對應類別（實體或三元組）不預填，`previewEntities` 或 `previewTriples` 為空
+- **AND** 非物件陣列 Input 由 Output 欄位解析預填實體的既有行為不變（AC-2.45）
+
+### Requirement: AC-2.53 關係類型自動帶入只來自宣告的三元組欄位
+
+整合預覽由預填三元組自動帶入關係類型清單時，候選只來自宣告且通過守門的三元組欄位（FR-107 第 16 點）。
+
+#### Scenario: AC-2.53 關係類型自動帶入只來自宣告的三元組欄位
+
+- **GIVEN** 資料含帶有關係類型標籤的三元組欄位
+- **WHEN** `prefill_fields.triples` 宣告該欄位且角色為 Evidence 時開啟整合預覽
+- **THEN** 關係類型清單由該欄位的不重複標籤帶入
+- **AND** `prefill_fields` 未宣告該欄位，或該欄位角色為 Output 或未知時，不由該欄位帶入關係類型

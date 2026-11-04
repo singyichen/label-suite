@@ -96,7 +96,7 @@ container 一致，本機綠燈與 CI 綠燈才會指向同一個目標。
 （例如上一輪整合測試留下的資料在干擾判讀）：
 
 ```bash
-docker compose --profile ci down -v
+docker compose -p label-suite --profile ci down -v
 ```
 
 ## Seed 資料

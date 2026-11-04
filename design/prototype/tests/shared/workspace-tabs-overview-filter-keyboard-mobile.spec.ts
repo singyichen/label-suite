@@ -133,8 +133,9 @@ test.describe('Workspace tabs overview menu (G2b) — AC-023.3 filter matches ta
     // filter also matches the SEPARATE page-kind-name corpus, not just title.
     await page.goto(TASK_DETAIL_T001_R1_URL);
     // sample_id contains "task" only inside the URL query string; title
-    // ("Annotation") and page-kind name (none exists for annotation-
-    // workspace in workspacePageKindI18n) never contain it.
+    // ("Annotate Medical Text Sentiment Classification" since #1280 G2) and
+    // page-kind name (none exists for annotation-workspace in
+    // workspacePageKindI18n) never contain it.
     await page.goto(
       buildWorkspaceUrl({ task_id: 'T001', sample_id: 'task-marker-001', role: 'annotator', run_type: 'official_run' })
     );
@@ -148,7 +149,11 @@ test.describe('Workspace tabs overview menu (G2b) — AC-023.3 filter matches ta
     const taskListRow = items(page).filter({ hasText: 'Task Management' });
     const datasetRow = items(page).filter({ hasText: 'Dataset Analytics' });
     const taskDetailRow = items(page).filter({ hasText: /Dry Run R1/ });
-    const annotationRow = items(page).filter({ hasText: /Annotation/ });
+    // Issue #1280 G2: the en annotation title is "<chip> <task name>" =
+    // "Annotate Medical Text ...", no longer the bare "Annotation". The row
+    // must exist (count 1) so the hidden assertion below cannot pass vacuously.
+    const annotationRow = items(page).filter({ hasText: /Annotate Medical/ });
+    await expect(annotationRow).toHaveCount(1);
 
     await expect(taskListRow).toBeVisible();
     await expect(taskDetailRow).toBeVisible(); // page-kind-name match despite no "task" in its own title

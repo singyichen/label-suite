@@ -1,11 +1,17 @@
 <!DOCTYPE html>
+<!-- Spec: specs/annotation/015-annotation-workspace/spec.md -->
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 標記作業</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <link rel="stylesheet" href="../shared/input.css" />
   <link rel="stylesheet" href="../task-management/task-config.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
@@ -28,7 +34,7 @@
     }
     html[lang="en"] body { line-height: 1.6; }
     a { color: inherit; text-decoration: none; }
-    button, input, select, textarea { font: inherit; }
+    :where(button, input, select, textarea) { font: inherit; }
     button, input[type="checkbox"], input[type="radio"], select { cursor: pointer; }
     .hidden { display: none !important; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; padding: 0; margin: -1px; }
@@ -170,6 +176,18 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+    /* FR-106 clause 6: count tags beside the dialogue summary (existing tokens only). */
+    .sample-summary-tag {
+      display: inline-block;
+      margin: 2px 4px 0 0;
+      padding: 0 6px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--color-text-soft);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
     }
     .sample-group.has-active .sample-group-id { color: var(--color-primary); }
 
@@ -319,12 +337,15 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+      cursor: pointer;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
       padding: 8px 14px;
       border-radius: var(--radius-md);
       font-size: 13px;
       font-weight: 600;
       border: 1px solid transparent;
-      cursor: pointer;
       transition: opacity var(--dur-fast), transform var(--dur-fast);
     }
     .btn:hover:not(:disabled) { transform: translateY(-1px); }
@@ -334,8 +355,6 @@
        aria-disabled; this is the visual layer only). Declared after the
        variant :hover rules so the :not(:disabled) guards below win cleanly. */
     .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-    .btn-cta { background: var(--color-cta); color: var(--color-on-cta); border-color: var(--color-cta); }
-    .btn-cta:hover:not(:disabled) { background: var(--color-cta-hover); border-color: var(--color-cta-hover); }
     .btn-outline { background: var(--color-white); color: var(--color-ink); border-color: var(--color-border); }
     .btn-outline[aria-pressed="true"] { background: var(--color-primary); color: var(--color-white); border-color: var(--color-primary); }
 
@@ -345,6 +364,11 @@
        but is desaturated and stays more prominent than unselected ones. */
     .ws-finalized-notice {
       display: flex; align-items: flex-start; gap: 10px;
+      border-color: var(--color-info-border);
+      background: var(--color-info-bg);
+      color: var(--color-info);
+    }
+    .ws-finalized-notice[data-lock-reason="under_review"] {
       border-color: var(--color-warning-border);
       background: var(--color-warning-bg);
       color: var(--color-warning);
@@ -703,7 +727,7 @@
     /* issue #563: margin-left:auto keeps the buttons on the right even when
        renderAutosaveStatus() hides .autosave-status for reviewers -- with a
        single flex child, space-between alone would pin them to the left. */
-    .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); margin-left: auto; }
+    .action-bar-right { display: flex; align-items: stretch; gap: var(--space-sm); margin-left: auto; }
     /* issue #930 (FR-102): plain-text submit-consequence hint. */
     .rv-submit-consequence { font-size: 12px; color: var(--color-ink-muted); }
 
@@ -743,26 +767,7 @@
     .workspace-body.guideline-collapsed .guideline-collapse-btn { right: 8px; }
     .guideline-collapse-btn svg { width: 16px; height: 16px; transition: transform var(--dur-normal) var(--ease-standard); }
     .workspace-body.guideline-collapsed .guideline-collapse-btn svg { transform: rotate(180deg); }
-    .guideline-tabs {
-      display: flex;
-      border-bottom: 2px solid var(--color-border);
-      padding: 0 var(--space-md);
-      flex-shrink: 0;
-    }
-    .guideline-tab {
-      padding: 12px 14px;
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-text-soft);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-    }
-    .guideline-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
     .guideline-panel { flex: 1; overflow-y: auto; padding: var(--space-md); }
-    .history-empty { font-size: 12px; color: var(--color-ink-muted); text-align: center; padding: var(--space-lg) 0; }
     .history-list { display: flex; flex-direction: column; gap: var(--space-sm); }
     .history-item {
       border: 1px solid var(--color-border);
@@ -928,29 +933,21 @@
     .guideline-md-preview h1 { font-size: 16px; }
     .guideline-md-preview h2 { font-size: 15px; }
     .guideline-md-preview h3 { font-size: 14px; }
-    .guideline-md-preview p { margin: 0 0 var(--space-sm); }
+    .guideline-md-preview p { margin: 0 0 var(--space-sm); font-size: inherit; color: inherit; line-height: inherit; }
     .guideline-md-preview ul, .guideline-md-preview ol { margin: 0 0 var(--space-sm); padding-left: 20px; }
     .guideline-md-preview li { margin-bottom: 4px; }
-    .guideline-md-preview code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 1px 4px; border-radius: 4px; background: var(--color-surface-muted, rgba(0,0,0,0.05)); }
+    .guideline-md-preview code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 1px 4px; border-radius: 4px; background: var(--color-border-muted); }
     .guideline-md-preview a { color: var(--color-primary); text-decoration: underline; }
-    .guideline-md-preview pre { margin: 0 0 var(--space-sm); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); background: var(--color-surface-muted, rgba(0,0,0,0.05)); overflow-x: auto; }
+    .guideline-md-preview pre { margin: 0 0 var(--space-sm); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); background: var(--color-border-muted); overflow-x: auto; }
     .guideline-md-preview pre code { padding: 0; background: transparent; white-space: pre; }
     .guideline-md-preview table { border-collapse: collapse; margin: 0 0 var(--space-sm); width: 100%; }
     .guideline-md-preview th, .guideline-md-preview td { border: 1px solid var(--color-border); padding: 4px 8px; text-align: left; vertical-align: top; }
-    .guideline-md-preview th { font-weight: 600; background: var(--color-surface-muted, rgba(0,0,0,0.03)); }
+    .guideline-md-preview th { font-weight: 600; background: var(--color-border-muted); }
     .guideline-md-preview img { max-width: 100%; height: auto; display: block; margin: 0 0 var(--space-sm); border-radius: var(--radius-sm); }
     .md-modal { max-width: 720px; width: 92vw; }
     .md-modal .guideline-md-preview { max-height: 70vh; overflow: auto; }
     .image-modal { max-width: 720px; }
-    .image-modal-header { display: flex; align-items: center; justify-content: space-between; }
-    .image-modal-close {
-      border: none;
-      background: transparent;
-      color: var(--color-text-soft);
-      cursor: pointer;
-      display: inline-flex;
-      padding: 4px;
-    }
+    .image-modal .modal-header { align-items: center; }
     .image-modal-preview { display: block; width: 100%; height: auto; max-height: 520px; object-fit: contain; border-radius: var(--radius-sm); }
     .pdf-modal { max-width: 860px; width: 92vw; }
     .pdf-modal-preview { display: block; width: 100%; height: 70vh; border: 0; border-radius: var(--radius-sm); background: var(--color-surface, #fff); }
@@ -1002,30 +999,11 @@
     }
 
     /* ── Modal ───────────────────────────────────────────────── */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: var(--z-modal);
-      padding: var(--space-lg);
-    }
-    .modal-overlay.hidden { display: none; }
-    .modal {
-      background: var(--color-white);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-xl);
-      padding: var(--space-xl);
-      width: 100%;
-      max-width: 520px;
+    .modal-overlay > .modal {
       display: flex;
       flex-direction: column;
       gap: var(--space-md);
     }
-    .modal-title { font-family: var(--font-serif-display); font-size: 22px; font-weight: 700; color: var(--color-ink); }
     /* Review-flow drawer (issue #525 PR-A): a right-edge sheet on desktop,
        a full-width modal below 768px. It inherits `position: fixed` from
        `.modal-overlay`, which is what keeps the review card's
@@ -1033,8 +1011,8 @@
     .rv-flow-overlay { align-items: stretch; justify-content: flex-end; padding: 0; }
     .rv-flow-drawer { max-width: 520px; height: 100%; border-radius: var(--radius-xl) 0 0 var(--radius-xl); overflow-y: auto; }
     .rv-flow-body { display: flex; flex-direction: column; gap: var(--space-lg); }
-    .rv-flow-description { margin: 0; color: var(--color-text-soft); font-size: 13px; line-height: 1.6; }
-    .rv-flow-route-summary {
+    .rv-flow-drawer .rv-flow-description { margin: 0; color: var(--color-text-soft); font-size: 13px; line-height: 1.6; }
+    .rv-flow-drawer .rv-flow-route-summary {
       margin: 0;
       padding-top: var(--space-md);
       border-top: 1px solid var(--color-border);
@@ -1048,7 +1026,6 @@
     @media (max-width: 767px) {
       .rv-flow-drawer { max-width: none; border-radius: 0; }
     }
-    .modal-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); }
 
     /* ── Toast (top-center, UXC-07 / MASTER §Toast) ──────────── */
     .toast-container {
@@ -1111,15 +1088,8 @@
     .rv-review-reason-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); }
 
     .rv-review-reason textarea {
-      width: 100%;
-      font: inherit;
-      font-size: 13px;
-      padding: 6px 8px;
-      border: 1px solid var(--color-error-border);
-      border-radius: var(--radius-sm);
-      background: var(--color-surface);
-      color: var(--color-ink);
-      resize: vertical;
+      border-color: var(--color-error-border);
+      min-height: 0;
     }
 
     /* ── Annotator mode: Bypass reason (issue #1082, AC-2.29/FR-089) ──────
@@ -1127,16 +1097,6 @@
        belongs to (task-config.engine.js:2502's "consumers dock their own
        trailing controls onto this row" contract). */
     .ws-bypass-reason-group { display: flex; flex-direction: column; gap: 2px; flex: 1 1 220px; min-width: 200px; }
-    .ws-bypass-reason-group input {
-      width: 100%;
-      font: inherit;
-      font-size: 13px;
-      padding: 5px 8px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      background: var(--color-surface);
-      color: var(--color-ink);
-    }
     .ws-bypass-reason-error { font-size: 12px; color: var(--color-error); }
     .ws-bypass-reason-helper { font-size: 12px; color: var(--color-text-soft); }
   </style>
@@ -1171,7 +1131,7 @@
 </script>
 
 <!-- Guideline modal (first-visit force-read gate) -->
-<div class="modal-overlay hidden" id="wsGuidelineModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineModalTitleText" data-testid="ws-guideline-modal">
+<div class="modal-overlay" id="wsGuidelineModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineModalTitleText" data-testid="ws-guideline-modal">
   <div class="modal">
     <h2 class="modal-title" id="wsGuidelineModalTitleText"></h2>
     <div class="guideline-md-preview" id="wsGuidelineModalBody" data-testid="ws-guideline-modal-body"></div>
@@ -1183,11 +1143,11 @@
 
 <!-- Guideline image preview modal (spec 015 v2.0.0 AC-5.3 / SC-005B):
      three closing paths -- close button, backdrop click, Esc key. -->
-<div class="modal-overlay hidden" id="wsGuidelineImageModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineImageModalTitleText" data-testid="ws-guideline-image-modal">
+<div class="modal-overlay" id="wsGuidelineImageModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineImageModalTitleText" data-testid="ws-guideline-image-modal">
   <div class="modal image-modal">
-    <div class="image-modal-header">
+    <div class="modal-header">
       <h2 class="modal-title" id="wsGuidelineImageModalTitleText"></h2>
-      <button class="image-modal-close" type="button" id="wsGuidelineImageModalClose" data-testid="ws-guideline-image-modal-close" aria-label="關閉圖片預覽">
+      <button class="modal-close" type="button" id="wsGuidelineImageModalClose" data-testid="ws-guideline-image-modal-close" aria-label="關閉圖片預覽">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
@@ -1198,11 +1158,11 @@
 <!-- Guideline PDF preview modal (spec 015 AC-5.3 / SC-005C, issue #353):
      mirrors the image modal's closing paths -- close button, backdrop
      click, Esc key (Esc via the LabelSuiteModalFocus trap). -->
-<div class="modal-overlay hidden" id="wsGuidelinePdfModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelinePdfModalTitleText" data-testid="ws-guideline-pdf-modal">
+<div class="modal-overlay" id="wsGuidelinePdfModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelinePdfModalTitleText" data-testid="ws-guideline-pdf-modal">
   <div class="modal image-modal pdf-modal">
-    <div class="image-modal-header">
+    <div class="modal-header">
       <h2 class="modal-title" id="wsGuidelinePdfModalTitleText"></h2>
-      <button class="image-modal-close" type="button" id="wsGuidelinePdfModalClose" data-testid="ws-guideline-pdf-modal-close" aria-label="關閉 PDF 預覽">
+      <button class="modal-close" type="button" id="wsGuidelinePdfModalClose" data-testid="ws-guideline-pdf-modal-close" aria-label="關閉 PDF 預覽">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
@@ -1214,11 +1174,11 @@
      same closing paths as the PDF modal -- close button, backdrop click,
      Esc key (Esc via the LabelSuiteModalFocus trap). Body receives the
      output of renderMarkdown() (config.js), never raw file content. -->
-<div class="modal-overlay hidden" id="wsGuidelineMdModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineMdModalTitleText" data-testid="ws-guideline-md-modal">
+<div class="modal-overlay" id="wsGuidelineMdModal" role="dialog" aria-modal="true" aria-labelledby="wsGuidelineMdModalTitleText" data-testid="ws-guideline-md-modal">
   <div class="modal image-modal md-modal">
-    <div class="image-modal-header">
+    <div class="modal-header">
       <h2 class="modal-title" id="wsGuidelineMdModalTitleText"></h2>
-      <button class="image-modal-close" type="button" id="wsGuidelineMdModalClose" data-testid="ws-guideline-md-modal-close" aria-label="關閉 Markdown 預覽">
+      <button class="modal-close" type="button" id="wsGuidelineMdModalClose" data-testid="ws-guideline-md-modal-close" aria-label="關閉 Markdown 預覽">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
@@ -1231,15 +1191,15 @@
      `pending` -- every unreviewed unit's default and the state with the least
      to say -- paid the most vertical space for it. The track moved here
      verbatim; nothing about it was reduced. Reuses `.modal-overlay` so the
-     backdrop, `--z-modal` and the `.hidden` (display:none) removal from the
+     backdrop, `--z-modal` and the default `display:none` from the
      accessibility tree stay one implementation; `.rv-flow-overlay` only
      re-anchors the panel to the right edge. Esc / focus trap / focus return
      come from the LabelSuiteModalFocus trap, same as the guideline modals. -->
-<div class="modal-overlay rv-flow-overlay hidden" id="wsReviewFlowDrawer" role="dialog" aria-modal="true" aria-labelledby="wsReviewFlowDrawerTitle" data-testid="ws-review-flow-drawer">
+<div class="modal-overlay rv-flow-overlay" id="wsReviewFlowDrawer" role="dialog" aria-modal="true" aria-labelledby="wsReviewFlowDrawerTitle" data-testid="ws-review-flow-drawer">
   <div class="modal rv-flow-drawer">
-    <div class="image-modal-header">
+    <div class="modal-header">
       <h2 class="modal-title" id="wsReviewFlowDrawerTitle"></h2>
-      <button class="image-modal-close" type="button" id="wsReviewFlowDrawerClose" data-testid="ws-review-flow-drawer-close">
+      <button class="modal-close" type="button" id="wsReviewFlowDrawerClose" data-testid="ws-review-flow-drawer-close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
@@ -1329,9 +1289,9 @@
 
     <!-- Right: Guideline + History tabs -->
     <div class="col-guideline" data-testid="ws-guideline-panel">
-      <div class="guideline-tabs">
-        <button class="guideline-tab active" type="button" id="wsTabGuideline" data-testid="ws-guideline-tab-guideline"><span id="wsTabGuidelineLabel"></span></button>
-        <button class="guideline-tab" type="button" id="wsTabHistory" data-testid="ws-guideline-tab-history"><span id="wsTabHistoryLabel"></span></button>
+      <div class="admin-tabs admin-tabs--panel">
+        <button class="admin-tab active" type="button" id="wsTabGuideline" data-testid="ws-guideline-tab-guideline"><span id="wsTabGuidelineLabel"></span></button>
+        <button class="admin-tab" type="button" id="wsTabHistory" data-testid="ws-guideline-tab-history"><span id="wsTabHistoryLabel"></span></button>
       </div>
       <div class="guideline-panel" id="wsGuidelinePanel">
         <div class="guideline-summary">

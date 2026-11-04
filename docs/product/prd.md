@@ -1,7 +1,7 @@
 # Label Suite — 產品需求文件（Product Requirements Document）
 
-**版本：** 1.2.2
-**日期：** 2026-10-06
+**版本：** 1.3.0
+**日期：** 2026-10-13
 **狀態：** Draft
 **撰寫者：** Team Lead（基於 Research Phase 綜合）
 **可追溯來源：**
@@ -134,6 +134,37 @@ Label Suite 的核心價值主張在於：研究人員以 `input_type + outputs[
 
 > 說明：P0 = 必須（上線前阻塞）/ P1 = 重要（Demo 必要）/ P2 = 次要（R3 或未來）
 > 各 FR 的 Spec 可追溯至 `specs/STATUS.md` 及對應 spec 目錄
+>
+> **編號說明：** 本章 `FR-A01`、`FR-T03` 這類編號是 **PRD 能力編號**，只用來在產品層列舉能力，**不是 spec 的 FR**（spec 的 FR 如 `spec 014 FR-008a`）。本章描述僅為一句話能力陳述，不構成行為契約；需求內容、完成條件與例外一律以 §4.0 規格索引連到的 spec 為準，兩者不一致時以 spec 為準（見 [`decision-log.md`](./decision-log.md)）。
+
+### 4.0 規格索引
+
+下表為 `specs/` 現存的 22 份 spec（不含 `specs/_archive/` 與 `specs/_governance/`）；交付狀態不在此複製，以 [`specs/STATUS.md`](../../specs/STATUS.md) 對應 ID 列為準，spec 版本亦以各 spec 檔頭為準。
+
+| spec ID | 模組 | 主要角色 | 一句話簡述 | spec | 交付狀態 |
+|---|---|---|---|---|---|
+| foundation-000 | foundation | 開發者、QA、reviewer | 讓團隊依同一套工程基準設計與實作模組 | [spec](../../specs/foundation/000-foundation/spec.md) | [STATUS：`foundation-000`](../../specs/STATUS.md) |
+| foundation-001 | foundation | 維護者、開發 agent | 讓維護者在合併前偵測 SDD 文件漂移 | [spec](../../specs/foundation/001-project-sdd-lint/spec.md) | [STATUS：`foundation-001`](../../specs/STATUS.md) |
+| foundation-002 | foundation | 維護者 | 讓維護者判斷使用者路徑圖是否過期 | [spec](../../specs/foundation/002-user-path-map-freshness-check/spec.md) | [STATUS：`foundation-002`](../../specs/STATUS.md) |
+| account-001 | account | 使用者 | 讓使用者以 Email 與密碼登入 | [spec](../../specs/account/001-login-email-password/spec.md) | [STATUS：`account-001`](../../specs/STATUS.md) |
+| account-002 | account | 使用者 | 讓使用者看到 Google SSO 入口並預留整合 | [spec](../../specs/account/002-login-google-sso/spec.md) | [STATUS：`account-002`](../../specs/STATUS.md) |
+| account-003 | account | 訪客 | 讓訪客以 Email 與密碼註冊帳號 | [spec](../../specs/account/003-register-email-password/spec.md) | [STATUS：`account-003`](../../specs/STATUS.md) |
+| account-004 | account | 使用者 | 讓使用者忘記密碼時能重設密碼 | [spec](../../specs/account/004-forgot-reset-password/spec.md) | [STATUS：`account-004`](../../specs/STATUS.md) |
+| account-005 | account | 使用者 | 讓使用者管理個人資料、Email 與密碼 | [spec](../../specs/account/005-profile-settings/spec.md) | [STATUS：`account-005`](../../specs/STATUS.md) |
+| account-020 | account | 使用者 | 讓使用者在多裝置維持安全的登入工作階段 | [spec](../../specs/account/020-auth-session-security/spec.md) | [STATUS：`account-020`](../../specs/STATUS.md) |
+| admin-006 | admin | super_admin | 讓超管管理平台帳號與邀請 | [spec](../../specs/admin/006-user-management/spec.md) | [STATUS：`admin-006`](../../specs/STATUS.md) |
+| admin-007 | admin | super_admin | 讓超管檢視並維護角色權限矩陣 | [spec](../../specs/admin/007-role-settings/spec.md) | [STATUS：`admin-007`](../../specs/STATUS.md) |
+| dashboard-012 | dashboard | 所有角色 | 讓使用者依角色掌握任務進度與待辦 | [spec](../../specs/dashboard/012-dashboard/spec.md) | [STATUS：`dashboard-012`](../../specs/STATUS.md) |
+| shared-008 | shared | 所有登入使用者 | 讓使用者從共用側欄切換各模組 | [spec](../../specs/shared/008-sidebar-navbar-shared/spec.md) | [STATUS：`shared-008`](../../specs/STATUS.md) |
+| shared-018 | shared | 所有登入使用者 | 讓使用者從平台內取得說明 | [spec](../../specs/shared/018-help-button/spec.md) | [STATUS：`shared-018`](../../specs/STATUS.md) |
+| shared-019 | shared | 所有登入使用者 | 讓使用者同時保留多頁檢視並快速切換 | [spec](../../specs/shared/019-workspace-tabs/spec.md) | [STATUS：`shared-019`](../../specs/STATUS.md) |
+| annotation-015 | annotation | annotator、reviewer、仲裁者 | 讓標記員標記、審核員與仲裁者審核並收斂爭議 | [spec](../../specs/annotation/015-annotation-workspace/spec.md) | [STATUS：`annotation-015`](../../specs/STATUS.md) |
+| task-management-010 | task-management | user、super_admin | 讓使用者搜尋與篩選自己的任務 | [spec](../../specs/task-management/010-task-list/spec.md) | [STATUS：`task-management-010`](../../specs/STATUS.md) |
+| task-management-013 | task-management | project_leader | 讓專案負責人以四步驟精靈建立任務 | [spec](../../specs/task-management/013-task-new/spec.md) | [STATUS：`task-management-013`](../../specs/STATUS.md) |
+| task-management-014 | task-management | project_leader、reviewer | 讓負責人管理成員、回合並匯出結果 | [spec](../../specs/task-management/014-task-detail/spec.md) | [STATUS：`task-management-014`](../../specs/STATUS.md) |
+| dataset-016 | dataset | project_leader、reviewer | 讓負責人與審核員挑選要分析的任務 | [spec](../../specs/dataset/016-dataset-analysis-list/spec.md) | [STATUS：`dataset-016`](../../specs/STATUS.md) |
+| dataset-017 | dataset | project_leader、reviewer | 讓負責人與審核員查看統計與資料品質 | [spec](../../specs/dataset/017-dataset-analysis-detail/spec.md) | [STATUS：`dataset-017`](../../specs/STATUS.md) |
+| dataset-021 | dataset | project_leader、維護者 | 讓建立者追溯資料集版本並保護測試集答案 | [spec](../../specs/dataset/021-dataset-ingestion-and-lineage/spec.md) | [STATUS：`dataset-021`](../../specs/STATUS.md) |
 
 ### 4.1 模組：foundation（工程基準）
 
@@ -143,70 +174,70 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
-| FR-A01 | 使用者可透過 Email + Password 安全登入並維持受保護的工作階段 | P0 | spec 001；ADR-021 |
-| FR-A02 | 工作階段更新不得不必要中斷使用者操作 | P0 | spec 001；ADR-021 |
+| FR-A01 | 使用者可用 Email + Password 安全登入並維持受保護的工作階段 | P0 | spec 001；spec 020 FR-002、FR-003；ADR-021 |
+| FR-A02 | 工作階段更新不得不必要中斷使用者操作 | P0 | spec 020 FR-003～FR-005；ADR-021 |
 | FR-A03 | Google SSO 僅為可操作入口與未來整合預留（no-op），不宣告 OAuth 已可登入 | P2 | spec 002 |
 | FR-A04 | Email／Password 註冊目前為前端互動 prototype；完整行為以 spec 003 為準 | P1 | spec 003 |
 | FR-A05 | 忘記密碼目前為前端互動 prototype；完整行為以 spec 004 為準 | P2 | spec 004 |
-| FR-A06 | 使用者可在個人設定頁修改姓名、上傳頭像、變更 Email（含驗證流程）、修改密碼、設定外觀偏好（跟隨系統 / 淺色 / 深色）及通知偏好 | P2 | spec 005 |
-| FR-A07 | 使用者登出時，後端立即撤銷 refresh token，清除 cookie | P0 | ADR-021 |
+| FR-A06 | 使用者可在個人設定頁管理自己的個人資料與帳號安全設定 | P2 | spec 005 FR-001 |
+| FR-A07 | 使用者登出後，其登入工作階段隨即失效 | P0 | spec 020 FR-008；ADR-021 |
 | FR-A08 | 系統角色與任務角色採雙層模型；具體授權契約以 shared constants 與對應 spec 為準 | P0 | ADR-021；IA §1 |
 
 ### 4.3 模組：dashboard（儀表板）
 
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
-| FR-D01 | 儀表板依使用者系統角色與任務角色動態顯示對應視圖（一般使用者 / Project Leader / Annotator / Reviewer / Super Admin 共 5 種） | P0 | spec 012 |
-| FR-D02 | 試標回合完成（標註、必要審核與必要仲裁皆完成，且 `dry_run` 例外池已清空；IAA 不是完成條件）時，Dashboard 待處理事項區顯示 badge 提醒 `project_leader` | P1 | spec 012；spec 014 FR-008a；IA §4 |
-| FR-D03 | Super Admin 視圖顯示平台使用者統計（總用戶、PL/Annotator/Reviewer 數量）及全平台任務概況 | P2 | spec 012 |
-| FR-D04 | 語言切換（ZH / EN）於所有登入後頁面即時生效，不重新載入頁面 | P1 | spec 012；IA §2.1 |
+| FR-D01 | 儀表板依使用者的系統角色與任務角色顯示對應視圖 | P0 | spec 012 FR-001、FR-001B |
+| FR-D02 | 試標回合完成後，Dashboard 提醒 `project_leader` 前往處理；完成條件以 spec 014 為準 | P1 | spec 012；spec 014 FR-008a；IA §4 |
+| FR-D03 | Super Admin 視圖提供平台層級的使用者與任務概況 | P2 | spec 012 FR-002、FR-008E |
+| FR-D04 | 使用者可在登入後頁面切換介面語言（ZH / EN） | P1 | spec 012；spec 008 FR-009；IA §2.1 |
 
 ### 4.4 模組：task-management（任務管理模組）
 
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
-| FR-T01 | `project_leader` 可透過四步驟精靈建立任務（基本資料 + 標記設定檔 + 啟動設定 + 標記說明），建立完成後自動取得任務 `project_leader` 角色 | P0 | spec 013 |
+| FR-T01 | `project_leader` 可透過四步驟精靈建立任務，並自動成為該任務的 `project_leader` | P0 | spec 013 FR-001 |
 | FR-T02 | Config Builder 提供可理解的設定與預覽方式，細節以 spec 013 為準 | P0 | spec 013；IA §4 |
-| FR-T03 | Config Builder 必須支援以 `input_type`（`single_item` / `item_pair`）與可組合的 `outputs[]`（`single_label`、`multi_label`、`single_dim`、`multi_dim`、`entity_recognition`、`relation_identification`、`sequence_tagging`、`free_text`）定義任務，取代固定任務類型 enum | P0 | spec 013；ADR-029；task-type-taxonomy |
+| FR-T03 | Config Builder 以 `input_type` 與可組合的 `outputs[]` 定義任務，取代固定任務類型 enum；可用輸出類型以 spec 013 registry 為準 | P0 | spec 013；ADR-029；task-type-taxonomy |
 | FR-T04 | 新增任務類型必須透過 registry / schema 擴充，不修改 Step 1~4 核心流程 | P0 | ADR-010；constitution 原則 II |
-| FR-T05 | 任務列表頁顯示使用者有成員資格的任務（`super_admin` 顯示全平台任務），支援搜尋與狀態篩選 | P1 | spec 010 |
-| FR-T06 | 任務詳情頁提供「任務概覽」、「標記結果」、「標記進度」、「工時紀錄」、「成員管理」五個 tab | P1 | spec 014 |
-| FR-T07 | 任務生命週期為 `draft → dry_run_in_progress → waiting_iaa_confirmation → official_run_in_progress → completed`；完成需有正式提交、定案 review unit、無未解爭議、所需仲裁完成與品質指標可用；完整規則以 spec 014／ADR-022 為準 | P0 | ADR-022；spec 014 |
+| FR-T05 | 任務列表頁顯示使用者可見的任務，並支援搜尋與篩選 | P1 | spec 010 FR-002、FR-004 |
+| FR-T06 | 任務詳情頁以分頁整合單一任務的設定、成員、進度、結果與工時 | P1 | spec 014 FR-003 |
+| FR-T07 | 任務依固定生命週期推進；各狀態與完成條件以 spec 014／ADR-022 為準 | P0 | spec 014 FR-008；ADR-022 |
 | FR-T08 | 流程狀態與回合需可追溯，Dry Run 與 Official Run 保持可重現且資料公平 | P0 | ADR-022；Constitution 原則 III |
-| FR-T10 | `project_leader` 可在成員管理 tab 搜尋平台成員或以 Email 邀請，指派 `reviewer` / `annotator` 任務角色 | P1 | spec 014 |
-| FR-T11 | 標記結果 tab 提供 JSON / JSON-MIN 格式匯出，並記錄匯出歷程 | P1 | spec 014 |
+| FR-T10 | `project_leader` 可邀請平台成員加入任務，並指派 `reviewer` / `annotator` 角色 | P1 | spec 014 FR-005 |
+| FR-T11 | `project_leader` 可匯出標記結果，系統保留匯出歷程 | P1 | spec 014 FR-009、FR-021 |
 | FR-T12 | 任務刪除採軟刪除（soft delete），從預設列表隱藏，不物理刪除 | P1 | spec 010；IA §4 |
 
 ### 4.5 模組：annotation（標記任務模組）
 
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
-| FR-AN01 | Annotator 可從 Dashboard 或 Navbar 進入 `annotation-list`，查看被指派的任務與資料清單 | P0 | spec 015 |
+| FR-AN01 | Annotator 可進入 `annotation-list`，查看被指派的任務與資料清單 | P0 | spec 015 FR-001 |
 | FR-AN02 | 標記作業頁依已發布 TaskConfig 的 `outputs[]` registry 動態渲染，不硬編碼任務邏輯 | P0 | spec 015；ADR-010 |
-| FR-AN03 | 標記進度即時更新（已標記數量 / 本輪總量 / 階段），草稿自動儲存，離開後可繼續 | P0 | spec 015 |
-| FR-AN04 | Dry Run 模式：所有 annotator 標記相同樣本，結果不計入正式資料集 | P0 | spec 015；constitution 原則 III |
-| FR-AN05 | Official Run 模式：每位 annotator 分配不重疊的資料（依樣本快照切分） | P0 | spec 015 |
-| FR-AN06 | Annotator 介面及其可見資料絕不包含 test-set ground truth；official run 的 gold 僅能在授權審核／仲裁定案後產生與存取 | P0 | Constitution 原則 III / NON-NEGOTIABLE |
+| FR-AN03 | 標記員可保存草稿，離開後能從上次進度繼續標記 | P0 | spec 015 FR-013 |
+| FR-AN04 | Dry Run 的標記結果不計入正式資料集 | P0 | spec 015 FR-012；constitution 原則 III |
+| FR-AN05 | Official Run 中每位 annotator 分到彼此不重疊的資料 | P0 | spec 015 FR-011 |
+| FR-AN06 | Annotator 介面及其可見資料不得包含 test-set ground truth | P0 | Constitution 原則 III / NON-NEGOTIABLE；spec 015 |
 | FR-AN07 | Reviewer 以 review unit 審核、可直接修正；爭議由合格且非當事人的仲裁者處理，完整規則以 spec 015 為準 | P1 | spec 015 |
-| FR-AN08 | 右欄「說明與檔案」在每筆標記頁必須持續可見，翻頁時不收起或清空 | P0 | spec 015；IA §4 |
+| FR-AN08 | 標記頁的「說明與檔案」須持續可見 | P0 | spec 015 FR-019；IA §4 |
 | FR-AN09 | `annotation-workspace` 必須記錄標記歷程（History），Reviewer 可追溯每筆的修改紀錄 | P1 | spec 015 |
 
 ### 4.6 模組：dataset（資料集分析模組）
 
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
-| FR-DS01 | 資料集分析模組入口（`/dataset-analysis`）列出使用者具 `project_leader` 或 `reviewer` 角色的任務 | P1 | spec 016 |
-| FR-DS02 | 統計總覽 tab（`?tab=stats`）顯示共用指標：Sentence 數量、Token 數量、整體完成率 | P1 | spec 017 |
-| FR-DS03 | 統計總覽依 `outputs[].type` 逐型顯示，複合任務逐型彙整 | P1 | spec 017 |
-| FR-DS04 | 品質監控的 IAA 指標與預設門檻取自 spec 017 的 registry；`free_text` output 的自動 IAA 為 `not_applicable`，混合任務的其他 outputs 仍逐型套用該 registry | P1 | spec 017 |
+| FR-DS01 | 資料集分析入口列出使用者可分析的任務 | P1 | spec 016 FR-001、FR-002 |
+| FR-DS02 | 統計總覽 tab 提供任務的共用規模與進度指標 | P1 | spec 017 FR-008 |
+| FR-DS03 | 統計總覽依 `outputs[].type` 逐型顯示 | P1 | spec 017 FR-009 |
+| FR-DS04 | 品質監控逐型提供 IAA 指標；指標與門檻以 spec 017 registry 為準 | P1 | spec 017 FR-012 |
 | FR-DS05 | 品質監控提供資料品質觀察；異常與比較規則以 spec 017 為準 | P2 | spec 017 |
 
 ### 4.7 模組：admin（系統管理模組）
 
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
-| FR-AD01 | 使用者管理頁（`user-management`）僅 `super_admin` 可存取，可查看所有平台使用者、建立 / 停用帳號、指派系統角色（`user` / `super_admin`） | P2 | spec 006 |
-| FR-AD02 | 角色權限設定頁（`role-settings`）顯示系統角色與任務角色的功能存取矩陣 | P2 | spec 007 |
+| FR-AD01 | `super_admin` 可在 `user-management` 管理平台帳號與系統角色 | P2 | spec 006 FR-002、FR-003 |
+| FR-AD02 | `super_admin` 可檢視並維護系統角色與任務角色的功能存取矩陣 | P2 | spec 007 FR-001、FR-003 |
 | FR-AD03 | 任務成員（`annotator` / `reviewer`）的指派由 `task-detail` 的成員管理 tab 管理，不在 `user-management` 處理 | P0 | IA §4；product-baseline |
 | FR-AD04 | 破壞性管理操作（批量停用帳號等）必須留下審計日誌 | P1 | constitution 原則 XV |
 
@@ -214,10 +245,10 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
-| FR-SH01 | 側邊欄 Navbar（Sidebar）提供 L0 主導覽：儀表板、任務管理、標記作業、資料集分析、系統管理、個人設定；角色可見性依系統角色與任務角色 gating | P0 | spec 008；IA §2.1 |
-| FR-SH02 | Desktop（> MOBILE_BP）採左側固定 Sidebar；Mobile（<= MOBILE_BP）採頂部品牌列 + 底部橫向主導覽 | P1 | spec 008；IA §2.1 |
-| FR-SH03 | 系統管理導覽項（`user-management`）僅 `super_admin` 可見 | P0 | IA §2.1 §C |
-| FR-SH04 | 登入後具 Sidebar 殼層的頁面於主內容區上方提供工作頁籤列與總覽選單（篩選、重開剛關閉的、全部關閉），讓使用者同時保留多頁檢視狀態；目前交付層為規格＋原型，`frontend/**` 實作待後續階段 | P2 | spec 019 FR-001、FR-023～025；IA §2.1 §E |
+| FR-SH01 | 側邊欄提供 L0 主導覽，可見項目依角色決定 | P0 | spec 008 FR-002；IA §2.1 |
+| FR-SH02 | 桌面與行動裝置採不同的導覽版型 | P1 | spec 008；IA §2.1 |
+| FR-SH03 | 系統管理導覽項僅 `super_admin` 可見 | P0 | spec 008 FR-003；IA §2.1 §C |
+| FR-SH04 | 登入後頁面提供工作頁籤列，讓使用者同時保留多頁檢視狀態 | P2 | spec 019 FR-001；IA §2.1 §E |
 
 ---
 
@@ -247,16 +278,16 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 
 ## 7. 開放問題（Open Questions）
 
-下列問題尚未在現有文件中有明確定義，需使用者確認後才能推進對應 spec：
+下列問題最初為 PRD 撰寫時尚未定義的項目；已有正典答案者於「狀態」欄標示並附來源，未標示者仍待確認。本表不更動原 QID 編號與問題文字：
 
-| QID | 問題 | 影響範圍 | 需確認對象 |
-|-----|------|---------|-----------|
-| Q-01 | Help Button（spec 018）目前標記為 `deferred`，是否確認排除於 Demo Paper 範疇？ | shared 模組 | 論文作者 |
-| Q-02 | 項目對型任務（`input_type = item_pair`）的 demo dataset 與使用情境是否已確定？目前 spec 013 / 015 / 017 已將 item_pair 輸入類型納入 config、workspace 與品質分析範圍 | spec 013 / 015 / 017 | 論文作者 |
-| Q-03 | UI 資料集上傳目前僅接受 JSON；若需要 JSONL 或其他格式，必須先變更 spec 013。 | spec 013 | 論文作者 |
-| Q-04 | SUS 問卷的受試者招募策略（5~10 位實驗室成員），目前 user study 的計畫時程是否確定？ | R2/R3 驗收 | 指導教授 / 論文作者 |
-| Q-05 | `annotation-workspace` 中「標記說明強制顯示」（spec 013/015）的確認狀態是否需要持久化至 DB？若使用者換瀏覽器，應重新顯示還是跳過？ | spec 015 | 論文作者 |
-| Q-06 | Official Run 完成後，`project_leader` 匯出 JSON / JSON-MIN 的格式定義是否需要正式 ADR？目前 spec 014 提及但未有詳細 schema 文件 | spec 014 / export | 論文作者 |
+| QID | 問題 | 影響範圍 | 需確認對象 | 狀態與來源 |
+|-----|------|---------|-----------|-----------|
+| Q-01 | Help Button（spec 018）目前標記為 `deferred`，是否確認排除於 Demo Paper 範疇？ | shared 模組 | 論文作者 | 已暫緩：`specs/STATUS.md` 中 `shared-018` 為 `deferred`；`information-architecture.md` 記載 018「deferred，尚非目前交付能力」。是否永久排除仍待論文作者確認 |
+| Q-02 | 項目對型任務（`input_type = item_pair`）的 demo dataset 與使用情境是否已確定？目前 spec 013 / 015 / 017 已將 item_pair 輸入類型納入 config、workspace 與品質分析範圍 | spec 013 / 015 / 017 | 論文作者 | 已解：`docs/product/example-data/nli.json`（`Premise`／`Hypothesis`）為項目對示例資料，spec 013 定義 `TASK_INPUT_TYPES = single_item | item_pair` |
+| Q-03 | UI 資料集上傳目前僅接受 JSON；若需要 JSONL 或其他格式，必須先變更 spec 013。 | spec 013 | 論文作者 | 已解：spec 013 `DATASET_UPLOAD_FORMATS = json`、FR-002a 僅接受 `.json`；其他格式須先變更 spec 013 |
+| Q-04 | SUS 問卷的受試者招募策略（5~10 位實驗室成員），目前 user study 的計畫時程是否確定？ | R2/R3 驗收 | 指導教授 / 論文作者 | 待確認：`docs/product/milestones.md` 僅記「User Study 的招募與 SUS 問卷需提前規劃時程」，未見確定時程 |
+| Q-05 | `annotation-workspace` 中「標記說明強制顯示」（spec 013/015）的確認狀態是否需要持久化至 DB？若使用者換瀏覽器，應重新顯示還是跳過？ | spec 015 | 論文作者 | 部分已解：spec 013 SC-006a 以「同一使用者」為單位，首次進入顯示、確認後不重複；跨瀏覽器是否持久化至 DB 條文未規定，仍待確認 |
+| Q-06 | Official Run 完成後，`project_leader` 匯出 JSON / JSON-MIN 的格式定義是否需要正式 ADR？目前 spec 014 提及但未有詳細 schema 文件 | spec 014 / export | 論文作者 | 部分已解：spec 014 已定義 JSON／JSON-MIN 格式（`EXPORT_JSON_MIN_SHAPE`、FR-021）；是否另立 ADR 仍待論文作者確認 |
 
 ---
 
@@ -269,3 +300,4 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 | 1.2.0 | 2026-08-19 | 建立產品文件治理：將可變技術契約回鏈 feature specs／Constitution／ADR，校正組態、審核、資料安全與 IAA 摘要，新增 Agent Context Contract 與 decision log 入口 |
 | 1.2.1 | 2026-10-06 | 同步可追溯來源版本（constitution、IA、story map、impact map）；FR-D02 試標完成通知改對齊 014 FR-008a v5.0.0（issue #1157） |
 | 1.2.2 | 2026-10-06 | 新增 FR-SH04 工作頁籤導覽（spec 019 v1.2.0）；IA 參照改 v1.5.2、story map 參照改 v1.5.1（issue #1157） |
+| 1.3.0 | 2026-10-13 | 新增 §4.0 規格索引（22 份 spec）並說明 PRD 能力編號（`FR-A01` 等）不是 spec FR；§4 各模組描述收斂為一句話能力陳述並補 spec FR 指標；FR-T06 分頁描述、FR-AD02 角色矩陣描述改對齊 spec 014 v12 與 spec 007；§7 Q-01～Q-06 標註現況與來源（issue #1315） |

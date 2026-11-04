@@ -58,6 +58,9 @@
       nameEn: listEntry.nameEn,
       outputs: detail.outputs || [],
       fieldRoleMap: detail.fieldRoleMap || {},
+      dialogueFields: detail.dialogue_fields ?? null,
+      prefillFields: detail.prefill_fields ?? null,
+      listTitleField: detail.list_title_field ?? null,
       datasetRecords: detail.datasetRecords || [],
       datasetFileName: detail.datasetFileName || '',
       taskInputTypes: detail.taskInputTypes || ['single_item'],
@@ -76,9 +79,8 @@
    * dataset record is assigned to the engine's state.datasetRawFirstRow
    * for annotator-facing rendering, keep ONLY fields explicitly mapped to
    * a non-output role in field_role_map. Unmapped fields are dropped too
-   * (not just output-role ones) so engine readers that inspect literal
-   * keys (initPreviewState's rawRow.entities/rawRow.triples) can never
-   * pick up an unmapped answer column. Mapped output-role fields are
+   * (not just output-role ones) so engine readers that fall back to literal
+   * keys can never pick up an unmapped answer column. Mapped output-role fields are
    * re-added by buildAnnotatorRecord (config.js) as creator-designated
    * annotator-visible preannotation per 013 FR-003g-5. Reviewer mode
    * reads the raw record separately for diff/comparison. */
@@ -108,13 +110,111 @@
     return String(index);
   }
 
-  /* First 'input'-role field's value, used as the sample-list snippet. */
-  function getRecordPreviewText(record, fieldRoleMap) {
-    var inputKey = Object.keys(fieldRoleMap || {}).find(function (key) {
-      return fieldRoleMap[key] === 'input';
+  /* FR-106 (issue #1339): the single sample-summary helper shared by the
+     workspace left rail and annotation-list. Never reads an output-role field
+     (Data Fairness); never emits "[object Object]"; does not truncate. */
+  /* The text of one object-array element, read only from the sub-field the task's
+     dialogue_fields.text names (#1358); no such field -> undefined (no guessing). */
+  function objectTextField(obj, dialogueFields) {
+    var key = dialogueFields && dialogueFields.text;
+    if (!key || obj === null || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
+    return typeof obj[key] === 'string' ? obj[key] : undefined;
+  }
+
+  function valueToSummaryText(value, lang, dialogueFields) {
+    if (value === undefined || value === null || value === '') return '';
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '';
+      if (value.every(function (el) { return objectTextField(el, dialogueFields) !== undefined; })) {
+        return objectTextField(value[0], dialogueFields);
+      }
+      return lang === 'en' ? value.length + ' items' : value.length + ' 筆資料';
+    }
+    if (typeof value === 'object') {
+      var k = Object.keys(value).length;
+      if (k === 0) return '';
+      return lang === 'en' ? k + ' fields' : k + ' 個欄位';
+    }
+    return String(value);
+  }
+
+  function isDialogueThread(value, dialogueFields) {
+    return Array.isArray(value) && value.length > 0 && value.every(function (el) {
+      return objectTextField(el, dialogueFields) !== undefined;
     });
-    if (inputKey && record && record[inputKey] != null) return String(record[inputKey]);
-    return record && record.id != null ? String(record.id) : '';
+  }
+
+  /* The one field-selection pass behind both the summary text and its tags:
+     returns the chosen input-side field value and its summary text. */
+  function pickSummarySource(record, fieldRoleMap, listTitleField, lang, dialogueFields) {
+    var roles = fieldRoleMap || {};
+    var explicitOk = listTitleField != null && (
+      roles[listTitleField] === 'input' || roles[listTitleField] === 'evidence' ||
+      (listTitleField === 'id' && roles.id !== 'output')
+    );
+    var value = explicitOk ? record[listTitleField] : undefined;
+    var text = explicitOk ? valueToSummaryText(value, lang, dialogueFields) : '';
+    if (!text) {
+      Object.keys(roles).some(function (key) {
+        if (roles[key] !== 'input') return false;
+        value = record[key];
+        text = valueToSummaryText(value, lang, dialogueFields);
+        return !!text;
+      });
+    }
+    return text ? { value: value, text: text } : { value: undefined, text: '' };
+  }
+
+  /* FR-106 clause 6: sub-field names come only from dialogue_fields. */
+  function speakerOf(el, dialogueFields) {
+    var key = dialogueFields && dialogueFields.speaker;
+    return key && el && typeof el[key] === 'string' ? el[key] : '';
+  }
+
+  function getRecordSummaryText(record, fieldRoleMap, listTitleField, lang, dialogueFields) {
+    if (!record) return '';
+    var picked = pickSummarySource(record, fieldRoleMap, listTitleField, lang, dialogueFields);
+    if (picked.text) {
+      var first = isDialogueThread(picked.value, dialogueFields) ? speakerOf(picked.value[0], dialogueFields) : '';
+      return first ? first + (lang === 'en' ? ': ' : '：') + picked.text : picked.text;
+    }
+    var roles = fieldRoleMap || {};
+    return roles.id !== 'output' && record.id != null ? String(record.id) : '';
+  }
+
+  function getRecordSummaryTags(record, fieldRoleMap, listTitleField, lang, dialogueFields) {
+    if (!record || !dialogueFields) return [];
+    var value = pickSummarySource(record, fieldRoleMap, listTitleField, lang, dialogueFields).value;
+    if (!isDialogueThread(value, dialogueFields)) return [];
+    var en = lang === 'en';
+    var tags = [value.length + (en ? ' turns' : ' 則發言')];
+    var seen = {};
+    value.forEach(function (el) {
+      var sp = speakerOf(el, dialogueFields);
+      if (sp) seen[sp] = true;
+    });
+    var m = Object.keys(seen).length;
+    if (m >= 1) tags.push(m + (en ? ' speakers' : ' 位發言者'));
+    return tags;
+  }
+
+  /* List search string: the text of EVERY input-role field (never output or
+     evidence — Data Fairness), reusing valueToSummaryText's rules but joining
+     all elements of an object array instead of only the first. */
+  function getRecordSearchText(record, fieldRoleMap, lang, dialogueFields) {
+    if (!record) return '';
+    var roles = fieldRoleMap || {};
+    return Object.keys(roles).filter(function (key) {
+      return roles[key] === 'input';
+    }).map(function (key) {
+      var value = record[key];
+      if (Array.isArray(value) && value.length > 0 && value.every(function (el) {
+        return objectTextField(el, dialogueFields) !== undefined;
+      })) {
+        return value.map(function (el) { return objectTextField(el, dialogueFields); }).join(' ');
+      }
+      return valueToSummaryText(value, lang, dialogueFields);
+    }).filter(Boolean).join(' ');
   }
 
   /* Generic localStorage-backed JSON object store, factored out so the
@@ -1881,7 +1981,17 @@
         });
       }
       case 'entity_recognition':
-        return (submission.previewEntities || []).map(function (e) { return { text: e.text, type: e.type }; });
+        /* FR-107 (2): dialogue-shape entities keep utt_id/start/end; the flat
+         * shape stays exactly {text,type}. */
+        return (submission.previewEntities || []).map(function (e) {
+          var out = { text: e.text, type: e.type };
+          if (e.utt_id != null) {
+            out.utt_id = e.utt_id;
+            out.start = e.start != null ? e.start : null;
+            out.end = e.end != null ? e.end : null;
+          }
+          return out;
+        });
       case 'relation_identification':
         /* FR-098 §4: serialize the four offset fields plus relType
          * alongside the existing display strings, symmetric with the
@@ -1890,7 +2000,7 @@
          * (relType is absent, not null, on sources that never set it)
          * MUST still come out as an explicit `null`, not `undefined`. */
         return (submission.previewTriples || []).map(function (tr) {
-          return {
+          var out = {
             subj: tr.subj,
             rel: tr.rel,
             obj: tr.obj,
@@ -1900,6 +2010,12 @@
             objStart: tr.objStart != null ? tr.objStart : null,
             objEnd: tr.objEnd != null ? tr.objEnd : null,
           };
+          /* FR-107 (2): dialogue triples also keep their utterance ids. */
+          if (tr.subjUttId != null || tr.objUttId != null) {
+            out.subjUttId = tr.subjUttId != null ? tr.subjUttId : null;
+            out.objUttId = tr.objUttId != null ? tr.objUttId : null;
+          }
+          return out;
         });
       case 'free_text':
         return ps.text || '';
@@ -2388,10 +2504,27 @@
    * resolveTaskProfile(taskId).outputs, the same source the workspace host
    * itself uses to build the task's output type list. */
   function isAnnotatorWriteLocked(taskId, runType, sampleId, identity) {
-    if (runType !== 'official_run') return false;
+    return getAnnotatorLockReason(taskId, runType, sampleId, identity) !== null;
+  }
+
+  /* FR-101 / AC-2.27 / AC-2.30 (issue #1330): the single judgment behind every
+   * annotator lock. 'finalized' = the official_run terminal lock (derived by
+   * getReviewUnitStatus, takes precedence); 'under_review' = the V1
+   * source-integrity lock -- a real annotator submission plus any formal
+   * reviewer submission, in dry_run and official_run alike. An FR-044a
+   * demo-row unit has no real annotator submission, so it reads null. */
+  function getAnnotatorLockReason(taskId, runType, sampleId, identity) {
     var profile = resolveTaskProfile(taskId);
     var outKeys = (profile && profile.outputs || []).map(function (o) { return o.type; });
-    return getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) === REVIEW_UNIT_STATUS.FINALIZED;
+    if (runType === 'official_run' &&
+        getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys) === REVIEW_UNIT_STATUS.FINALIZED) {
+      return 'finalized';
+    }
+    if (getSubmission(taskId, 'annotator', runType, sampleId, identity) &&
+        readReviewerSubmissions(taskId, runType, sampleId, identity).length) {
+      return 'under_review';
+    }
+    return null;
   }
 
   /* issue #824 (FR-093 本版修訂 1): the key a sticky lookup is built on.
@@ -4037,7 +4170,9 @@
     resolveTaskProfile: resolveTaskProfile,
     sanitizeRecordForAnnotator: sanitizeRecordForAnnotator,
     getRecordId: getRecordId,
-    getRecordPreviewText: getRecordPreviewText,
+    getRecordSummaryText: getRecordSummaryText,
+    getRecordSummaryTags: getRecordSummaryTags,
+    getRecordSearchText: getRecordSearchText,
     isSampleSubmitted: isSampleSubmitted,
     getSampleStatus: getSampleStatus,
     getSampleSubmittedAt: getSampleSubmittedAt,
@@ -4073,6 +4208,7 @@
     REVIEW_ASSIGNMENT_GRANULARITY: REVIEW_ASSIGNMENT_GRANULARITY,
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
+    getAnnotatorLockReason: getAnnotatorLockReason,
     getReviewUnitLane: getReviewUnitLane,
     getReviewAssignments: getReviewAssignments,
     getStickyReviewers: getStickyReviewers,

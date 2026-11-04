@@ -7,7 +7,9 @@
  *     BOTH view and edit state: background --color-white, 1px solid --color-border,
  *     radius --radius-lg, box-shadow none
  *   - .settings-nav-item text is 14px and horizontally centered in the button
- *   - active nav item background is --color-white; inactive is not
+ *   - active nav item (issue #1483): background --color-primary-soft-bg, text --color-primary-strong
+ *     (#4F46E5 light / #A5B4FC dark), font-weight 600, radius 8px; inactive is transparent with
+ *     --color-ink-muted text (not primary-soft-bg, not --color-white)
  *   - the same holds in dark theme, against the dark-resolved token values
  *
  * Tokens are resolved at runtime (never hardcoded). Colors are normalized by applying them to a
@@ -51,6 +53,27 @@ async function resolveTokens(page: Page): Promise<Resolved> {
     return r;
   });
 }
+
+type NavTokens = { softBg: string; strong: string; muted: string; white: string };
+
+/** Resolve nav tokens via var(); an undefined --color-primary-strong falls back to a sentinel. */
+async function resolveNavTokens(page: Page): Promise<NavTokens> {
+  return page.evaluate(() => {
+    const probe = document.createElement('div');
+    probe.style.cssText =
+      'position:absolute;background-color:var(--color-primary-soft-bg);color:var(--color-primary-strong, rgb(1, 2, 3))';
+    document.body.appendChild(probe);
+    const cs = getComputedStyle(probe);
+    const r = { softBg: cs.backgroundColor, strong: cs.color, muted: '', white: '' };
+    probe.style.cssText = 'position:absolute;color:var(--color-ink-muted);background-color:var(--color-white)';
+    r.muted = getComputedStyle(probe).color;
+    r.white = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return r;
+  });
+}
+
+const NAV_STRONG_RGB = { light: 'rgb(79, 70, 229)', dark: 'rgb(165, 180, 252)' } as const; // #4F46E5 / #A5B4FC
 
 const visibleCard = (page: Page) => page.locator('#settingsPanel [role="tabpanel"]:visible');
 
@@ -97,9 +120,10 @@ for (const theme of ['light', 'dark'] as const) {
       }
     });
 
-    test(`nav items are 14px, horizontally centered; active is --color-white, inactive is not [${theme}]`, async ({ page }) => {
+    test(`nav items are 14px, centered; active is indigo soft-bg/strong text/600/8px, inactive transparent ink-muted [${theme}]`, async ({ page }) => {
       await openPage(page, theme);
-      const tokens = await resolveTokens(page);
+      const tokens = await resolveNavTokens(page);
+      expect(tokens.strong, '--color-primary-strong resolved value').toBe(NAV_STRONG_RGB[theme]);
       await openSettingsSection(page, 'basic');
       const items = page.locator('.settings-nav-item');
       await expect(items).toHaveCount(5);
@@ -109,17 +133,30 @@ for (const theme of ['light', 'dark'] as const) {
           range.selectNodeContents(el);
           const text = range.getBoundingClientRect();
           const box = el.getBoundingClientRect();
+          const cs = getComputedStyle(el);
           return {
-            fontSize: getComputedStyle(el).fontSize,
+            fontSize: cs.fontSize,
+            fontWeight: cs.fontWeight,
+            radius: cs.borderTopLeftRadius,
             offset: text.left + text.width / 2 - (box.left + box.width / 2),
-            bg: getComputedStyle(el).backgroundColor,
+            bg: cs.backgroundColor,
+            color: cs.color,
             selected: el.getAttribute('aria-selected') === 'true',
           };
         });
         expect.soft(m.fontSize, `nav ${i} font-size`).toBe('14px');
         expect.soft(Math.abs(m.offset), `nav ${i} text center offset`).toBeLessThanOrEqual(2);
-        if (m.selected) expect.soft(m.bg, `nav ${i} active bg`).toBe(tokens.white);
-        else expect.soft(m.bg, `nav ${i} inactive bg`).not.toBe(tokens.white);
+        if (m.selected) {
+          expect.soft(m.bg, `nav ${i} active bg`).toBe(tokens.softBg);
+          expect.soft(m.color, `nav ${i} active color`).toBe(tokens.strong);
+          expect.soft(m.fontWeight, `nav ${i} active font-weight`).toBe('600');
+          expect.soft(m.radius, `nav ${i} active radius`).toBe('8px');
+        } else {
+          expect.soft(m.bg, `nav ${i} inactive bg`).not.toBe(tokens.softBg);
+          expect.soft(m.bg, `nav ${i} inactive bg`).not.toBe(tokens.white);
+          expect.soft(m.bg, `nav ${i} inactive bg transparent`).toBe('rgba(0, 0, 0, 0)');
+          expect.soft(m.color, `nav ${i} inactive color`).toBe(tokens.muted);
+        }
       }
       await expect(items.nth(0)).toHaveAttribute('aria-selected', 'true');
     });

@@ -1,7 +1,7 @@
 # foundation/000-foundation Specification
 
 ## Purpose
-Label Suite 的工程基線能力：所有功能模組共同依賴的跨模組 API envelope、設定驗證、安全原語、資料庫 session 契約、前端 scaffold 與本機 bootstrap。本文件是正典 `specs/foundation/000-foundation/spec.md`（v1.14.0）的 derived view —— 以下每條需求皆引用既有正典 FR/SC ID；本檢視收錄已歸檔的規劃契約與實作需求，account session 命名以當前正典為準。範圍：Foundation-Core，依 `specs/foundation/000-foundation/plan.md` v2.0.0（Observability 延後）。
+Label Suite 的工程基線能力：所有功能模組共同依賴的跨模組 API envelope、設定驗證、安全原語、資料庫 session 契約、前端 scaffold 與本機 bootstrap。本文件是正典 `specs/foundation/000-foundation/spec.md`（v1.14.1）的 derived view —— 以下每條需求皆引用既有正典 FR/SC ID；本檢視收錄已歸檔的規劃契約與實作需求，account session 命名以當前正典為準。範圍：Foundation-Core，依 `specs/foundation/000-foundation/plan.md` v2.0.0（Observability 延後）。
 
 ## Requirements
 

@@ -96,13 +96,16 @@ test.describe('task-detail settings tab section nav (FR-026 (1))', () => {
     await expectSection(page, 'reviewSettingsTitle');
   });
 
-  test('active nav item uses the resolved --color-white background and font-weight 600', async ({ page }) => {
+  // #1483: active item moved from white/ink to the indigo soft-bg contract.
+  test('active nav item uses the resolved --color-primary-soft-bg background, --color-primary-strong text and font-weight 600', async ({ page }) => {
     await openSettings(page);
     const expected = await page.evaluate(() => {
       const probe = document.createElement('div');
-      probe.style.backgroundColor = 'var(--color-white)';
+      probe.style.backgroundColor = 'var(--color-primary-soft-bg)';
+      probe.style.color = 'var(--color-primary-strong)';
       document.body.appendChild(probe);
-      const c = getComputedStyle(probe).backgroundColor;
+      const cs = getComputedStyle(probe);
+      const c = { bg: cs.backgroundColor, color: cs.color };
       probe.remove();
       return c;
     });
@@ -110,12 +113,13 @@ test.describe('task-detail settings tab section nav (FR-026 (1))', () => {
     await expect(active).toBeVisible();
     const style = await active.evaluate((el) => {
       const cs = getComputedStyle(el);
-      return { bg: cs.backgroundColor, weight: cs.fontWeight };
+      return { bg: cs.backgroundColor, color: cs.color, weight: cs.fontWeight };
     });
-    expect(style.bg).toBe(expected);
+    expect(style.bg).toBe(expected.bg);
+    expect(style.color).toBe(expected.color);
     expect(style.weight).toBe('600');
     const inactive = await sectionTab(page, '抽樣設定').evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(inactive).not.toBe(expected);
+    expect(inactive).not.toBe(expected.bg);
   });
 
   test('section panels are 1px --color-border cards with --radius-lg and no box-shadow (FR-026 (6))', async ({ page }) => {
@@ -336,7 +340,7 @@ test.describe('task-detail settings tab G2 review follow-ups (FR-026 (1)(2), FR-
     expect(rowGap).toBe('10px');
 
     const muted = await tokenValue(page, 'borderTopColor', '--color-border-muted');
-    const sep = await page.locator('#basicInfoView .kv-dl-row .kv-dl-key').first().evaluate((el) => {
+    const sep = await page.locator('#basicInfoView .kv-dl-row').first().evaluate((el) => {
       const cs = getComputedStyle(el);
       return { width: cs.borderBottomWidth, color: cs.borderBottomColor };
     });

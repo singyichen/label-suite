@@ -178,6 +178,10 @@
       annotatorFinalizedNoticeDesc: '作答內容已鎖定，無法再修改或提交。如需異動請聯絡審核員。',
       annotatorFinalizedToast: '此標記結果已定稿，無法再修改或提交',
       wsAutosaveFinalized: '已定稿，不再自動儲存',
+      annotatorUnderReviewNoticeTitle: '此標記已進入審核',
+      annotatorUnderReviewNoticeDesc: '審核員已開始處理這筆作答，內容已鎖定，無法再修改或提交。',
+      annotatorUnderReviewToast: '此標記已進入審核，無法再修改或提交',
+      wsAutosaveUnderReview: '審核中，不再自動儲存',
       wsExceptionSampleGroupAria: '樣本 {sample}，{n} 項待處置例外',
       wsExceptionSampleGroupCount: '{n} 項例外',
       wsExceptionQueueItemAria: '標記員 {annotator}，{output}，{status}',
@@ -347,6 +351,10 @@
       annotatorFinalizedNoticeDesc: 'Answers are locked and can no longer be edited or submitted. Contact a reviewer if a change is needed.',
       annotatorFinalizedToast: 'This annotation is finalized and can no longer be edited or submitted.',
       wsAutosaveFinalized: 'Finalized — autosave stopped.',
+      annotatorUnderReviewNoticeTitle: 'This annotation is under review.',
+      annotatorUnderReviewNoticeDesc: 'A reviewer has started working on this answer. The content is locked and can no longer be edited or submitted.',
+      annotatorUnderReviewToast: 'This annotation is under review and can no longer be edited or submitted.',
+      wsAutosaveUnderReview: 'Under review — autosave stopped.',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -632,6 +640,7 @@
 
     var input = document.createElement('input');
     input.type = 'text';
+    input.className = 'input';
     input.setAttribute('data-testid', 'ws-bypass-reason-' + outKey);
     input.value = state.bypassReasons[outKey] || '';
 
@@ -738,6 +747,10 @@
     var textarea = container.querySelector('[data-testid="generation-answer-input"]');
     if (!textarea) return;
     textarea.setAttribute('data-testid', 'ws-free-text-input');
+    /* Engine styles this textarea inline for the task-new preview; the
+       workspace adopts the shared input vocabulary instead (issue #1447). */
+    textarea.removeAttribute('style');
+    textarea.classList.add('input-textarea');
     var counter = textarea.nextElementSibling;
     if (!counter) return;
     counter.setAttribute('data-testid', 'ws-free-text-counter');
@@ -983,10 +996,10 @@
   }
   renderAbsaUnifiedPreview = patchedRenderAbsaUnifiedPreview;
 
+  /* Same label the engine's relation builder writes into a triple (fmtRelSpan),
+     so cascade-delete matches dialogue spans ("詞 (#utt_id:start,end)") too. */
   function fmtEntityForTriple(ent) {
-    var entityLabel = ent.text || '?';
-    if (ent.start != null && ent.end != null) entityLabel += ' (' + ent.start + ',' + ent.end + ')';
-    return entityLabel;
+    return fmtRelSpan(ent);
   }
   function tripleReferencesEntity(triple, ent) {
     var label = fmtEntityForTriple(ent);
@@ -1479,20 +1492,24 @@
     /* getDatasetPreviewText() (engine.js) joins every 'input'-role column's
        String(value) into one preview-text blob. That's only meaningful for
        scalar (string-able) columns; an 'input'-role column whose value is
-       an array or object (e.g. sequence_tagging's sibling pre-tokenized
-       `tokens` column, kept alongside `text`) gets Array#toString()'d into
-       comma-joined garbage and silently corrupts the token count. Demote
-       any 'input' role whose first record's value isn't a scalar so it's
-       excluded from that join -- this is a generic guard (any non-scalar
-       input-role column, not just `tokens`), and it only affects
-       getFieldsByRole('input')/preview-text joining; datasetRawFirstRow and
-       datasetParsedColumns are unaffected. */
+       a plain object or a pure-value array (e.g. sequence_tagging's sibling
+       pre-tokenized `tokens` column, kept alongside `text`) gets
+       Array#toString()'d into comma-joined garbage and silently corrupts the
+       token count. Demote any 'input' role whose first record's value is
+       such a non-scalar so it's excluded from that join -- a generic guard
+       (not just `tokens`) affecting only getFieldsByRole('input')/preview-text
+       joining; datasetRawFirstRow and datasetParsedColumns are unaffected.
+       An object array (e.g. a dialogue's `utterances`) is exempt: the engine
+       renders it per element (dialogue thread or raw JSON, issue #1341 D6)
+       and its joined text comes from dialogueJoinedText, never String(). */
     var firstRawRow = state.datasetRawFirstRow || {};
     Object.keys(state.fieldRoleMap).forEach(function (col) {
       if (state.fieldRoleMap[col] !== 'input') return;
       var v = firstRawRow[col];
-      if (v !== null && typeof v === 'object') delete state.fieldRoleMap[col];
+      if (v !== null && typeof v === 'object' && !isObjectArrayValue(v)) delete state.fieldRoleMap[col];
     });
+    state.dialogueFields = profile.dialogueFields || null;
+    state.prefillFields = profile.prefillFields || null;
   }
 
   /*
@@ -1620,17 +1637,18 @@
   }
 
   /* FR-101 (issue #908): reused by both the lock banner/control-disable
-     render below and renderAutosaveStatus()'s finalized branch, so the two
+     render below and renderAutosaveStatus()'s locked branch, so the two
      never risk drifting apart from re-deriving the same four-argument call
-     independently. Mirrors data.js's own isAnnotatorWriteLocked() scope
-     guard at the UI layer (belt and suspenders) so a future status shape
-     coincidence can never render the notice for dry_run. */
+     independently. Delegates to data.js getAnnotatorLockReason() (issue
+     #1330): 'finalized' (official_run terminal lock) or 'under_review'
+     (V1 source-integrity lock, dry_run included), else null. */
+  function getCurrentSampleLockReason() {
+    return window.LabelSuiteAnnotationWorkspaceData.getAnnotatorLockReason(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    );
+  }
   function isCurrentSampleAnnotatorLocked() {
-    if (currentRunType !== 'official_run') return false;
-    var data = window.LabelSuiteAnnotationWorkspaceData;
-    return data.getReviewUnitStatus(
-      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
-    ) === data.REVIEW_UNIT_STATUS.FINALIZED;
+    return getCurrentSampleLockReason() !== null;
   }
 
   /* Unlike setPreviewControlsLocked() below, this function's two callers
@@ -1680,16 +1698,19 @@
     var existingNotice = document.querySelector('[data-testid="ws-annotator-finalized-notice"]');
     if (existingNotice) existingNotice.remove();
 
-    var locked = isCurrentSampleAnnotatorLocked();
+    var lockReason = getCurrentSampleLockReason();
+    var locked = lockReason !== null;
     if (locked && scroll && preview) {
+      var noticeKey = lockReason === 'under_review' ? 'annotatorUnderReviewNotice' : 'annotatorFinalizedNotice';
       var notice = document.createElement('div');
       notice.setAttribute('data-testid', 'ws-annotator-finalized-notice');
+      notice.setAttribute('data-lock-reason', lockReason);
       notice.className = 'content-card ws-finalized-notice';
       notice.innerHTML = LOCK_SVG.replace(/\{size\}/g, '18')
         + '<div><div class="ws-finalized-notice-title"></div>'
         + '<div class="ws-finalized-notice-desc"></div></div>';
-      notice.querySelector('.ws-finalized-notice-title').textContent = t('annotatorFinalizedNoticeTitle');
-      notice.querySelector('.ws-finalized-notice-desc').textContent = t('annotatorFinalizedNoticeDesc');
+      notice.querySelector('.ws-finalized-notice-title').textContent = t(noticeKey + 'Title');
+      notice.querySelector('.ws-finalized-notice-desc').textContent = t(noticeKey + 'Desc');
       scroll.insertBefore(notice, preview);
     }
 
@@ -1984,7 +2005,7 @@
     if (isCurrentSampleAnnotatorLocked()) {
       dot.className = 'autosave-dot hidden';
       dot.insertAdjacentHTML('afterend', LOCK_SVG.replace(/\{size\}/g, '14').replace('class="ws-lock-icon"', 'class="autosave-lock"'));
-      setText('wsAutosaveLabel', t('wsAutosaveFinalized'));
+      setText('wsAutosaveLabel', t(getCurrentSampleLockReason() === 'under_review' ? 'wsAutosaveUnderReview' : 'wsAutosaveFinalized'));
       return;
     }
     if (currentSampleDirty) {
@@ -2261,7 +2282,7 @@
     );
     if (events.length === 0) {
       var empty = document.createElement('p');
-      empty.className = 'history-empty';
+      empty.className = 'empty-state empty-state-compact';
       empty.textContent = t('wsHistoryEmpty');
       container.appendChild(empty);
       return;
@@ -2474,6 +2495,23 @@
     );
   }
 
+  /* FR-106 clause 6: one small tag per getRecordSummaryTags() entry, beside the summary. */
+  function appendSummaryTags(container, record) {
+    window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryTags(
+      record,
+      currentProfile.fieldRoleMap,
+      currentProfile.listTitleField,
+      state.lang,
+      currentProfile.dialogueFields
+    ).forEach(function (label) {
+      var tag = document.createElement('span');
+      tag.className = 'sample-summary-tag';
+      tag.setAttribute('data-testid', 'ws-summary-tag');
+      tag.textContent = label;
+      container.appendChild(tag);
+    });
+  }
+
   /* Reviewer-only sample group wrapper (issue #455). One review unit per
      row (FR-056) means a 3-annotator sample renders three rows whose ONLY
      difference is the annotator account -- the record snippet above it is
@@ -2521,11 +2559,15 @@
     var snippet = document.createElement('div');
     snippet.className = 'sample-group-snippet';
     snippet.setAttribute('data-testid', 'ws-sample-group-snippet');
-    snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+    snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
       record,
-      currentProfile.fieldRoleMap
+      currentProfile.fieldRoleMap,
+      currentProfile.listTitleField,
+      state.lang,
+      currentProfile.dialogueFields
     );
     header.appendChild(snippet);
+    appendSummaryTags(header, record);
 
     group.appendChild(header);
     return group;
@@ -2587,7 +2629,7 @@
        or a ground-truth field (Data Fairness). */
     var record = findRecordById(sampleId);
     var previewText = record
-      ? window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(record, currentProfile.fieldRoleMap)
+      ? window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(record, currentProfile.fieldRoleMap, currentProfile.listTitleField, state.lang, currentProfile.dialogueFields)
       : '';
     if (previewText) {
       var snippet = document.createElement('div');
@@ -2595,6 +2637,7 @@
       snippet.setAttribute('data-testid', 'ws-exception-sample-group-snippet');
       snippet.textContent = previewText;
       header.appendChild(snippet);
+      appendSummaryTags(header, record);
     }
 
     group.appendChild(header);
@@ -2778,11 +2821,15 @@
       if (currentRole !== 'reviewer') {
         var snippet = document.createElement('div');
         snippet.className = 'sample-snippet';
-        snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordPreviewText(
+        snippet.textContent = window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
           record,
-          currentProfile.fieldRoleMap
+          currentProfile.fieldRoleMap,
+          currentProfile.listTitleField,
+          state.lang,
+          currentProfile.dialogueFields
         );
         meta.appendChild(snippet);
+        appendSummaryTags(meta, record);
       } else {
         /* Only the annotator: it is the one dimension that varies inside a
            group. The sample ID already sits once in the group header, and
@@ -2966,7 +3013,7 @@
       currentIdentity
     );
     if (saved === false) {
-      showToast(t('annotatorFinalizedToast'), 'warning');
+      showToast(t(getCurrentSampleLockReason() === 'under_review' ? 'annotatorUnderReviewToast' : 'annotatorFinalizedToast'), 'warning');
       return;
     }
     clearUnsaved();
@@ -3051,7 +3098,7 @@
     }
     var submitted = window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary(), currentIdentity);
     if (submitted === false) {
-      showToast(t('annotatorFinalizedToast'), 'warning');
+      showToast(t(getCurrentSampleLockReason() === 'under_review' ? 'annotatorUnderReviewToast' : 'annotatorFinalizedToast'), 'warning');
       state.submitBusy = false;
       if (submitBtnEl) submitBtnEl.disabled = false;
       return;
@@ -3374,6 +3421,8 @@
      Fairness); an entity whose text no longer occurs stays position-less and
      simply does not highlight, exactly as before. */
   function placeCompactEntities(entities) {
+    var turns = getObjectArrayInput();
+    if (turns) return placeCompactEntitiesInTurns(entities, turns);
     var text = getDatasetPreviewText() || '';
     var placed = [];
     entities.forEach(function (entity) {
@@ -3385,6 +3434,37 @@
         var taken = placed.some(function (p) { return p.start != null && start <= p.end && end >= p.start; });
         if (!taken) { out.start = start; out.end = end; break; }
         from = start + 1;
+      }
+      placed.push(out);
+    });
+    return placed;
+  }
+
+  /* Dialogue-thread variant (issue #1341 D7, #1358): a coordinate-less entity is placed
+     only at its single occurrence across the turns; coordinates are half-open [start,end) inside that
+     turn. Without a confirmed text sub-field there is nothing to place against. */
+  function placeCompactEntitiesInTurns(entities, turns) {
+    var cfg = state.dialogueFields;
+    var placed = [];
+    entities.forEach(function (entity) {
+      var out = { text: entity.text, type: entity.type };
+      /* Stored coordinates are authoritative (FR-107 (2)); no text search. */
+      if (entity.utt_id != null && entity.start != null && entity.end != null) {
+        out.utt_id = entity.utt_id; out.start = entity.start; out.end = entity.end;
+        placed.push(out);
+        return;
+      }
+      /* Place only when the text occurs exactly once across all turns; an ambiguous or
+         absent text stays unplaced rather than guessing the first occurrence (#1358). */
+      var hits = [];
+      for (var i = 0; cfg && cfg.text && entity.text && i < turns.length; i++) {
+        var uttText = turns[i] && typeof turns[i][cfg.text] === 'string' ? turns[i][cfg.text] : '';
+        for (var from = uttText.indexOf(entity.text); from >= 0; from = uttText.indexOf(entity.text, from + 1)) {
+          hits.push({ utt_id: dialogueUttIdOf(turns[i], i, cfg), start: from });
+        }
+      }
+      if (hits.length === 1) {
+        out.utt_id = hits[0].utt_id; out.start = hits[0].start; out.end = hits[0].start + entity.text.length;
       }
       placed.push(out);
     });
@@ -3427,7 +3507,7 @@
          * legitimately land on 0, and a missing source key MUST still come
          * out as an explicit `null`, not `undefined`. */
         state.previewTriples = (mergedValue || []).map(function (tr) {
-          return {
+          var out = {
             subj: tr.subj,
             rel: tr.rel,
             obj: tr.obj,
@@ -3437,6 +3517,11 @@
             objStart: tr.objStart != null ? tr.objStart : null,
             objEnd: tr.objEnd != null ? tr.objEnd : null,
           };
+          if (tr.subjUttId != null || tr.objUttId != null) {
+            out.subjUttId = tr.subjUttId != null ? tr.subjUttId : null;
+            out.objUttId = tr.objUttId != null ? tr.objUttId : null;
+          }
+          return out;
         });
         state.previewInited = true;
         break;
@@ -3695,7 +3780,7 @@
       /* issue #1247: direct clicks on a greyed-out button stay silent, so the
          shortcut is the one path that explains the lock. */
       if (btn && btn.disabled && (id === 'wsSaveBtn' || id === 'wsSubmitBtn') && isCurrentSampleAnnotatorLocked()) {
-        showToast(t('annotatorFinalizedToast'), 'warning');
+        showToast(t(getCurrentSampleLockReason() === 'under_review' ? 'annotatorUnderReviewToast' : 'annotatorFinalizedToast'), 'warning');
         return;
       }
       if (btn && !btn.disabled && !btn.classList.contains('hidden')) btn.click();
@@ -4008,6 +4093,7 @@
     var input = document.createElement('textarea');
     input.id = inputId;
     input.rows = 2;
+    input.className = 'input-textarea';
     input.setAttribute('data-testid', 'ws-review-reason');
     input.setAttribute('data-outkey', outKey);
     input.setAttribute('placeholder', t('reviewReasonPlaceholder'));
@@ -4306,8 +4392,8 @@
      v2.0.0 US3 行為規則: "Reviewer 與 Annotator 共用相同樣本來源契約與導覽
      骨架，避免視圖不一致") -- the reviewer must also see the original
      source text, not only the review rows. Data Fairness still applies:
-     only fieldRoleMap 'input' fields are ever surfaced here (mirrors
-     annotation-list.html's getRecordSnippet()); non-string input-role
+     only fieldRoleMap 'input' fields are ever surfaced here (same Input-only
+     rule as getRecordSummaryText in annotation-workspace.data.js); non-string input-role
      fields (e.g. absa_va's structured `utterances` column) are skipped in
      favor of their scalar sibling ('text'), same generalized rule 裁決6
      applied to the dashboard test helper. */
@@ -4318,7 +4404,8 @@
     return inputKeys
       .map(function (key) {
         var value = record[key];
-        return typeof value === 'string' ? value : null;
+        if (typeof value === 'string') return value;
+        return isObjectArrayValue(value) ? dialogueJoinedText(value) : null;
       })
       .filter(Boolean)
       .join('\n\n');
@@ -5629,7 +5716,7 @@
   function openReviewFlowDrawer(trigger) {
     var drawer = document.getElementById(FLOW_DRAWER_ID);
     if (!drawer) return;
-    drawer.classList.remove('hidden');
+    drawer.classList.add('show');
     trigger.setAttribute('aria-expanded', 'true');
     if (window.LabelSuiteModalFocus) {
       window.LabelSuiteModalFocus.open(drawer, {
@@ -5641,8 +5728,8 @@
 
   function closeReviewFlowDrawer() {
     var drawer = document.getElementById(FLOW_DRAWER_ID);
-    if (!drawer || drawer.classList.contains('hidden')) return;
-    drawer.classList.add('hidden');
+    if (!drawer || !drawer.classList.contains('show')) return;
+    drawer.classList.remove('show');
     var trigger = document.querySelector('[data-testid="ws-review-flow-trigger"]');
     if (trigger) trigger.setAttribute('aria-expanded', 'false');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(drawer);
@@ -6278,7 +6365,7 @@
     if (!modal || !image) return;
     image.src = src;
     image.alt = altText || '';
-    modal.classList.remove('hidden');
+    modal.classList.add('show');
     if (window.LabelSuiteModalFocus) {
       window.LabelSuiteModalFocus.open(modal, {
         trigger: triggerEl || document.activeElement,
@@ -6288,7 +6375,7 @@
   }
   function closeGuidelineImageModal() {
     var modal = document.getElementById('wsGuidelineImageModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) modal.classList.remove('show');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   /* issue #353 (spec 015 AC-5.3 / SC-005C): PDF guideline files preview in
@@ -6302,7 +6389,7 @@
     if (!modal || !frame) return;
     frame.src = src;
     setText('wsGuidelinePdfModalTitleText', name || '');
-    modal.classList.remove('hidden');
+    modal.classList.add('show');
     if (window.LabelSuiteModalFocus) {
       window.LabelSuiteModalFocus.open(modal, {
         trigger: triggerEl || document.activeElement,
@@ -6312,7 +6399,7 @@
   }
   function closeGuidelinePdfModal() {
     var modal = document.getElementById('wsGuidelinePdfModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) modal.classList.remove('show');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   /* issue #527 (spec 015 AC-5.3 / FR-020D / SC-005D): Markdown guideline
@@ -6467,7 +6554,7 @@
        runs are escaped and whose only tags are the fixed allowlist above. */
     body.innerHTML = renderMarkdown(content);
     setText('wsGuidelineMdModalTitleText', name || '');
-    modal.classList.remove('hidden');
+    modal.classList.add('show');
     if (window.LabelSuiteModalFocus) {
       window.LabelSuiteModalFocus.open(modal, {
         trigger: triggerEl || document.activeElement,
@@ -6531,7 +6618,7 @@
   }
   function closeGuidelineMdModal() {
     var modal = document.getElementById('wsGuidelineMdModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) modal.classList.remove('show');
     if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
   }
   var GUIDELINE_FILE_ICON_SVG = {
@@ -6715,7 +6802,7 @@
     var body = document.getElementById('wsGuidelineModalBody');
     if (!modal || !confirmBtn) return;
     if (!currentProfile || !currentProfile.forceShowGuideline) {
-      modal.classList.add('hidden');
+      modal.classList.remove('show');
       return;
     }
     var storageKey = guidelineModalStorageKey(currentProfile.id);
@@ -6726,7 +6813,7 @@
       /* treat blocked storage as not-seen: showing the modal again is safe */
     }
     function hideGuidelineModal() {
-      modal.classList.add('hidden');
+      modal.classList.remove('show');
       if (body) body.textContent = '';
       if (window.LabelSuiteModalFocus) window.LabelSuiteModalFocus.close(modal);
     }
@@ -6751,7 +6838,7 @@
             .join('\n');
         }
       }
-      modal.classList.remove('hidden');
+      modal.classList.add('show');
       if (window.LabelSuiteModalFocus) {
         /* No user click triggers this modal (shown automatically on first
            visit), so focus returns to the workspace root landmark on close
@@ -6762,7 +6849,7 @@
         });
       }
     } else {
-      modal.classList.add('hidden');
+      modal.classList.remove('show');
       if (body) body.textContent = '';
     }
     confirmBtn.addEventListener('click', function () {

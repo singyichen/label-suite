@@ -63,7 +63,7 @@
  */
 import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
-import { workspaceTabs, closeButton, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
+import { workspaceTabs, closeTab, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
@@ -115,7 +115,7 @@ test.describe('Workspace tabs overview menu (G3) — AC-024.1/AC-024.2 reopen st
     const tabs = workspaceTabs(page);
     await expect(tabs).toHaveCount(2);
 
-    await closeButton(tabs.nth(1)).click();
+    await closeTab(tabs.nth(1));
     await expect(tabs).toHaveCount(1);
 
     await openOverviewMenu(page);
@@ -134,9 +134,9 @@ test.describe('Workspace tabs overview menu (G3) — AC-024.1/AC-024.2 reopen st
     await expect(tabs).toHaveCount(3);
 
     // Close A (index 1) first, then B (now index 1 after A's removal) second.
-    await closeButton(tabs.nth(1)).click();
+    await closeTab(tabs.nth(1));
     await expect(tabs).toHaveCount(2);
-    await closeButton(tabs.nth(1)).click();
+    await closeTab(tabs.nth(1));
     await expect(tabs).toHaveCount(1);
 
     await openOverviewMenu(page);
@@ -201,7 +201,7 @@ test.describe('Workspace tabs overview menu (G3) — AC-024.3 reopen stack cap',
         await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleByTask[taskId], role: 'annotator', run_type: 'official_run' }));
       }
       await expect(workspaceTabs(page)).toHaveCount(2); // dashboard + the one just opened
-      await closeButton(workspaceTabs(page).nth(1)).click(); // close it -- pushes to the reopen stack
+      await closeTab(workspaceTabs(page).nth(1)); // close it -- pushes to the reopen stack
       await expect(workspaceTabs(page)).toHaveCount(1);
     }
 
@@ -222,7 +222,7 @@ test.describe('Workspace tabs overview menu (G3) — AC-024.4 reopen dedupe', ()
     await page.goto(DASHBOARD_URL);
     await page.goto(TASK_LIST_URL);
     const tabs = workspaceTabs(page);
-    await closeButton(tabs.nth(1)).click(); // close task-list -- pushed to stack
+    await closeTab(tabs.nth(1)); // close task-list -- pushed to stack
     await expect(tabs).toHaveCount(1);
 
     // Re-open the SAME dedupe key by navigating there directly, before
@@ -284,7 +284,7 @@ test.describe('Workspace tabs overview menu (G3) — AC-2.4-updated logout clear
   test('logging out clears TAB_REOPEN_STORAGE_KEY alongside TAB_STORAGE_KEY/TAB_SCROLL_STORAGE_KEY', async ({ page }) => {
     await page.goto(DASHBOARD_URL);
     await page.goto(TASK_LIST_URL);
-    await closeButton(workspaceTabs(page).nth(1)).click();
+    await closeTab(workspaceTabs(page).nth(1));
     expect((await readReopenStack(page)).length).toBeGreaterThan(0);
 
     await page.locator('#logoutBtn').click();
@@ -364,7 +364,7 @@ test.describe('Workspace tabs overview menu (G3) — AC-024A.1/AC-024A.2 reopen 
   test('Alt+Shift+T reopens the most recently closed tab, same as clicking "重開剛關閉的"', async ({ page }) => {
     await page.goto(DASHBOARD_URL);
     await page.goto(TASK_LIST_URL);
-    await closeButton(workspaceTabs(page).nth(1)).click();
+    await closeTab(workspaceTabs(page).nth(1));
     await expect(workspaceTabs(page)).toHaveCount(1);
 
     await page.keyboard.press('Alt+Shift+KeyT');
@@ -377,7 +377,7 @@ test.describe('Workspace tabs overview menu (G3) — AC-024A.1/AC-024A.2 reopen 
   test('Alt+Shift+T with focus in an <input> does not reopen and does not interfere with typing', async ({ page }) => {
     await page.goto(DASHBOARD_URL);
     await page.goto(TASK_NEW_URL); // tab 2, active; #taskNameInput is step1's visible field
-    await closeButton(workspaceTabs(page).nth(0)).click(); // close dashboard (tab 1) -- pushes to stack
+    await closeTab(workspaceTabs(page).nth(0)); // close dashboard (tab 1) -- pushes to stack
     await expect(workspaceTabs(page)).toHaveCount(1); // only task-new left, stack now non-empty
 
     await page.locator('#taskNameInput').click();

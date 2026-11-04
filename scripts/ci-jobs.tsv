@@ -13,6 +13,7 @@ inventory-tests	scripts/inventory-tests.sh	gen-screen-inventory.mjs
 none	one-off repository bootstrap; cannot fail a change	init.sh
 none	one-off label migration; cannot fail a change	migrate-labels.sh
 none	one-off demo data seeding; cannot fail a change	seed.sh
+none	Codex companion launcher helper; cannot fail a change	codex-companion.sh
 none	Pencil editor save helper; cannot fail a change	pencil-save.sh
 none	local static server for prototype runs; cannot fail a change	serve-prototype.sh
 none	worktree scaffolding helper; cannot fail a change	worktree-init.sh
@@ -24,5 +25,6 @@ prototype-typecheck	pnpm typecheck	-
 sdd-lint	scripts/check-sdd.sh	check-sdd.sh
 speckit-tests	scripts/speckit-tests.sh	speckit-tests.sh
 user-path-map-freshness	node scripts/check-user-path-map-freshness.mjs	check-user-path-map-freshness.mjs
+user-path-map-freshness	node scripts/check-css-tokens.mjs	check-css-tokens.mjs
 validate	bash scripts/verify-bootstrap.sh	verify-bootstrap.sh
 validate	scripts/check-spec-artifacts.sh	check-spec-artifacts.sh

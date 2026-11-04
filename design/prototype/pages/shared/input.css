@@ -1,0 +1,27 @@
+/* Shared text input (issue #1447) -- spec: design/system/MASTER.md "Inputs".
+ * .input for single-line fields, .input-textarea for multi-line fields. */
+.input,
+.input-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 16px;
+  transition: border-color 200ms ease;
+}
+
+.input:focus,
+.input-textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.input-textarea {
+  resize: vertical;
+  min-height: 100px;
+}

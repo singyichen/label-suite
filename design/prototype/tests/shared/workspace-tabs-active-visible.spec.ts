@@ -59,7 +59,7 @@
  */
 import { test, expect } from '../fixtures';
 import type { Page } from '@playwright/test';
-import { tabBar, workspaceTabs, closeButton } from './_workspace-tabs-helpers';
+import { tabBar, workspaceTabs, closeButton, closeTab } from './_workspace-tabs-helpers';
 import { buildWorkspaceUrl, skipGuidelineModal } from '../annotation/_workspace-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
@@ -233,7 +233,7 @@ test.describe('Workspace tabs -- issue #1102: active tab stays visible after swi
     // this close (see file header) -- picked deliberately so this case
     // actually exercises the bug instead of passing vacuously on a neighbour
     // that already happened to be visible.
-    await closeButton(workspaceTabs(page).nth(7)).click();
+    await closeTab(workspaceTabs(page).nth(7));
 
     const remainingTabs = workspaceTabs(page);
     await expect(remainingTabs).toHaveCount(7);

@@ -194,6 +194,10 @@ jobs:
           node-version: '20'
       - name: Check user path map freshness
         run: node scripts/check-user-path-map-freshness.mjs
+      - name: Run CSS token check regression tests
+        run: node --test scripts/tests/check-css-tokens.test.mjs
+      - name: Check prototype CSS tokens
+        run: node scripts/check-css-tokens.mjs
 
   demo-data-parity:
     name: Demo Data — Parity Check

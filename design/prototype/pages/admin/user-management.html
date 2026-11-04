@@ -1,12 +1,16 @@
 <!DOCTYPE html>
+<!-- Spec: specs/admin/006-user-management/spec.md, specs/admin/007-role-settings/spec.md -->
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 使用者管理</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
@@ -24,7 +28,7 @@
     }
     html[lang="en"] body { line-height: 1.6; }
     a { color: inherit; text-decoration: none; }
-    button, input, select { font: inherit; cursor: pointer; }
+    :where(button, input, select) { font: inherit; cursor: pointer; }
     .hidden { display: none !important; }
 
     /* ── Main Layout ────────────────────────────────────────────── */
@@ -45,42 +49,9 @@
     .page-main-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
     .page-header-actions { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
 
-    /* ── Admin Tabs ─────────────────────────────────────────────── */
-    .admin-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-lg); }
-    .admin-tab {
-      padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--color-text-soft);
-      border-bottom: 2px solid transparent; margin-bottom: -2px;
-      cursor: pointer; transition: color 150ms, border-color 150ms;
-      text-decoration: none; display: inline-block;
-    }
-    .admin-tab:hover { color: var(--color-primary); }
-    .admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
-
     /* ── Buttons ─────────────────────────────────────────────────── */
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--color-cta); color: var(--color-on-cta);
-      padding: 10px 20px; border-radius: var(--radius-md);
-      font-size: 14px; font-weight: 600; border: none;
-      transition: opacity 150ms, transform 150ms; cursor: pointer;
-    }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-ghost {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: transparent; color: var(--color-ink-muted); border: none;
-      padding: 8px 14px; border-radius: var(--radius-md);
-      font-size: 14px; font-weight: 500;
-      transition: color 150ms, background 150ms; cursor: pointer;
-    }
-    .btn-ghost:hover { color: var(--color-ink); background: var(--color-slate-50); }
-    /* Solid destructive confirm — modal-only variant (MASTER §Danger (solid)) */
-    .btn-danger {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
-      border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms;
-      cursor: pointer;
-    }
-    .btn-danger:hover { opacity: 0.9; }
+    /* Layout only; the look comes from pages/shared/button.css */
+    .btn-primary, .btn-ghost { display: inline-flex; align-items: center; gap: 6px; }
 
     /* ── Filter Bar ─────────────────────────────────────────────── */
     .filter-bar {
@@ -186,40 +157,14 @@
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
     .page-size-select {
       padding: 5px 28px 5px 10px; border: 1px solid var(--color-border);
-      border-radius: var(--radius-md); font-size: 13px;
+      border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink);
       background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
       appearance: none; -webkit-appearance: none; cursor: pointer;
     }
 
     /* ── Modal ──────────────────────────────────────────────────── */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px); z-index: 300;
-      display: flex; align-items: center; justify-content: center; padding: var(--space-lg);
-    }
-    .modal-overlay.hidden { display: none !important; }
-    .modal {
-      background: var(--color-white); border-radius: var(--radius-xl);
-      padding: var(--space-xl); box-shadow: var(--shadow-xl);
-      max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
-    }
-    .modal-header {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; gap: var(--space-md); margin-bottom: var(--space-lg);
-    }
-    .modal-title {
-      font-family: var(--font-serif-display);
-      font-size: 22px; font-weight: 700; color: var(--color-ink);
-    }
-    .modal-close {
-      display: flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border-radius: var(--radius-md);
-      border: 1px solid var(--color-border); background: transparent;
-      color: var(--color-ink-muted); cursor: pointer; flex-shrink: 0; transition: all 150ms;
-    }
-    .modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }
-    .modal-footer {
-      display: flex; justify-content: flex-end; gap: var(--space-sm);
+    .modal-overlay .modal { max-height: 90vh; overflow-y: auto; }
+    .modal-overlay .modal-footer {
       margin-top: var(--space-lg); padding-top: var(--space-lg);
       border-top: 1px solid var(--color-border);
     }
@@ -376,11 +321,6 @@
     .audit-badge-disable    { background: var(--color-error-soft-bg); color: var(--color-error); border-color: var(--color-error-soft-border); }
     .audit-badge-enable     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
     .audit-badge-role_change { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
-
-    .audit-drawer-empty {
-      text-align: center; padding: var(--space-2xl) var(--space-lg);
-      color: var(--color-text-soft); font-size: 13px;
-    }
 
     @media (max-width: 767px) {
       .audit-drawer {
@@ -625,7 +565,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- ADD USER MODAL                                             -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="modal-overlay hidden" id="addModal"
+  <div class="modal-overlay" id="addModal"
        role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="modal">
       <div class="modal-header">
@@ -687,7 +627,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- EDIT USER MODAL                                            -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="modal-overlay hidden" id="editModal"
+  <div class="modal-overlay" id="editModal"
        role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
     <div class="modal">
       <div class="modal-header">
@@ -747,7 +687,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- DISABLE CONFIRM MODAL                                      -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="modal-overlay hidden" id="disableModal"
+  <div class="modal-overlay" id="disableModal"
        role="alertdialog" aria-modal="true" aria-labelledby="disableModalTitle">
     <div class="modal" style="max-width:440px">
       <div class="modal-header">
@@ -766,7 +706,7 @@
         <span id="disableWarningText">停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。</span>
       </div>
       <p id="disableConfirmText" style="font-size:14px;color:var(--color-ink);margin-top:var(--space-md)">
-        確定要停用 <strong id="disableTargetName">Alex Wang</strong> 的帳號嗎？
+        <span id="disableConfirmPrefix">確定要停用 </span><strong id="disableTargetName">Alex Wang</strong><span id="disableConfirmSuffix"> 的帳號嗎？</span>
       </p>
       <div class="modal-footer">
         <button type="button" class="btn-ghost" onclick="closeModal('disableModal')" id="disableCancelBtn">取消</button>
@@ -801,7 +741,7 @@
     </div>
     <div class="audit-drawer-body">
       <div id="auditLogList" class="audit-log-list" role="list"></div>
-      <div id="auditDrawerEmpty" class="audit-drawer-empty hidden">
+      <div id="auditDrawerEmpty" class="empty-state empty-state-compact hidden">
         <p id="auditDrawerEmptyText">尚無異動紀錄</p>
       </div>
     </div>
@@ -992,9 +932,31 @@
 
     Object.assign(i18n.zh, {
       disableModalTitle: '\u505c\u7528\u5e33\u865f',
+      disableConfirmPrefix: '確定要停用 ',
+      disableConfirmSuffix: ' 的帳號嗎？',
+      pageSizeAria: '每頁顯示',
+      closeAria: '關閉',
+      toastCloseAria: '關閉通知',
+      searchAria: '搜尋使用者',
+      roleFilterAria: '角色篩選',
+      statusFilterAria: '狀態篩選',
+      usersTableAria: '使用者列表',
+      auditDrawerAria: '異動紀錄',
+      pageSizeOption: (n) => n + ' 筆/頁',
     });
     Object.assign(i18n.en, {
       disableModalTitle: 'Disable Account',
+      disableConfirmPrefix: 'Are you sure you want to disable the account of ',
+      disableConfirmSuffix: '?',
+      pageSizeAria: 'Rows per page',
+      closeAria: 'Close',
+      toastCloseAria: 'Close notification',
+      searchAria: 'Search users',
+      roleFilterAria: 'Filter by role',
+      statusFilterAria: 'Filter by status',
+      usersTableAria: 'Users',
+      auditDrawerAria: 'Change History',
+      pageSizeOption: (n) => n + ' / page',
     });
 
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
@@ -1024,7 +986,7 @@
         'editModalTitle','editNameLabel','editEmailLabel','editRoleLabel',
         'editStatusLabel','editStatusActive','editStatusDisabled',
         'editCancelBtn','editSaveBtnLabel',
-        'disableModalTitle','disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
+        'disableModalTitle','disableConfirmPrefix','disableConfirmSuffix','disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
       ];
       ids.forEach(id => {
         const el = document.getElementById(id);
@@ -1032,6 +994,17 @@
       });
 
       document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+
+      const pageSizeSelectEl = document.getElementById('pageSizeSelect');
+      pageSizeSelectEl.setAttribute('aria-label', t.pageSizeAria);
+      document.querySelectorAll('.modal-close').forEach(b => b.setAttribute('aria-label', t.closeAria));
+      document.getElementById('toastClose').setAttribute('aria-label', t.toastCloseAria);
+      document.getElementById('searchInput').setAttribute('aria-label', t.searchAria);
+      document.getElementById('roleFilter').setAttribute('aria-label', t.roleFilterAria);
+      document.getElementById('statusFilter').setAttribute('aria-label', t.statusFilterAria);
+      document.querySelector('table[role="table"]').setAttribute('aria-label', t.usersTableAria);
+      document.getElementById('auditDrawer').setAttribute('aria-label', t.auditDrawerAria);
+      Array.from(pageSizeSelectEl.options).forEach(o => { o.textContent = t.pageSizeOption(o.value); });
 
       const adminTabs = document.getElementById('adminTabs');
       if (adminTabs && t.adminTabsAria) adminTabs.setAttribute('aria-label', t.adminTabsAria);
@@ -1369,11 +1342,11 @@
     }
 
     function openModal(id) {
-      document.getElementById(id).classList.remove('hidden');
+      document.getElementById(id).classList.add('show');
       document.body.style.overflow = 'hidden';
     }
     function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
+      document.getElementById(id).classList.remove('show');
       document.body.style.overflow = '';
     }
 
@@ -1390,7 +1363,7 @@
         return;
       }
       /* UXC-10 keyboard: Enter confirms the open destructive dialog */
-      if (e.key === 'Enter' && !document.getElementById('disableModal').classList.contains('hidden')) {
+      if (e.key === 'Enter' && document.getElementById('disableModal').classList.contains('show')) {
         confirmDisable();
       }
     });

@@ -462,6 +462,7 @@
         relation_types: 'output',
         triples: 'output'
       },
+      prefill_fields: { entities: 'entities', triples: null },
       datasetFileName: 'relation-identification.json',
       datasetRecords: [
         {
@@ -959,24 +960,26 @@
           }
         }
       ],
-      // "utterances" and "text" are two representations of the same
-      // cross-utterance dialogue input; both are shown to the annotator.
+      // "utterances" is the only Input: the workspace renders it as a dialogue
+      // thread via dialogue_fields. "text" is its flattened duplicate and stays
+      // unused so the annotator sees the dialogue once (issue #1341).
       fieldRoleMap: {
         utterances: 'input',
-        text: 'input',
+        text: 'unused',
         gold_triplets: 'output',
         incomplete_annotations: 'output'
       },
+      dialogue_fields: { text: 'text', speaker: 'speaker', utt_id: 'utt_id', reply_to: 'reply_to' },
       datasetFileName: 'absa-va.json',
       datasetRecords: [
         {
           id: 'absa-001',
           utterances: [
-            { utt_id: 0, speaker: 'rottenrockteahouse', text: '我入手Note 10 plus第三天就退廠保修\n過熱問題嚴重！差評' },
-            { utt_id: 1, speaker: '張峯獎-f6w', text: '我已經拿了九天了就沒有這個問題你在唬爛' },
-            { utt_id: 2, speaker: 'isbonny', text: '唉！在哪裡購買的呢？這款手機才上市兩天啊～' },
-            { utt_id: 3, speaker: 'rottenrockteahouse', text: '@isbonny 澳門的代理商' },
-            { utt_id: 4, speaker: 'rottenrockteahouse', text: '我在首發當天買' }
+            { utt_id: 0, speaker: 'rottenrockteahouse', reply_to: null, text: '我入手Note 10 plus第三天就退廠保修\n過熱問題嚴重！差評' },
+            { utt_id: 1, speaker: '張峯獎-f6w', reply_to: 0, text: '我已經拿了九天了就沒有這個問題你在唬爛' },
+            { utt_id: 2, speaker: 'isbonny', reply_to: 1, text: '唉！在哪裡購買的呢？這款手機才上市兩天啊～' },
+            { utt_id: 3, speaker: 'rottenrockteahouse', reply_to: 2, text: '@isbonny 澳門的代理商' },
+            { utt_id: 4, speaker: 'rottenrockteahouse', reply_to: 0, text: '我在首發當天買' }
           ],
           text: '@rottenrockteahouse: 我入手Note 10 plus第三天就退廠保修 過熱問題嚴重！差評\n@張峯獎-f6w: 我已經拿了九天了就沒有這個問題你在唬爛\n@isbonny: 唉！在哪裡購買的呢？這款手機才上市兩天啊～\n@rottenrockteahouse: @isbonny 澳門的代理商\n@rottenrockteahouse: 我在首發當天買',
           gold_triplets: [
@@ -1117,8 +1120,13 @@
          date. This seed pins it as in_progress (no verdict, no completion
          date). agreement/annotators mirror computeIaaAlpha('T014',
          'dry_run', ...) (0.59, 3 raters) so the live IAA stays visible;
-         issue-489-task-detail-iaa-derived.spec.ts fails if they drift. The 5 records are the full dataset, so the official pool is
-         unchanged. */
+         issue-489-task-detail-iaa-derived.spec.ts fails if they drift.
+         issue #1429: R1 consumes the 5 listed records (sampleCount 5).
+         datasetTotal 6 covers the whole dataset, leaving 1 official-pool
+         record outside datasetRecords (014 FR-010e), so the pool is 1, not
+         0. Same #1120 precedent as T015/T016: annotation trial surfaces keep
+         iterating only the 5 listed records and stay unchanged. */
+      datasetTotal: 6,
       trialRounds: [
         {
           round: 1,
@@ -1484,6 +1492,7 @@
       fieldRoleMap: created.fieldRoleMap || {},
       datasetFileName: created.datasetFileName || '',
       datasetRecords: created.datasetRecords || [],
+      list_title_field: created.list_title_field ?? null,
       guidelineFiles: DEFAULT_GUIDELINE_FILES
     };
   });

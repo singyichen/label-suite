@@ -1,12 +1,18 @@
 <!DOCTYPE html>
+<!-- Spec: specs/task-management/014-task-detail/spec.md -->
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 任務詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/date-range-picker.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <link rel="stylesheet" href="../shared/metric.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="stylesheet" href="task-config.css">
   <style>
@@ -28,7 +34,7 @@
     }
     html[lang="en"] body { line-height: 1.6; }
     a { color: inherit; text-decoration: none; }
-    button, input, select { font: inherit; }
+    :where(button, input, select) { font: inherit; }
     button, input[type="checkbox"], select { cursor: pointer; }
     .hidden { display: none !important; }
 
@@ -57,31 +63,6 @@
       color: var(--color-ink);
       margin: 0 0 4px;
     }
-
-    .admin-tabs {
-      display: flex;
-      border-bottom: 2px solid var(--color-border);
-      margin-bottom: var(--space-lg);
-    }
-    .admin-tab {
-      padding: 10px 20px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--color-text-soft);
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      cursor: pointer;
-      transition: color var(--dur-fast), border-color var(--dur-fast);
-      text-decoration: none;
-      display: inline-block;
-      background: transparent;
-      border-left: none;
-      border-right: none;
-      border-top: none;
-      white-space: nowrap;
-    }
-    .admin-tab:hover { color: var(--color-primary); }
-    .admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
 
     .skeleton-stack {
       display: grid;
@@ -130,29 +111,6 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px 16px;
-    }
-    .kv-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      background: var(--color-white);
-      min-width: 0;
-    }
-    .kv-key {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--color-ink-muted);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .kv-value {
-      display: block;
-      font-size: 14px;
-      color: var(--color-ink);
-      line-height: 1.5;
-      word-break: break-word;
     }
     .mono { font-family: var(--font-mono); font-size: 12px; }
 
@@ -207,6 +165,9 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
       padding: 10px 20px;
       border-radius: var(--radius-md);
       border: 1px solid transparent;
@@ -219,12 +180,8 @@
     .btn:hover::after { content: ""; position: absolute; inset: -1px -1px -2px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; pointer-events: none; }
     .btn-disabled-tip { display: inline-block; }
-    .btn-primary { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
-    .btn-primary:hover:not(:disabled) { opacity: 0.9; }
-    .btn-cta { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
-    .btn-cta:hover:not(:disabled) { opacity: 0.9; }
-    .btn-secondary { color: var(--color-ink); background: var(--color-white); border-color: var(--color-border); }
-    .btn-secondary:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .btn-link { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
+    .btn-link:hover:not(:disabled) { background: transparent; text-decoration: underline; }
 
     .sampling-panel {
       border: 1px solid var(--color-border);
@@ -333,15 +290,6 @@
       justify-content: space-between;
       gap: 12px;
     }
-    /* Scoped override: task-config.css's global .toggle-row (line ~241)
-       adds its own border/padding/background, which double-frames this
-       nested row inside .isolation-wrap's own card frame (issue #1100). */
-    .isolation-wrap .toggle-row {
-      border: none;
-      padding: 0;
-      background: transparent;
-      border-radius: 0;
-    }
     .toggle-meta {
       min-width: 0;
     }
@@ -430,30 +378,6 @@
       gap: 10px;
       margin-top: 16px;
     }
-    .progress-metric-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      background: var(--color-white);
-      min-width: 0;
-    }
-    .progress-metric-key {
-      display: block;
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--color-ink-muted);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .progress-metric-value {
-      display: block;
-      color: var(--color-ink);
-      font-size: 17px;
-      line-height: 1.3;
-      font-weight: 700;
-      word-break: break-word;
-    }
     .review-progress-breakdown {
       grid-column: 1 / -1;
     }
@@ -462,7 +386,11 @@
       flex-wrap: wrap;
       gap: 8px 18px;
     }
-    .review-progress-value {
+    .review-progress-breakdown .review-progress-value {
+      display: inline;
+      margin-bottom: 0;
+      text-transform: none;
+      letter-spacing: normal;
       color: var(--color-ink);
       font-size: 14px;
       line-height: 1.4;
@@ -575,8 +503,8 @@
     .stage-split-fill.dry { background: var(--color-primary); }
     .stage-split-fill.official { background: var(--color-cta); }
     .phase-flow { display: flex; flex-direction: column; gap: 10px; }
-    .phase-item { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); padding: 14px; }
-    .phase-item--active { border-color: var(--color-primary); }
+    .phase-item { padding: 14px 0; }
+    .phase-item + .phase-item { border-top: 1px solid var(--color-border-muted); }
     .phase-item--pending { opacity: 0.55; }
     .phase-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
     .phase-round-label { font-size: 14px; font-weight: 700; color: var(--color-ink); }
@@ -587,20 +515,6 @@
     .phase-status-tag--pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .phase-iaa-text { margin-left: auto; font-size: 12px; color: var(--color-ink-muted); font-weight: 600; }
     .phase-meta { font-size: 13px; color: var(--color-text-soft); margin-top: 8px; }
-    .progress-empty-state {
-      border: 1px dashed var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 20px;
-      text-align: center;
-      margin-top: 10px;
-    }
-    .progress-empty-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--color-ink);
-      margin-bottom: 10px;
-    }
     .worklog-filter-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -640,25 +554,6 @@
       height: 16px;
       flex-shrink: 0;
       opacity: 0.9;
-    }
-    .worklog-empty-state {
-      border: 1px dashed var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 22px;
-      text-align: center;
-    }
-    .worklog-empty-icon {
-      width: 34px;
-      height: 34px;
-      margin: 0 auto 10px;
-      opacity: 0.7;
-    }
-    .worklog-empty-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--color-ink);
-      margin-bottom: 10px;
     }
     .table-wrap {
       border: 1px solid var(--color-border);
@@ -761,12 +656,7 @@
       grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
       gap: var(--space-md);
     }
-    .member-entry-card {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-slate-50);
-      padding: var(--space-md);
-    }
+    .member-entry-card { padding: 0; }
     .member-entry-title {
       margin: 0 0 6px;
       font-size: 16px;
@@ -795,12 +685,6 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 12px;
       color: var(--color-text-soft);
-    }
-    .member-search-empty {
-      text-align: center;
-      color: var(--color-text-soft);
-      font-size: 13px;
-      padding: 18px 12px;
     }
     .role-select-inline {
       width: 130px;
@@ -931,53 +815,14 @@
       color: var(--color-error);
     }
     .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error); }
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.45);
-      z-index: var(--z-modal);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .modal-overlay.show { display: flex; }
     .preview-json-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
     .preview-json { margin: 0; padding: var(--space-md); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
-    .modal {
-      width: min(520px, 100%);
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-xl);
-      padding: var(--space-lg);
-    }
-    .modal h2 {
-      font-size: 20px;
-      margin: 0 0 8px;
-      color: var(--color-ink);
-      line-height: 1.3;
-    }
-    .modal p {
-      font-size: 14px;
-      color: var(--color-text-soft);
-      margin: 0 0 14px;
-      line-height: 1.7;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
     /* ── Dataset preview ── */
     .dataset-preview-trigger { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; padding: 0; cursor: pointer; color: inherit; font: inherit; }
     .dataset-preview-trigger:hover { color: var(--color-primary); }
     .dataset-preview-eye { width: 13px; height: 13px; flex-shrink: 0; }
     .modal-xl { width: min(720px, 100%); max-height: 80vh; display: flex; flex-direction: column; }
     .modal-xl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-md, 16px); }
-    .modal-close-btn { width: 32px; height: 32px; border: none; background: none; cursor: pointer; color: var(--color-ink-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .modal-close-btn:hover { background: var(--color-border-muted); color: var(--color-ink); }
     .preview-hint { font-size: 12px; color: var(--color-text-soft); margin: 2px 0 0; }
     .preview-table-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
     .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -1119,12 +964,7 @@
     .badge-ar-pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .ar-export-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
     .ar-export-table-wrap { margin-top: var(--space-sm); }
-    .ar-export-empty { font-size: 13px; color: var(--color-text-soft); text-align: center; padding: var(--space-lg) 0; margin: 0; }
     .ar-export-action-btn { white-space: nowrap; }
-    .ar-empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: var(--space-xl) 0; text-align: center; }
-    .ar-empty-icon { width: 40px; height: 40px; opacity: 0.3; }
-    .ar-empty-title { font-size: 16px; font-weight: 600; color: var(--color-ink); }
-    .ar-empty-hint { font-size: 13px; color: var(--color-text-soft); }
     .ar-va-stats { font-size: 12px; line-height: 1.7; font-family: var(--font-mono); }
     .ar-va-stats-row { color: var(--color-text-soft); white-space: nowrap; }
     .ar-dist-text { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -1136,35 +976,32 @@
     .ar-classif-chips { display: flex; flex-wrap: wrap; gap: 4px; }
     .ar-classif-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
     .member-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
-    .member-detail-empty { font-size: 13px; color: var(--color-text-soft); text-align: center; padding: var(--space-lg) 0; margin: 0; }
     .md-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
     .md-text-cell { font-size: 13px; max-width: 280px; }
     .md-chips { display: flex; flex-wrap: wrap; gap: 4px; }
     .md-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
     .md-time-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; font-family: var(--font-mono); }
     .btn-view-detail { padding: 2px 10px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-primary); cursor: pointer; white-space: nowrap; }
-    .btn-view-detail:hover { background: var(--color-surface-raised); }
+    .btn-view-detail:hover { background: var(--color-primary-soft-bg); }
 
     /* FR-026 (1): settings tab = left section nav + one visible section. */
     .settings-layout { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px; align-items: start; }
     .settings-section-nav { display: flex; flex-direction: column; gap: var(--space-xs); overflow-x: auto; }
-    .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 4px; background: transparent; color: var(--color-ink-muted); font: inherit; font-size: 14px; text-align: center; cursor: pointer; }
-    .settings-nav-item[aria-selected="true"] { background: var(--color-white); color: var(--color-ink); font-weight: 600; }
+    .settings-nav-item { padding: var(--space-sm) var(--space-md); border: 0; border-radius: 8px; background: transparent; color: var(--color-ink-muted); font: inherit; font-size: 14px; text-align: center; cursor: pointer; }
+    .settings-section-status { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .settings-nav-item[aria-selected="true"] { background: var(--color-primary-soft-bg); color: var(--color-primary-strong); font-weight: 600; }
     .settings-section.panel { border: 1px solid var(--color-border); box-shadow: none; border-radius: var(--radius-lg); background: var(--color-white); margin-bottom: 0; }
     /* FR-026 (1) / design.md: section title, text-link edit, divided definition list. Scoped to the settings tab only. */
     .settings-section .panel-title { font-size: 16px; font-weight: 600; }
-    .settings-section [id$="EditBtn"] { border: 0; background: transparent; color: var(--color-primary); padding: 0 var(--space-xs); box-shadow: none; }
-    .settings-section [id$="EditBtn"]:hover { background: transparent; text-decoration: underline; }
     .settings-section .kv-dl { grid-template-columns: 160px minmax(0, 1fr); gap: 10px 0; }
-    .settings-section .kv-dl-key { padding: 0 16px 10px 0; border-bottom: 1px solid var(--color-border-muted); }
-    .settings-section .kv-dl-value { padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
+    .settings-section .kv-dl-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; padding-bottom: 10px; border-bottom: 1px solid var(--color-border-muted); }
+    .settings-section .kv-dl-key { padding: 0 16px 0 0; }
 
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .settings-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
       .settings-section-nav { flex-direction: row; }
       .settings-nav-item { flex: 0 0 auto; white-space: nowrap; }
-      .admin-tabs { overflow-x: auto; flex-wrap: wrap; }
       .kv-grid { grid-template-columns: 1fr; }
       .sampling-grid { grid-template-columns: 1fr; }
 .progress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1616,10 +1453,6 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    .annotation-preview-empty {
-      font-size: 13px;
-      color: var(--color-text-soft);
-    }
     .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
     .aspect-list-preview-row { display: flex; align-items: center; gap: 8px; }
     .aspect-list-preview-row-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); min-width: 48px; }
@@ -1808,7 +1641,7 @@
     .run-control-tab.active {
       background: var(--color-white);
       color: var(--color-primary);
-      border-color: var(--color-primary-soft-border);
+      border-color: var(--color-primary-border);
     }
     .run-control-tab:hover {
       color: var(--color-primary);
@@ -1835,59 +1668,36 @@
       gap: 10px;
       margin-bottom: 12px;
     }
-    .exec-round-item {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .exec-round-key { font-size: 12px; color: var(--color-text-soft); }
-    .exec-round-value { font-size: 20px; line-height: 1.15; color: var(--color-ink); font-variant-numeric: tabular-nums; }
-    .exec-stop-row {
-      margin-bottom: var(--space-md);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .exec-stop-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
-    .exec-stop-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-    .exec-stop-actions { display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; }
-    .stop-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--color-border);
+    /* issue #1348 (Plan A): vertical execution action column; scoped to #publishActionRow so global .btn / .status-hint stay untouched */
+    #publishActionRow { display: flex; flex-direction: column; align-items: stretch; gap: 8px; max-width: 420px; }
+    #publishActionRow .exec-action-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    #publishActionRow .btn:disabled {
+      opacity: 1;
       color: var(--color-text-soft);
-      background: var(--color-white);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .stop-pill.passed {
-      border-color: var(--color-success-border);
-      color: var(--color-success);
-      background: var(--color-success-bg);
-    }
-    /* issue #491: a third, distinct state for "not enough marked data to
-       compute IAA yet" -- must never look like the default (which already
-       reads as "not met") or like .passed, or a viewer would misread
-       "cannot compute" as one of those two states. */
-    .stop-pill.not-computable {
-      border-color: var(--color-warning-border);
-      color: var(--color-warning);
-      background: var(--color-warning-bg);
-    }
-    .round-history-panel {
+      background: var(--color-slate-50);
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      padding: 16px;
+      cursor: not-allowed;
+    }
+    /* issue #1403 (FR-027(4)): the "next step" card -- header (state sentence + actions) over a condition list */
+    .next-step-card { margin-bottom: var(--space-md); padding: 14px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); display: flex; flex-direction: column; gap: 12px; }
+    .next-step-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .next-step-head-text { flex: 1; min-width: 200px; }
+    .next-step-title { margin: 0; font-size: 16px; line-height: 1.3; color: var(--color-ink); }
+    .next-step-desc { margin: 4px 0 0; }
+    .next-step-actions { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+    .next-step-conditions { display: flex; flex-direction: column; gap: 10px; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .next-step-conditions:empty { display: none; }
+    .next-step-group-title { margin: 0 0 4px; font-weight: 600; color: var(--color-ink); }
+    .next-step-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+    .next-step-cond { color: var(--color-text-soft); }
+    .next-step-cond-icon { font-weight: 700; }
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .next-step-cond[data-status="met"] .next-step-cond-icon { color: var(--color-success); }
+    .next-step-cond[data-status="unmet"] .next-step-cond-icon { color: var(--color-ink-muted); }
+    .next-step-cond[data-status="info"] .next-step-cond-icon { color: var(--color-warning); }
+    .next-step-cond-label { color: var(--color-ink); }
+    #publishActionRow .exec-action-readonly-note { margin: 0; font-size: 13px; color: var(--color-text-soft); text-align: right; }
+    .round-history-panel {
       margin-bottom: var(--space-md);
     }
     .round-history-head {
@@ -2049,11 +1859,17 @@
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
       .exec-stage-banner { flex-direction: column; }
-      .exec-stop-row,
-      .exec-stop-actions { align-items: flex-start; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
+    }
+
+    @media (max-width: 640px) {
+      .next-step-actions { width: 100%; align-items: stretch; }
+      #publishActionRow { max-width: none; width: 100%; }
+      #publishActionRow .exec-action-buttons { flex-wrap: nowrap; }
+      #publishActionRow .exec-action-buttons .btn,
+      #publishActionRow .exec-action-buttons .btn-disabled-tip { flex: 1 1 0; min-width: 0; }
     }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
@@ -2110,13 +1926,14 @@
         </nav>
       </header>
 
+      <!-- #1362: tabs stay aria-disabled until init() binds their handlers, so early clicks wait instead of being lost -->
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
-        <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-controls="overviewPanel" aria-selected="true" tabindex="0">概覽</button>
-        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-controls="settingsPanel" aria-selected="false" tabindex="-1">設定</button>
-        <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-controls="memberManagementPanel" aria-selected="false">成員管理</button>
-        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-controls="annotationProgressPanel" aria-selected="false">標記進度</button>
-        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-controls="annotationResultsPanel" aria-selected="false">標記結果</button>
-        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-controls="workLogPanel" aria-selected="false">工時紀錄</button>
+        <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-disabled="true" aria-controls="overviewPanel" aria-selected="true" tabindex="0">概覽</button>
+        <button class="admin-tab" id="tabSettings" type="button" role="tab" aria-disabled="true" aria-controls="settingsPanel" aria-selected="false" tabindex="-1">設定</button>
+        <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-disabled="true" aria-controls="memberManagementPanel" aria-selected="false">成員管理</button>
+        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-disabled="true" aria-controls="annotationProgressPanel" aria-selected="false">標記進度</button>
+        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-disabled="true" aria-controls="annotationResultsPanel" aria-selected="false">標記結果</button>
+        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-disabled="true" aria-controls="workLogPanel" aria-selected="false">工時紀錄</button>
       </div>
 
       <div id="loadingSkeleton" class="skeleton-stack" aria-live="polite" aria-busy="true">
@@ -2157,7 +1974,7 @@
         <h2 id="datasetPreviewModalTitle">資料集預覽</h2>
         <p class="preview-hint" id="datasetPreviewModalHint">顯示第一筆資料・僅供確認用途</p>
       </div>
-      <button class="modal-close-btn" id="datasetPreviewCloseBtn" type="button" aria-label="關閉">
+      <button class="modal-close" id="datasetPreviewCloseBtn" type="button" aria-label="關閉">
         <svg class="modal-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -2189,14 +2006,14 @@
   </div>
 </div>
 
-<!-- FR-026 (2): unsaved settings changes on section / tab switch. -->
+<!-- FR-026 (2): unsaved settings changes on section / tab switch or section Cancel. -->
 <div class="modal-overlay" id="settingsLeaveModal" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="settingsLeaveTitle" aria-describedby="settingsLeaveBody">
   <div class="modal">
     <h2 id="settingsLeaveTitle">放棄未儲存的變更？</h2>
     <p id="settingsLeaveBody">目前區段有尚未儲存的變更，離開後這些變更將會遺失。</p>
     <div class="modal-actions">
       <button class="btn btn-secondary" type="button" id="settingsLeaveCancelBtn">取消</button>
-      <button class="btn btn-primary" type="button" id="settingsLeaveConfirmBtn">放棄變更</button>
+      <button class="btn btn-danger" type="button" id="settingsLeaveConfirmBtn">放棄變更</button>
     </div>
   </div>
 </div>
@@ -2282,6 +2099,7 @@
       tabWorkLog: '工時紀錄',
       tabMemberManagement: '成員管理',
       settingsSectionNavLabel: '設定區段',
+      settingsSectionSwitched: '已切換到{label}',
       settingsLeaveTitle: '放棄未儲存的變更？',
       settingsLeaveBody: '目前區段有尚未儲存的變更，離開後這些變更將會遺失。',
       settingsLeaveCancelBtn: '取消',
@@ -2329,7 +2147,6 @@
       editReviewerGuidelineFilesLabel: '上傳檔案',
       editForceGuidelineDesc: '啟用後，標記員進入作業前必須先閱讀說明',
       guidelineSaveSuccess: '標記說明已更新',
-      guidelineLeaveConfirm: '你有尚未儲存的標記說明變更，確定要離開編輯模式嗎？',
       guidelineFileTypeInvalid: '僅支援 PDF / PNG / JPG / JPEG / WEBP / Markdown',
       overviewEditTitle: '基本資料',
       overviewEditBtn: '編輯',
@@ -2340,7 +2157,6 @@
       overviewReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯基本資料。',
       overviewReadonlyDraftOnly: '',
       overviewSaveSuccess: '基本資料已更新',
-      overviewLeaveConfirm: '你有尚未儲存的基本資訊變更，確定要離開編輯模式嗎？',
       overviewEditTaskNameRequired: '任務名稱不可為空。',
       overviewEditTaskTypeRequired: '請至少選擇大分類、輸入類型與輸出類型各一項。',
       overviewEditDatasetRequired: '請上傳資料集。',
@@ -2356,7 +2172,6 @@
       settingsSaveCodeBtnLabel: '套用',
       settingsCodeAppliedToast: '已套用至 Visual，請按儲存送出',
       settingsSaveSuccess: '標記設定已更新',
-      settingsLeaveConfirm: '你有尚未儲存的標記設定變更，確定要離開編輯模式嗎？',
       settingsCodeUnsaved: '請先套用 Code 的修改再儲存。',
       editTaskNameLabel: '任務名稱',
       editTaskTypeLabel: '任務類型',
@@ -2372,7 +2187,6 @@
       samplingReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯抽樣設定。',
       samplingReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯抽樣設定。',
       samplingSaveSuccess: '抽樣設定已更新',
-      samplingLeaveConfirm: '你有尚未儲存的抽樣設定變更，確定要離開編輯模式嗎？',
       reviewSettingsTitle: '審核設定',
       reviewEditBtn: '編輯',
       reviewSaveBtn: '儲存',
@@ -2388,7 +2202,6 @@
       arbiterIdsValueEmpty: '未指定仲裁者',
       reviewSettingsErrorReviewerIdsEmpty: '請至少勾選一位審核員。',
       reviewSettingsErrorNoAssignableReviewer: '請至少保留一位未被指定為仲裁者的審核員。',
-      reviewLeaveConfirm: '你有尚未儲存的審核設定變更，確定要離開編輯模式嗎？',
       reviewReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯審核設定。',
       reviewReadonlyStatusOnly: '任務已離開草稿狀態，無法再編輯審核設定。',
       reviewSaveSuccess: '審核設定已更新',
@@ -2398,7 +2211,6 @@
       currentAgreementLabel: '最新 IAA',
       currentStdLabel: '目前標準差',
       officialPoolLabel: '正式標記池',
-      stopConditionTitle: '達標條件',
       labelSamplingValueControl: '每回合抽樣筆數',
       labelMinAnnotatorsControl: '最少標記者數',
       totalSamplesLabel: '總筆數',
@@ -2422,15 +2234,47 @@
       publishOfficialRun: '開始正式標記',
       publishComplete: '標記完成',
       noPublishAction: '此狀態不提供發布操作。',
+      noPublishActionDone: '任務已完成，無待執行動作',
+      readonlySuffix: '（唯讀）',
+      execReasonsBothTitle: '兩個動作都需要',
+      execReasonsOfficialOnlyTitle: '「開始正式標記」需要',
+      iaaComputationPendingReason: 'IAA 計算中，完成後才能繼續',
+      publishUndeterminedNote: 'R{round} 的 IAA 無法判定是否達標，可直接開始正式標記，或再試標一回合',
+      nextStepTitleDraft: '下一步：新增試標回合 R1',
+      nextStepTitleDryRun: '下一步：完成本回合',
+      nextStepTitleWaiting: '下一步：開始正式標記，或再試標一回合',
+      nextStepTitleOfficial: '下一步：完成正式標記',
+      nextStepDescDraft: '發布前請確認以下條件都已滿足。',
+      nextStepDescWaiting: '依最新回合的結果，選擇開始正式標記，或再新增一個試標回合。',
+      nextStepDescOfficial: '以下條件都完成後才能標記完成。',
+      nextStepGroupRequired: '這個動作需要',
+      nextStepGroupReminder: '提醒',
+      nextStepValueDone: '已完成',
+      nextStepCondPool: '正式標記池有剩餘',
+      nextStepPoolLeftTpl: '剩餘 {count} 筆',
+      nextStepCondAnnotatorsTpl: '啟用中標記者 ≥ {count}',
+      nextStepCondReviewers: '啟用中審核員 ≥ 1',
+      nextStepMemberCountTpl: '目前 {count} 位',
+      nextStepCondIaaLater: 'IAA 提醒',
+      nextStepIaaLaterValue: '第一回合結束後才會計算，不阻擋發布',
+      nextStepCondIaaComputed: 'IAA 計算完成',
+      nextStepCondIaaAdvisory: 'IAA 未達目標',
+      nextStepIaaAdvisoryTpl: 'IAA {alpha}，低於目標 {target}；只是提醒，不阻擋任何動作',
+      nextStepCondIaaUndetermined: 'IAA 無法判定',
+      nextStepCondSubmission: '標註全部提交',
+      nextStepCondReview: '審核單位全部定稿',
+      nextStepCondDispute: '爭議都已仲裁',
+      nextStepCondExceptionPool: '最終例外池已處置',
+      nextStepCondQuality: '品質指標就緒',
+      nextStepStatusMet: '已滿足',
+      nextStepStatusUnmet: '未滿足',
+      nextStepStatusInfo: '提醒',
       reviewerHint: '僅 project leader 可操作',
-      dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
       dryRunNextRoundReason: '本回合的標註、必要審核與必要仲裁全部完成後才能新增下一回合',
       retryIaaComputation: '重試計算',
-      iaaComputationPendingOfficialReason: 'IAA 計算中，完成後才能開始正式標記',
       officialPoolEmptyReason: '正式標記池剩餘 0 筆，無法開始正式標記',
       draftPoolEmptyReason: '依目前抽樣數，發布後正式標記池將剩 0 筆，請調降抽樣數',
-      iaaComputationPendingDryRunReason: 'IAA 計算中，完成後才能新增下一回合',
       iaaComputationFailedReason: 'IAA 計算失敗，請重試計算',
       trialRoundRevisionTitleTpl: '新增試標回合 R{round}：本輪修訂紀錄',
       trialRoundRevisionDesc: '建立下一個試標回合前，請記錄前一輪的發現與本輪的指引調整；若本輪未變更指引，請勾選並說明理由。',
@@ -2444,11 +2288,6 @@
       toastRevisionNoteBlockedTpl: '修訂紀錄未完成，無法新增試標回合 R{round}：',
       trialRoundRevisionCancelBtn: '取消',
       trialRoundRevisionConfirmTpl: '建立 R{round}',
-      statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
-      statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
-      statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
-      statusHintOfficial: 'Official Run 進行中。',
-      statusHintCompleted: '任務已完成。',
       statusLabel: {
         draft: '草稿',
         dry_run_in_progress: '試標進行中',
@@ -2518,9 +2357,6 @@
       roundStatusPassed: '已通過',
       roundStatusFailed: '未通過',
       roundStatusInProgress: '進行中',
-      stopAgreementPillTpl: 'IAA ≥ {target}',
-      stopStdPillTpl: '標準差 ≤ {target}',
-      stopAnnotatorPillTpl: '標記者 ≥ {target}',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: '確認停用資料隔離',
@@ -2834,6 +2670,7 @@
       tabWorkLog: 'Work log',
       tabMemberManagement: 'Member management',
       settingsSectionNavLabel: 'Settings sections',
+      settingsSectionSwitched: 'Switched to {label}',
       settingsLeaveTitle: 'Discard unsaved changes?',
       settingsLeaveBody: 'This section has unsaved changes that will be lost if you leave.',
       settingsLeaveCancelBtn: 'Cancel',
@@ -2881,7 +2718,6 @@
       editReviewerGuidelineLabel: 'Review guideline content',
       editReviewerGuidelineFilesLabel: 'Upload files',
       guidelineSaveSuccess: 'Guideline updated',
-      guidelineLeaveConfirm: 'You have unsaved guideline changes. Leave edit mode?',
       guidelineFileTypeInvalid: 'Only PDF / PNG / JPG / JPEG / WEBP / Markdown are supported',
       overviewEditTitle: 'Task basics',
       overviewEditBtn: 'Edit basics',
@@ -2892,7 +2728,6 @@
       overviewReadonlyStatusOnly: 'Task is no longer in draft. Task basics can no longer be edited.',
       overviewReadonlyDraftOnly: '',
       overviewSaveSuccess: 'Task basics updated',
-      overviewLeaveConfirm: 'You have unsaved task basics changes. Leave edit mode?',
       overviewEditTaskNameRequired: 'Task name is required.',
       settingsEditBtn: 'Edit label settings',
       settingsSaveBtn: 'Save',
@@ -2906,7 +2741,6 @@
       settingsSaveCodeBtnLabel: 'Apply',
       settingsCodeAppliedToast: 'Applied to Visual. Click Save to submit.',
       settingsSaveSuccess: 'Label settings updated',
-      settingsLeaveConfirm: 'You have unsaved label settings changes. Leave edit mode?',
       settingsCodeUnsaved: 'Apply your Code changes before saving.',
       editTaskNameLabel: 'Task name',
       editTaskTypeLabel: 'Task type',
@@ -2922,7 +2756,6 @@
       samplingReadonlyRoleOnly: 'Read-only role. Only project leader can edit sampling settings.',
       samplingReadonlyStatusOnly: 'Task is no longer in draft. Sampling settings can no longer be edited.',
       samplingSaveSuccess: 'Sampling settings updated',
-      samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
       reviewSettingsTitle: 'Review Settings',
       reviewEditBtn: 'Edit',
       reviewSaveBtn: 'Save',
@@ -2938,7 +2771,6 @@
       arbiterIdsValueEmpty: 'No arbiter designated',
       reviewSettingsErrorReviewerIdsEmpty: 'Select at least one reviewer.',
       reviewSettingsErrorNoAssignableReviewer: 'Keep at least one reviewer who is not designated as an arbiter.',
-      reviewLeaveConfirm: 'You have unsaved review-setting changes. Leave edit mode?',
       reviewReadonlyRoleOnly: 'Read-only role. Only project leader can edit review settings.',
       reviewReadonlyStatusOnly: 'Task is no longer in draft. Review settings can no longer be edited.',
       reviewSaveSuccess: 'Review settings updated',
@@ -2948,7 +2780,6 @@
       currentAgreementLabel: 'Latest IAA',
       currentStdLabel: 'Current standard deviation',
       officialPoolLabel: 'Official pool',
-      stopConditionTitle: 'Stop conditions',
       labelSamplingValueControl: 'Per-round sample count',
       labelMinAnnotatorsControl: 'Minimum annotators',
       totalSamplesLabel: 'Total',
@@ -2972,15 +2803,47 @@
       publishOfficialRun: 'Start official run',
       publishComplete: 'Mark complete',
       noPublishAction: 'No publish action is available in this status.',
+      noPublishActionDone: 'Task completed; no pending action',
+      readonlySuffix: ' (Read-only)',
+      execReasonsBothTitle: 'Needed for both actions',
+      execReasonsOfficialOnlyTitle: '"Start official run" needs',
+      iaaComputationPendingReason: 'IAA computation is in progress; you can continue once it finishes',
+      publishUndeterminedNote: 'R{round} IAA cannot determine whether the target is met. You can start the official run directly, or add another trial round',
+      nextStepTitleDraft: 'Next step: add trial round R1',
+      nextStepTitleDryRun: 'Next step: finish this round',
+      nextStepTitleWaiting: 'Next step: start the official run, or add another trial round',
+      nextStepTitleOfficial: 'Next step: finish the official run',
+      nextStepDescDraft: 'Confirm the conditions below are met before publishing.',
+      nextStepDescWaiting: 'Based on the latest round, start the official run or add another trial round.',
+      nextStepDescOfficial: 'Mark complete once all the conditions below are done.',
+      nextStepGroupRequired: 'This action needs',
+      nextStepGroupReminder: 'Reminder',
+      nextStepValueDone: 'Done',
+      nextStepCondPool: 'Official pool has items left',
+      nextStepPoolLeftTpl: '{count} left',
+      nextStepCondAnnotatorsTpl: 'Active annotators ≥ {count}',
+      nextStepCondReviewers: 'Active reviewers ≥ 1',
+      nextStepMemberCountTpl: '{count} now',
+      nextStepCondIaaLater: 'IAA reminder',
+      nextStepIaaLaterValue: 'Computed after the first round ends; does not block publishing',
+      nextStepCondIaaComputed: 'IAA computation finished',
+      nextStepCondIaaAdvisory: 'IAA below target',
+      nextStepIaaAdvisoryTpl: 'IAA {alpha} is below the target {target}; reminder only, nothing is blocked',
+      nextStepCondIaaUndetermined: 'IAA cannot be determined',
+      nextStepCondSubmission: 'All annotations submitted',
+      nextStepCondReview: 'All review units finalized',
+      nextStepCondDispute: 'All disputes arbitrated',
+      nextStepCondExceptionPool: 'Final exception pool handled',
+      nextStepCondQuality: 'Quality metrics ready',
+      nextStepStatusMet: 'Met',
+      nextStepStatusUnmet: 'Not met',
+      nextStepStatusInfo: 'Reminder',
       reviewerHint: 'Only project leader can perform this action',
-      dryRunDisabled: 'Add trial round (Read-only)',
       officialRunDisabled: 'Start official run (Read-only)',
       dryRunNextRoundReason: 'Finish this round\'s annotation, required review and required arbitration before adding the next round',
       retryIaaComputation: 'Retry computation',
-      iaaComputationPendingOfficialReason: 'IAA computation is in progress; official run can start once it finishes',
       officialPoolEmptyReason: 'The official pool has 0 items remaining, so the official run cannot start',
       draftPoolEmptyReason: 'With the current sampling value the official pool would have 0 items left; lower the sampling value',
-      iaaComputationPendingDryRunReason: 'IAA computation is in progress; the next round can be added once it finishes',
       iaaComputationFailedReason: 'IAA computation failed. Please retry the computation',
       trialRoundRevisionTitleTpl: 'Add trial round R{round}: revision note',
       trialRoundRevisionDesc: 'Before creating the next trial round, record what the previous round found and how the guideline changed. If the guideline is unchanged, check the box and give a reason.',
@@ -2994,11 +2857,6 @@
       toastRevisionNoteBlockedTpl: 'Revision note incomplete, cannot add trial round R{round}: ',
       trialRoundRevisionCancelBtn: 'Cancel',
       trialRoundRevisionConfirmTpl: 'Create R{round}',
-      statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
-      statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
-      statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
-      statusHintOfficial: 'Official run is in progress.',
-      statusHintCompleted: 'Task is completed.',
       statusLabel: {
         draft: 'Draft',
         dry_run_in_progress: 'Dry run in progress',
@@ -3068,9 +2926,6 @@
       roundStatusPassed: 'Passed',
       roundStatusFailed: 'Failed',
       roundStatusInProgress: 'In progress',
-      stopAgreementPillTpl: 'IAA ≥ {target}',
-      stopStdPillTpl: 'Std ≤ {target}',
-      stopAnnotatorPillTpl: 'annotators ≥ {target}',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: 'Confirm disabling data isolation',
@@ -3569,7 +3424,7 @@
     },
   };
 
-  /* issue #397: T014-T016 (review-flow demo, 5 dataset records each) get
+  /* issue #397: T014-T016 (review-flow demo, 5 listed dataset records each; T014's datasetTotal is 6 per #1429) get
      progress figures proportionate to that data volume instead of the
      legacy shared 40/124/1160-sample scale. T014 is a dry_run task (one
      active round, official not yet reached); T015-T016 are official_run
@@ -3759,7 +3614,7 @@
        Mirrors task-new.html's own `state` fields; consumed by
        task-config.engine.js / .data.js / .yaml.js / .dataset.js and
        task-detail.config.js. Seeded per-task by ensureTaskConfigSeeded(). */
-    datasetFiles: [], fieldRoleMap: {},
+    datasetFiles: [], fieldRoleMap: {}, listTitleField: null,
     datasetParsedColumns: [], datasetParsedRows: [], datasetRawFirstRow: {}, datasetColumnUniqueValues: {},
     _datasetRoots: [],
     _datasetVersion: 0,
@@ -4606,14 +4461,6 @@
     'work-log': './task-detail.panels/work-log.html',
     'member-management': './task-detail.panels/member-management.html'
   };
-
-  var statusHintMap = {
-    draft: 'statusHintDraft',
-    dry_run_in_progress: 'statusHintDry',
-    waiting_iaa_confirmation: 'statusHintIaa',
-    official_run_in_progress: 'statusHintOfficial',
-    completed: 'statusHintCompleted'
-  };
   var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
   var STATUS_ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
   var toastTimer = null;
@@ -4731,7 +4578,7 @@ function interpolate(template, payload) {
        zero (total disagreement)" instead of "no trial round exists yet" --
        exactly the coercion the issue flagged. Consumers (getTrialRounds()'s
        fallback round, the currentAgreementValue/round-timeline renderers,
-       and the stopAgreementPill) must treat null as "no data yet" and
+       and the next-step card IAA row) must treat null as "no data yet" and
        prefer getPrimaryIaaResult()'s live computeIaaAlpha() reading when
        one is computable. */
     TASK_DATA.currentAgreement = null;
@@ -4816,6 +4663,9 @@ function interpolate(template, payload) {
       TASK_DATA.fieldRoleMap = Object.assign({}, profile.fieldRoleMap || {});
       TASK_DATA.datasetFileName = profile.datasetFileName || TASK_DATA.datasetSourceZh;
       TASK_DATA.datasetRecords = cloneData(profile.datasetRecords || []);
+      TASK_DATA.list_title_field = profile.list_title_field ?? null;
+      TASK_DATA.dialogue_fields = profile.dialogue_fields ?? null;
+      TASK_DATA.prefill_fields = profile.prefill_fields ?? null;
       /* issue #1120 (FR-010f-3, maintainer ruling 2026-10-05): a profile's
          datasetTotal covers the whole dataset including trial-history
          samples that are not in datasetRecords (the official records stay
@@ -4953,7 +4803,7 @@ function interpolate(template, payload) {
   }
 
   /* FR-026 (1) / FR-019 (4): the ONE list of settings sections. The nav, the
-     panel lookup (by DOM order inside #settingsPanel), the URL `section`
+     panel lookup (by `data-section` inside #settingsPanel), the URL `section`
      values and the unsaved-change check are all derived from it. `stateKey`
      prefixes the existing <key>EditMode / <key>Dirty flags; `cancel` is the
      section's existing cancel function. */
@@ -5320,7 +5170,6 @@ function interpolate(template, payload) {
     setText('currentAgreementLabel', t('currentAgreementLabel'));
     setText('currentStdLabel', t('currentStdLabel'));
     setText('officialPoolLabel', t('officialPoolLabel'));
-    setText('stopConditionTitle', t('stopConditionTitle'));
     renderStatusStepperLabels();
     setText('labelSamplingValueControl', t('labelSamplingValueControl'));
     setText('labelMinAnnotatorsControl', t('labelMinAnnotatorsControl'));
@@ -5536,10 +5385,6 @@ function interpolate(template, payload) {
     }
   }
 
-  function getStatusHint() {
-    return t(statusHintMap[TASK_DATA.status] || 'statusHintDraft');
-  }
-
   function applySamplingDefaultsToTaskData() {
     var defs = SAMPLING_DEFAULTS_BY_TYPE[TASK_DATA.taskTypeKey] ||
       { targetIAA: 0.75, targetStd: null, minAnnotators: 3, trialPercent: 15 };
@@ -5708,7 +5553,7 @@ function interpolate(template, payload) {
   }
 
   function poolReasonHtml(key) {
-    return '<span class="status-hint" id="publishPoolReason">' + t(key) + '</span>';
+    return '<li id="publishPoolReason">' + t(key) + '</li>';
   }
 
   function hasPassedTrialRound() {
@@ -6053,26 +5898,6 @@ function interpolate(template, payload) {
         : 'Create the first trial round to validate agreement before deciding whether to start official work.');
     }
 
-    setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(getPrimaryTargetAgreement()).toFixed(2) }));
-    setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
-
-    var stopAgreementPill = document.getElementById('stopAgreementPill');
-    var stopStdPill = document.getElementById('stopStdPill');
-    var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
-    /* issue #491: 3-state pill. Number(null) === 0 previously made
-       "cannot compute yet" render as "not met", which reads as a stronger
-       (and wrong) claim than "we don't have an answer yet". */
-    if (stopAgreementPill) {
-      var primaryIaaForPill = getPrimaryIaaResult();
-      stopAgreementPill.classList.remove('passed', 'not-computable');
-      if (!primaryIaaForPill.computable) {
-        stopAgreementPill.classList.add('not-computable');
-      } else if (primaryIaaForPill.alpha >= Number(getPrimaryTargetAgreement())) {
-        stopAgreementPill.classList.add('passed');
-      }
-    }
-    if (stopStdPill) stopStdPill.classList.add('hidden');
-    if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
     renderSplitVisualization(
       (function() {
         var rounds = getTrialRounds();
@@ -6239,83 +6064,164 @@ function interpolate(template, payload) {
     warning.classList.toggle('hidden', !shouldShow);
   }
 
+  /* issue #1403 (FR-027(4)): the "next step" card. Card header = state sentence + description + #publishActionRow;
+     body = condition groups. Every row is derived from an existing source (FR-008a/b reducer, FR-010t members,
+     FR-010f-3 pool, FR-010o-4 computation status) -- never from the task type, and never from annotation answers. */
+  function nextStepRow(key, status, label, value, id, extraHtml) {
+    return { key: key, status: status, label: label, value: value, extraHtml: extraHtml || '',
+      id: status === 'met' ? '' : (id || 'nextStepCond-' + key) };
+  }
+
+  function nextStepGroup(key, rows) {
+    var titleKeys = { required: 'nextStepGroupRequired', both: 'execReasonsBothTitle', 'official-only': 'execReasonsOfficialOnlyTitle', reminder: 'nextStepGroupReminder' };
+    return { key: key, title: t(titleKeys[key]), rows: rows };
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function nextStepGroupsHtml(groups) {
+    var iconGlyphs = { met: '✓', unmet: '○', info: 'ⓘ' };
+    var statusKeys = { met: 'nextStepStatusMet', unmet: 'nextStepStatusUnmet', info: 'nextStepStatusInfo' };
+    return groups.map(function(group) {
+      return '<div class="next-step-group" data-group="' + group.key + '"><p class="next-step-group-title">' + escapeHtml(group.title) + '</p><ul>' +
+        group.rows.map(function(row) {
+          return '<li class="next-step-cond" data-cond="' + row.key + '" data-status="' + row.status + '"' + (row.id ? ' id="' + row.id + '"' : '') + '>' +
+            '<span class="next-step-cond-icon" aria-hidden="true">' + iconGlyphs[row.status] + '</span>' +
+            '<span class="sr-only next-step-cond-status">' + t(statusKeys[row.status]) + '</span> ' +
+            '<span class="next-step-cond-label">' + escapeHtml(row.label) + '</span> ' +
+            '<span class="next-step-cond-value">' + escapeHtml(row.value) + '</span> ' + row.extraHtml + '</li>';
+        }).join('') + '</ul></div>';
+    }).join('');
+  }
+
+  /* ids of every unmet row in the given groups -- the aria-describedby targets of the button they gate. */
+  function nextStepUnmetIds(groups, groupKeys) {
+    var ids = [];
+    groups.forEach(function(group) {
+      if (groupKeys.indexOf(group.key) === -1) return;
+      group.rows.forEach(function(row) { if (row.status === 'unmet') ids.push(row.id); });
+    });
+    return ids;
+  }
+
+  function nextStepGateAttrs(ids, forceDisabled) {
+    return (ids.length || forceDisabled ? ' disabled' : '') + (ids.length ? ' aria-describedby="' + ids.join(' ') + '"' : '');
+  }
+
+  /* FR-008a / FR-008b: one row per completion condition, met / unmet from the same reducer the gate uses. */
+  var COMPLETION_ROW_DEFS = [
+    { key: 'submission', code: 'submission_incomplete', labelKey: 'nextStepCondSubmission' },
+    { key: 'review', code: 'review_pending', labelKey: 'nextStepCondReview' },
+    { key: 'dispute', code: 'disputed_units', labelKey: 'nextStepCondDispute' },
+    { key: 'exception-pool', code: 'exception_pool_pending', labelKey: 'nextStepCondExceptionPool' },
+    { key: 'quality-metrics', code: 'quality_metrics_not_ready', labelKey: 'nextStepCondQuality', officialOnly: true }
+  ];
+
+  function getCompletionRows(runType) {
+    var detailData = window.LabelSuiteTaskDetailData;
+    var trial = runType === 'dry_run';
+    var blockers = detailData ? detailData.getTaskCompletionBlockers(getCompletionSignals(runType)) : [];
+    return COMPLETION_ROW_DEFS.filter(function(def) { return !(trial && def.officialOnly); }).map(function(def) {
+      var blocker = blockers.filter(function(item) { return item.code === def.code; })[0];
+      return blocker
+        ? nextStepRow(def.key, 'unmet', t(def.labelKey), getBlockerMessage(blocker, trial))
+        : nextStepRow(def.key, 'met', t(def.labelKey), t('nextStepValueDone'));
+    });
+  }
+
+  /* waiting_iaa_confirmation rows (FR-010o-3 / FR-010o-4 / FR-022): IAA never blocks except while computing or failed. */
+  function getWaitingGroups() {
+    var currentRound = getCurrentTrialRound();
+    var computationStatus = getRoundComputationStatus(currentRound);
+    var officialPoolKey = getPublishPoolBlockKey('official');
+    var groups = [];
+    if (computationStatus !== 'done') {
+      var isPending = computationStatus === 'pending';
+      groups.push(nextStepGroup('both', [nextStepRow('iaa-computed', 'unmet', t('nextStepCondIaaComputed'),
+        t(isPending ? 'iaaComputationPendingReason' : 'iaaComputationFailedReason'), 'publishIaaReason',
+        isPending ? '' : '<button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>')]));
+    }
+    groups.push(nextStepGroup('official-only', [officialPoolKey
+      ? nextStepRow('pool', 'unmet', t('nextStepCondPool'), t(officialPoolKey), 'publishPoolReason')
+      : nextStepRow('pool', 'met', t('nextStepCondPool'), interpolate(t('nextStepPoolLeftTpl'), { count: getOfficialPoolCount() }))]));
+    if (computationStatus === 'done') {
+      var iaa = getPrimaryIaaResult();
+      var target = Number(getPrimaryTargetAgreement());
+      if (currentRound && currentRound.result === 'in_progress') {
+        /* issue #1348 D3: both buttons stay enabled, so say what pressing them means. */
+        groups.push(nextStepGroup('reminder', [nextStepRow('iaa-undetermined', 'info', t('nextStepCondIaaUndetermined'),
+          interpolate(t('publishUndeterminedNote'), { round: currentRound.round }), 'publishUndeterminedNote')]));
+      } else if (iaa.computable && iaa.alpha < target) {
+        groups.push(nextStepGroup('reminder', [nextStepRow('iaa-advisory', 'info', t('nextStepCondIaaAdvisory'),
+          interpolate(t('nextStepIaaAdvisoryTpl'), { alpha: Number(iaa.alpha).toFixed(2), target: target.toFixed(2) }))]));
+      }
+    }
+    return groups;
+  }
+
+  function execColumnHtml(buttonsHtml, noteHtml) {
+    return '<div class="exec-action-buttons">' + buttonsHtml + '</div>' + (noteHtml || '');
+  }
+
   function renderPublishActions() {
     var actionRow = document.getElementById('publishActionRow');
     if (!actionRow) return;
     renderPublishArbiterWarning();
     var nextRound = getTrialRounds().length + 1;
+    var status = TASK_DATA.status;
+    var stateKeys = {
+      draft: ['nextStepTitleDraft', 'nextStepDescDraft'],
+      dry_run_in_progress: ['nextStepTitleDryRun', 'dryRunNextRoundReason'],
+      waiting_iaa_confirmation: ['nextStepTitleWaiting', 'nextStepDescWaiting'],
+      official_run_in_progress: ['nextStepTitleOfficial', 'nextStepDescOfficial']
+    }[status];
+    setText('nextStepTitle', stateKeys ? t(stateKeys[0]) : t(status === 'completed' ? 'noPublishActionDone' : 'noPublishAction'));
+    setText('nextStepDesc', stateKeys ? t(stateKeys[1]) : '');
+    var conditions = document.getElementById('nextStepConditions');
+    var groups = [];
+    var buttonsHtml = '';
+    var noteHtml = '';
 
-    if (state.taskRole === 'reviewer') {
-      actionRow.innerHTML = '<span class="btn-disabled-tip" title="' + t('reviewerHint') + '"><button class="btn btn-primary" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button></span>';
-      return;
-    }
-
-    if (TASK_DATA.status === 'draft') {
+    if (state.taskRole === 'reviewer' && stateKeys) {
+      /* issue #1348 D4: the label follows the state like project_leader's; the title tooltip and a visible note keep it read-only (FR-027(6)). */
+      var reviewerKey = { waiting_iaa_confirmation: 'publishOfficialRun', official_run_in_progress: 'publishComplete' }[status] || 'publishDryRun';
+      var reviewerLabel = t(reviewerKey) + ((reviewerKey === 'publishDryRun') ? ' R' + nextRound : '') + t('readonlySuffix');
+      buttonsHtml = '<span class="btn-disabled-tip" title="' + t('reviewerHint') + '"><button class="btn btn-primary" type="button" disabled title="' + t('reviewerHint') + '">' + reviewerLabel + '</button></span>';
+      noteHtml = '<p class="exec-action-readonly-note">' + t('reviewerHint') + '</p>';
+    } else if (status === 'draft') {
       var draftPoolKey = getPublishPoolBlockKey('dry');
-      /* FR-022(3): the member gap (FR-010t) is its own item next to the pool reason. */
-      var draftGaps = draftPoolKey ? getMembershipGapMessages() : [];
-      var draftDescribedBy = 'publishPoolReason' + (draftGaps.length ? ' publishMemberGapReason' : '');
-      var draftGapHtml = draftGaps.length
-        ? '<span class="status-hint" id="publishMemberGapReason">' + t('toastPublishBlockedMembers') + draftGaps.join(t('memberGapJoiner')) + '</span>'
-        : '';
-      actionRow.innerHTML = draftPoolKey
-        ? '<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled aria-describedby="' + draftDescribedBy + '">' + t('publishDryRun') + ' R1</button>' + poolReasonHtml(draftPoolKey) + draftGapHtml
-        : '<button class="btn btn-primary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
-      return;
+      var gaps = getMembershipGaps();
+      groups = [nextStepGroup('required', [
+        draftPoolKey
+          ? nextStepRow('pool', 'unmet', t('nextStepCondPool'), t(draftPoolKey), 'publishPoolReason')
+          : nextStepRow('pool', 'met', t('nextStepCondPool'), interpolate(t('nextStepPoolLeftTpl'), { count: getReserveAfterSampling(Number(TASK_DATA.samplingValue) || 0) })),
+        nextStepRow('annotators', gaps.annotators.length ? 'unmet' : 'met', interpolate(t('nextStepCondAnnotatorsTpl'), { count: TASK_DATA.minAnnotators }),
+          gaps.annotators.length ? gaps.annotators.join(t('memberGapJoiner')) : interpolate(t('nextStepMemberCountTpl'), { count: getActiveAnnotatorMembers().length })),
+        nextStepRow('reviewers', gaps.reviewers.length ? 'unmet' : 'met', t('nextStepCondReviewers'),
+          gaps.reviewers.length ? gaps.reviewers.join(t('memberGapJoiner')) : interpolate(t('nextStepMemberCountTpl'), { count: getEffectiveReviewerIds(TASK_DATA.reviewerIds).length }))
+      ]), nextStepGroup('reminder', [nextStepRow('iaa-later', 'info', t('nextStepCondIaaLater'), t('nextStepIaaLaterValue'))])];
+      buttonsHtml = '<button class="btn btn-primary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['required'])) + '>' + t('publishDryRun') + ' R1</button>';
+    } else if (status === 'dry_run_in_progress') {
+      /* FR-013(1) / FR-008a: always disabled while the round runs; the rows say what is still open. */
+      groups = [nextStepGroup('required', getCompletionRows('dry_run'))];
+      buttonsHtml = '<button class="btn btn-primary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['required']), true) + '>' + t('publishDryRun') + ' R' + nextRound + '</button>';
+    } else if (status === 'waiting_iaa_confirmation') {
+      /* issue #783 (FR-010o-4(5)/(6)): neither transition may proceed while the latest round's IAA computation
+         has not finished. The retry control (FR-010o-4(3)) is project_leader-only; the reviewer branch above handles reviewers. */
+      groups = getWaitingGroups();
+      buttonsHtml =
+        '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['both', 'official-only'])) + '>' + t('publishOfficialRun') + '</button>' +
+        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['both'])) + '>' + t('publishDryRun') + ' R' + nextRound + '</button>';
+    } else if (status === 'official_run_in_progress') {
+      /* FR-008b / AC-3.9 / SC-037: native disabled + one row per condition. */
+      groups = [nextStepGroup('required', getCompletionRows('official_run'))];
+      buttonsHtml = '<button class="btn btn-primary" type="button" id="publishCompleteBtn"' + nextStepGateAttrs(nextStepUnmetIds(groups, ['required'])) + '>' + t('publishComplete') + '</button>';
     }
 
-    if (TASK_DATA.status === 'dry_run_in_progress') {
-      /* FR-013(1) / FR-008a: one visible reason per unmet condition; the fallback keeps the legacy hint. */
-      var trialReasons = getDryRunCompletionBlockerMessages();
-      var trialHtml = '<button class="btn btn-primary" type="button" id="publishDryRunBtn" disabled' + (trialReasons.length ? ' aria-describedby="publishDryRunReasons"' : '') + '>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
-        '<span class="status-hint">' + t('dryRunNextRoundReason') + '</span>' +
-        (trialReasons.length
-          ? '<ul class="status-hint" id="publishDryRunReasons">' + trialReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
-          : '');
-      actionRow.innerHTML = trialHtml;
-      return;
-    }
-
-    if (TASK_DATA.status === 'waiting_iaa_confirmation') {
-      /* issue #783 (FR-010o-4(5)/(6)): neither the "start official run" nor
-         the "add next trial round" transition may proceed while the latest
-         round's IAA computation has not finished -- disable both with a
-         visible reason, same "disabled + visible reason" pattern as the
-         dry_run_in_progress branch above (issue #791 D4). The retry control
-         (FR-010o-4(3)) is project_leader-only; the reviewer branch above
-         already returns before this point, so state.taskRole here is
-         always 'project_leader'. */
-      var computationStatus = getRoundComputationStatus(getCurrentTrialRound());
-      /* FR-022: the pool reason is its own item, never merged into the IAA reason. */
-      var officialPoolKey = getPublishPoolBlockKey('official');
-      var officialPoolAttr = officialPoolKey ? ' aria-describedby="publishPoolReason"' : '';
-      var officialPoolHint = officialPoolKey ? poolReasonHtml(officialPoolKey) : '';
-      if (computationStatus !== 'done') {
-        var isPending = computationStatus === 'pending';
-        actionRow.innerHTML =
-          '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn" disabled' + officialPoolAttr + '>' + t('publishOfficialRun') + '</button>' +
-          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingOfficialReason' : 'iaaComputationFailedReason') + '</span>' + officialPoolHint +
-          '<button class="btn btn-secondary" type="button" id="publishDryRunBtn" disabled>' + t('publishDryRun') + ' R' + nextRound + '</button>' +
-          '<span class="status-hint">' + t(isPending ? 'iaaComputationPendingDryRunReason' : 'iaaComputationFailedReason') + '</span>' +
-          (isPending ? '' : '<button class="btn btn-secondary" type="button" id="retryIaaComputationBtn">' + t('retryIaaComputation') + '</button>');
-        return;
-      }
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn"' + (officialPoolKey ? ' disabled' : '') + officialPoolAttr + '>' + t('publishOfficialRun') + '</button>' + officialPoolHint +
-        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
-      return;
-    }
-
-    if (TASK_DATA.status === 'official_run_in_progress') {
-      /* FR-008b / AC-3.9 / SC-037: native disabled + one visible reason per unmet condition. */
-      var completeReasons = getTaskCompletionBlockerMessages();
-      actionRow.innerHTML = completeReasons.length
-        ? '<button class="btn btn-primary" type="button" id="publishCompleteBtn" disabled aria-describedby="publishCompleteReasons">' + t('publishComplete') + '</button>' +
-          '<ul class="status-hint" id="publishCompleteReasons">' + completeReasons.map(function(reason) { return '<li>' + reason + '</li>'; }).join('') + '</ul>'
-        : '<button class="btn btn-primary" type="button" id="publishCompleteBtn">' + t('publishComplete') + '</button>';
-      return;
-    }
-
-    actionRow.innerHTML = '<span class="status-hint">' + t('noPublishAction') + '</span>';
+    actionRow.innerHTML = buttonsHtml ? execColumnHtml(buttonsHtml, noteHtml) : '';
+    if (conditions) conditions.innerHTML = nextStepGroupsHtml(groups);
   }
 
   function renderIsolationState() {
@@ -6401,7 +6307,6 @@ function interpolate(template, payload) {
       statusBadge.className = 'badge ' + statusCls;
       statusBadge.textContent = (I18N[state.lang].statusLabel || I18N.zh.statusLabel)[TASK_DATA.status] || TASK_DATA.status;
     }
-    setText('statusHint', getStatusHint());
     renderBreadcrumbCurrent();
     updateStatusStepper();
   }
@@ -6489,7 +6394,7 @@ function getTaskTypeLabel() {
 
   function cancelOverviewEdit(force) {
     if (!state.overviewEditMode) return true;
-    if (!force && state.overviewDirty && !window.confirm(t('overviewLeaveConfirm'))) return false;
+    if (!force && state.overviewDirty) return confirmDiscardEdit(cancelOverviewEdit, 'overviewEditBtn');
     state.overviewEditMode = false;
     state.overviewDirty = false;
     resetTaskConfigSeedGuard();
@@ -6533,6 +6438,9 @@ function getTaskTypeLabel() {
       return { type: outKey, config: state.outputConfigs[outKey] || {} };
     });
     TASK_DATA.fieldRoleMap = Object.assign({}, state.fieldRoleMap);
+    TASK_DATA.list_title_field = state.listTitleField ?? null;
+    TASK_DATA.dialogue_fields = state.dialogueFields ?? null;
+    TASK_DATA.prefill_fields = state.prefillFields ?? null;
     /* A replaced dataset only bumps _datasetVersion; the pair-label reset lives in
        renderSchemaFields, so run it before reading labels to avoid persisting stale ones */
     renderSchemaFields();
@@ -6627,7 +6535,7 @@ function getTaskTypeLabel() {
 
   function cancelSamplingEdit(force) {
     if (!state.samplingEditMode) return true;
-    if (!force && state.samplingDirty && !window.confirm(t('samplingLeaveConfirm'))) return false;
+    if (!force && state.samplingDirty) return confirmDiscardEdit(cancelSamplingEdit, 'samplingEditBtn');
     state.samplingEditMode = false;
     state.samplingDirty = false;
     state.samplingDraft = null;
@@ -6854,7 +6762,7 @@ function getTaskTypeLabel() {
 
   function cancelReviewEdit(force) {
     if (!state.reviewEditMode) return true;
-    if (!force && state.reviewDirty && !window.confirm(t('reviewLeaveConfirm'))) return false;
+    if (!force && state.reviewDirty) return confirmDiscardEdit(cancelReviewEdit, 'reviewEditBtn');
     state.reviewEditMode = false;
     state.reviewDirty = false;
     state.reviewDraft = null;
@@ -6892,7 +6800,14 @@ function getTaskTypeLabel() {
   }
 
   function isGuidelineEditable() {
-    return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
+    return (TASK_DATA.status === 'draft' || TASK_DATA.status === 'waiting_iaa_confirmation')
+      && state.taskRole === 'project_leader';
+  }
+
+  /* force_guideline stays draft-only even where the guideline content is
+     editable in waiting_iaa_confirmation (FR-014). */
+  function isForceGuidelineEditable() {
+    return TASK_DATA.status === 'draft';
   }
 
   function getGuidelineRoleFieldName(role, field) {
@@ -7037,7 +6952,10 @@ function getTaskTypeLabel() {
     var forceToggle = document.getElementById('editForceGuidelineToggle');
     if (annotatorGuidelineTextInput) annotatorGuidelineTextInput.value = state.guidelineDraft.annotatorGuidelineText;
     if (reviewerGuidelineTextInput) reviewerGuidelineTextInput.value = state.guidelineDraft.reviewerGuidelineText;
-    if (forceToggle) forceToggle.checked = state.guidelineDraft.forceGuideline;
+    if (forceToggle) {
+      forceToggle.checked = state.guidelineDraft.forceGuideline;
+      forceToggle.disabled = !isForceGuidelineEditable();
+    }
     setGuidelineEditError('');
     renderGuidelineFileList('annotator');
     renderGuidelineFileList('reviewer');
@@ -7115,7 +7033,7 @@ function getTaskTypeLabel() {
 
   function cancelGuidelineEdit(force) {
     if (!state.guidelineEditMode) return true;
-    if (!force && state.guidelineDirty && !window.confirm(t('guidelineLeaveConfirm'))) return false;
+    if (!force && state.guidelineDirty) return confirmDiscardEdit(cancelGuidelineEdit, 'guidelineEditBtn');
     state.guidelineEditMode = false;
     state.guidelineDirty = false;
     state.guidelineDraft = null;
@@ -7146,7 +7064,9 @@ function getTaskTypeLabel() {
     TASK_DATA.guidelineFiles = TASK_DATA.annotatorGuidelineFiles.map(function(file) {
       return { name: file.name, type: file.type };
     });
-    TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
+    if (isForceGuidelineEditable()) {
+      TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
+    }
     TASK_DATA.guidelineUploaded = hasTaskGuidelineRoleContent('annotator') || hasTaskGuidelineRoleContent('reviewer');
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
     state.guidelineEditMode = false;
@@ -7239,6 +7159,9 @@ function getTaskTypeLabel() {
     var hint = document.getElementById('settingsReadonlyHint');
 
     if (!saveBtn || !cancelBtn || !form || !view || !hint) return;
+    // #1375: computed before the toggles; a re-render while the form is already open
+    // (e.g. the overview skeleton timer) must not rebuild inputs under the user's focus.
+    var enteringEdit = form.classList.contains('hidden');
     if (editBtn) editBtn.disabled = !editable;
     if (editBtn) editBtn.classList.toggle('hidden', state.settingsEditMode);
     saveBtn.classList.toggle('hidden', !state.settingsEditMode);
@@ -7249,10 +7172,12 @@ function getTaskTypeLabel() {
     if (state.settingsEditMode) {
       hint.classList.add('hidden');
       hint.textContent = '';
-      setSettingsEditError('');
-      ensureTaskConfigSeeded();
-      renderTemplateBtns();
-      renderSchemaFields();
+      if (enteringEdit) {
+        setSettingsEditError('');
+        ensureTaskConfigSeeded();
+        renderTemplateBtns();
+        renderSchemaFields();
+      }
       return;
     }
 
@@ -7281,7 +7206,7 @@ function getTaskTypeLabel() {
 
   function cancelSettingsEdit(force) {
     if (!state.settingsEditMode) return true;
-    if (!force && state.settingsDirty && !window.confirm(t('settingsLeaveConfirm'))) return false;
+    if (!force && state.settingsDirty) return confirmDiscardEdit(cancelSettingsEdit, 'settingsEditBtn');
     state.settingsEditMode = false;
     state.settingsDirty = false;
     state.codeDraftDirty = false;
@@ -7318,7 +7243,8 @@ function getTaskTypeLabel() {
     var summaryRows = (TASK_DATA.outputs || []).map(function(out) {
       return {
         label: getOutputTypeDisplayLabel(out.type),
-        value: summarizeOutputConfigForDisplay(out.type, out.config || {}) || '-',
+        value: summarizeOutputConfigForDisplay(out.type, out.config || {}),
+        labelNodes: summarizeOutputTaxonomyNodes(out.type, out.config || {}),
         required: true,
       };
     });
@@ -7350,7 +7276,24 @@ function getTaskTypeLabel() {
 
       var valueNode = document.createElement('span');
       valueNode.className = 'kv-dl-value';
-      valueNode.textContent = row.value;
+      var hasNodes = row.labelNodes && row.labelNodes.length;
+      valueNode.textContent = row.value || (hasNodes ? '' : '-');
+      if (hasNodes) {
+        var tree = document.createElement('ul');
+        tree.setAttribute('data-testid', 'settings-label-tree');
+        tree.style.cssText = 'list-style:none;margin:0;padding:0';
+        row.labelNodes.forEach(function(node) {
+          var li = document.createElement('li');
+          li.setAttribute('data-testid', 'settings-label-node');
+          li.setAttribute('data-depth', String(node.depth));
+          li.setAttribute('data-label-path', node.path.join(' › '));
+          li.setAttribute('aria-label', node.path.join(' › '));
+          li.style.paddingInlineStart = 'calc(' + (node.depth - 1) + ' * var(--space-md))';
+          li.textContent = node.name;
+          tree.appendChild(li);
+        });
+        valueNode.appendChild(tree);
+      }
       rowNode.appendChild(valueNode);
 
       container.appendChild(rowNode);
@@ -7455,6 +7398,15 @@ function getTaskTypeLabel() {
     return Boolean(state[section.stateKey + 'EditMode'] && state[section.stateKey + 'Dirty']);
   }
 
+  function confirmDiscardEdit(cancelFn, editBtnId) {
+    openSettingsLeaveConfirm(function() {
+      cancelFn(true);
+      var b = document.getElementById(editBtnId);
+      if (b) b.focus();
+    });
+    return false;
+  }
+
   function openSettingsLeaveConfirm(onConfirm) {
     pendingSettingsLeave = onConfirm;
     var modal = document.getElementById('settingsLeaveModal');
@@ -7475,10 +7427,10 @@ function getTaskTypeLabel() {
 
   function renderSettingsSectionNav() {
     var nav = document.getElementById('settingsSectionNav');
-    var panels = document.querySelectorAll('#settingsPanel .settings-section');
     if (!nav) return;
     nav.setAttribute('aria-label', t('settingsSectionNavLabel'));
-    SETTINGS_SECTIONS.forEach(function(section, index) {
+    SETTINGS_SECTIONS.forEach(function(section) {
+      var panel = document.querySelector('#settingsPanel .settings-section[data-section="' + section.slug + '"]');
       var tab = document.getElementById('settingsTab-' + section.slug);
       if (!tab) {
         tab = document.createElement('button');
@@ -7488,19 +7440,25 @@ function getTaskTypeLabel() {
         tab.setAttribute('role', 'tab');
         tab.dataset.section = section.slug;
         nav.appendChild(tab);
-        if (panels[index]) {
-          panels[index].id = 'settingsSection-' + section.slug;
-          panels[index].setAttribute('role', 'tabpanel');
-          panels[index].setAttribute('aria-labelledby', tab.id);
-          tab.setAttribute('aria-controls', panels[index].id);
+        if (panel) {
+          panel.id = 'settingsSection-' + section.slug;
+          panel.setAttribute('role', 'tabpanel');
+          panel.setAttribute('aria-labelledby', tab.id);
+          tab.setAttribute('aria-controls', panel.id);
         }
       }
       var selected = section.slug === state.settingsSection;
       tab.textContent = t(section.labelKey);
       tab.setAttribute('aria-selected', selected ? 'true' : 'false');
       tab.setAttribute('tabindex', selected ? '0' : '-1');
-      if (panels[index]) panels[index].classList.toggle('hidden', !selected);
+      if (panel) panel.classList.toggle('hidden', !selected);
     });
+  }
+
+  function announceSettingsSection(slug) {
+    var status = document.getElementById('settingsSectionStatus');
+    var tab = document.getElementById('settingsTab-' + slug);
+    if (status && tab) status.textContent = t('settingsSectionSwitched').replace('{label}', tab.textContent);
   }
 
   function selectSettingsSection(slug) {
@@ -7511,6 +7469,7 @@ function getTaskTypeLabel() {
       state.settingsSection = slug;
       syncUrlToViewState();
       renderSettingsSectionNav();
+      announceSettingsSection(slug);
     }
     if (current && isSettingsSectionDirty(current)) {
       openSettingsLeaveConfirm(function() {
@@ -7792,8 +7751,15 @@ function getTaskTypeLabel() {
       var idleTr = document.createElement('tr');
       var idleTd = document.createElement('td');
       idleTd.colSpan = 5;
-      idleTd.className = 'member-search-empty';
-      idleTd.textContent = t('memberSearchIdle');
+      idleTd.className = 'empty-state-td';
+      var idleBox = document.createElement('div');
+      idleBox.className = 'empty-state empty-state-cell';
+      var idleMsg = document.createElement('p');
+      idleMsg.className = 'empty-state-desc';
+      idleMsg.textContent = t('memberSearchIdle');
+      idleBox.appendChild(idleMsg);
+      idleTd.appendChild(idleBox);
+      idleTr.className = 'empty-state-row';
       idleTr.appendChild(idleTd);
       tbody.appendChild(idleTr);
       return;
@@ -7802,8 +7768,15 @@ function getTaskTypeLabel() {
       var emptyTr = document.createElement('tr');
       var emptyTd = document.createElement('td');
       emptyTd.colSpan = 5;
-      emptyTd.className = 'member-search-empty';
-      emptyTd.textContent = t('memberSearchEmpty');
+      emptyTd.className = 'empty-state-td';
+      var emptyBox = document.createElement('div');
+      emptyBox.className = 'empty-state empty-state-cell';
+      var emptyMsg = document.createElement('p');
+      emptyMsg.className = 'empty-state-desc';
+      emptyMsg.textContent = t('memberSearchEmpty');
+      emptyBox.appendChild(emptyMsg);
+      emptyTd.appendChild(emptyBox);
+      emptyTr.className = 'empty-state-row';
       emptyTr.appendChild(emptyTd);
       tbody.appendChild(emptyTr);
       return;
@@ -8060,24 +8033,29 @@ function getTaskTypeLabel() {
      (min_reviewers is retired: a review unit always has exactly one
      reviewer). Returns one interpolated "還差 N 位" message per short-handed
      role so canPublish() can surface every gap at once. */
-  function getMembershipGapMessages() {
-    var messages = [];
+  function getMembershipGaps() {
+    var gaps = { annotators: [], reviewers: [] };
     var annotatorGap = Number(TASK_DATA.minAnnotators) - getActiveAnnotatorMembers().length;
     if (annotatorGap > 0) {
-      messages.push(interpolate(t('memberGapAnnotatorTpl'), { count: annotatorGap }));
+      gaps.annotators.push(interpolate(t('memberGapAnnotatorTpl'), { count: annotatorGap }));
     }
     var activeReviewerIds = getEffectiveReviewerIds(TASK_DATA.reviewerIds);
     var reviewerGap = 1 - activeReviewerIds.length;
     if (reviewerGap > 0) {
-      messages.push(interpolate(t('memberGapReviewerTpl'), { count: reviewerGap }));
+      gaps.reviewers.push(interpolate(t('memberGapReviewerTpl'), { count: reviewerGap }));
     } else {
       var activeArbiterIds = getEffectiveArbiterIds(TASK_DATA.arbiterIds);
       var hasAssignableReviewer = activeReviewerIds.some(function(reviewerId) {
         return activeArbiterIds.indexOf(reviewerId) === -1;
       });
-      if (!hasAssignableReviewer) messages.push(t('memberGapAssignableReviewer'));
+      if (!hasAssignableReviewer) gaps.reviewers.push(t('memberGapAssignableReviewer'));
     }
-    return messages;
+    return gaps;
+  }
+
+  function getMembershipGapMessages() {
+    var gaps = getMembershipGaps();
+    return gaps.annotators.concat(gaps.reviewers);
   }
 
   function getAssignmentCount(records, roundId) {
@@ -10515,11 +10493,19 @@ function getTaskTypeLabel() {
         dlBtn.addEventListener('click', function() {
           redownloadArExportRecord(record);
         });
+        opsTd.appendChild(dlBtn);
       } else {
+        // issue #1311: .mini-btn:disabled has pointer-events:none, so the hover reason lives on the wrapper (same pattern as #1129).
+        // ponytail: a disabled button is unfocusable, so keyboard users never see the title; aria-disabled + focusable tooltip if needed.
+        var reason = t('arExportSnapshotMissingTitle');
         dlBtn.disabled = true;
-        dlBtn.title = t('arExportSnapshotMissingTitle');
+        dlBtn.title = reason;
+        var dlTip = document.createElement('span');
+        dlTip.className = 'btn-disabled-tip';
+        dlTip.title = reason;
+        dlTip.appendChild(dlBtn);
+        opsTd.appendChild(dlTip);
       }
-      opsTd.appendChild(dlBtn);
       tr.appendChild(opsTd);
       body.appendChild(tr);
     });
@@ -11067,28 +11053,32 @@ function getTaskTypeLabel() {
     return getBlockerMessages('dry_run');
   }
 
+  function getBlockerMessage(blocker, trial) {
+    if (blocker.code === 'exception_pool_pending') {
+      return interpolate(t('completeBlockerExceptionPoolTpl'), { count: blocker.count });
+    }
+    if (blocker.code === 'submission_incomplete') return t(trial ? 'trialBlockerSubmission' : 'completeBlockerSubmission');
+    if (blocker.code === 'review_pending') {
+      return blocker.count === null || blocker.count === undefined
+        ? t(trial ? 'trialBlockerReviewNoData' : 'completeBlockerReviewNoData')
+        : interpolate(t('completeBlockerReviewTpl'), { count: blocker.count });
+    }
+    if (blocker.code === 'disputed_units') {
+      return interpolate(t(trial ? 'trialBlockerDisputedTpl' : 'completeBlockerDisputedTpl'), { count: blocker.count });
+    }
+    if (blocker.code === 'quality_metrics_not_ready') {
+      return t(getRoundComputationStatus(getCurrentTrialRound()) === 'failed'
+        ? 'completeBlockerQualityFailed' : 'completeBlockerQualityPending');
+    }
+    return '';
+  }
+
   function getBlockerMessages(runType) {
     var detailData = window.LabelSuiteTaskDetailData;
     if (!detailData) return [];
     var trial = runType === 'dry_run';
     return detailData.getTaskCompletionBlockers(getCompletionSignals(runType)).map(function(blocker) {
-      if (blocker.code === 'exception_pool_pending') {
-        return interpolate(t('completeBlockerExceptionPoolTpl'), { count: blocker.count });
-      }
-      if (blocker.code === 'submission_incomplete') return t(trial ? 'trialBlockerSubmission' : 'completeBlockerSubmission');
-      if (blocker.code === 'review_pending') {
-        return blocker.count === null || blocker.count === undefined
-          ? t(trial ? 'trialBlockerReviewNoData' : 'completeBlockerReviewNoData')
-          : interpolate(t('completeBlockerReviewTpl'), { count: blocker.count });
-      }
-      if (blocker.code === 'disputed_units') {
-        return interpolate(t(trial ? 'trialBlockerDisputedTpl' : 'completeBlockerDisputedTpl'), { count: blocker.count });
-      }
-      if (blocker.code === 'quality_metrics_not_ready') {
-        return t(getRoundComputationStatus(getCurrentTrialRound()) === 'failed'
-          ? 'completeBlockerQualityFailed' : 'completeBlockerQualityPending');
-      }
-      return '';
+      return getBlockerMessage(blocker, trial);
     }).filter(function(message) { return Boolean(message); });
   }
 
@@ -11411,7 +11401,8 @@ function getTaskTypeLabel() {
       });
     }
 
-    document.getElementById('publishActionRow').addEventListener('click', function(e) {
+    /* issue #1403: delegated on the card so the retry button inside the iaa-computed row is covered too. */
+    document.getElementById('nextStepCard').addEventListener('click', function(e) {
       if (e.target.id === 'publishDryRunBtn') {
         trackEvent('prototype_cta_clicked', { cta: 'publish_dry_run' });
         if (isTrialRoundCreationBlocked()) return;
@@ -11448,9 +11439,12 @@ function getTaskTypeLabel() {
 
     document.getElementById('settingsSectionNav').addEventListener('keydown', function(e) {
       var step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-      if (!step || e.altKey || e.ctrlKey || e.metaKey) return;
+      var isEdge = e.key === 'Home' || e.key === 'End';
+      if ((!step && !isEdge) || e.altKey || e.ctrlKey || e.metaKey) return;
       var index = SETTINGS_SECTIONS.findIndex(function(section) { return section.slug === state.settingsSection; });
-      var next = SETTINGS_SECTIONS[(index + step + SETTINGS_SECTIONS.length) % SETTINGS_SECTIONS.length];
+      var next = e.key === 'Home' ? SETTINGS_SECTIONS[0]
+        : e.key === 'End' ? SETTINGS_SECTIONS[SETTINGS_SECTIONS.length - 1]
+        : SETTINGS_SECTIONS[(index + step + SETTINGS_SECTIONS.length) % SETTINGS_SECTIONS.length];
       e.preventDefault();
       if (selectSettingsSection(next.slug)) document.getElementById('settingsTab-' + next.slug).focus();
     });
@@ -11888,6 +11882,10 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
         applyLang(state.lang);
         bindEvents();
         bindTaskConfigEvents();
+        // #1362: handlers are bound now; release the tabs disabled in static HTML.
+        document.querySelectorAll('.admin-tabs [role="tab"]').forEach(function(tabEl) {
+          tabEl.removeAttribute('aria-disabled');
+        });
         showOverviewWithSkeleton();
 
         if (window.LabelSuiteAnalytics) {

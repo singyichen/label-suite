@@ -15,7 +15,7 @@
     "allow": [
       "Bash(npx playwright *)",
       "Bash(gh issue edit:*)",
-      "Bash(node *codex-companion.mjs *)",
+      "Bash(scripts/codex-companion.sh *)",
       "EnterWorktree",
       "ExitWorktree"
     ]

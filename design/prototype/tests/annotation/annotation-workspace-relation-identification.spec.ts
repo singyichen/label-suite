@@ -99,7 +99,14 @@ test.describe('relation_identification output type — pure mode (T008)', () => 
   });
 
   test('prefilled triples show their semantic type badge and can be deleted per row', async ({ page }) => {
-    // rel-001 ships 4 output-role triples, each with a relation_type.
+    // rel-001 ships 4 triples, each with a relation_type. issue #1430: they prefill only from
+    // the column declared in prefill_fields, and the seed `triples` column is Output-role (an
+    // Output column must not be declared), so this test declares an Evidence-role copy.
+    await patchDataFile(page, 'task-detail.data.js', `
+      var p = window.LabelSuiteTaskDetailData.profiles.T008;
+      p.fieldRoleMap.triples = 'evidence';
+      p.prefill_fields = { entities: 'entities', triples: 'triples' };
+    `);
     await page.goto(buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001' }));
     await dismissGuidelineModal(page);
 

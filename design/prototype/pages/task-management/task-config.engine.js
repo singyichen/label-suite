@@ -1536,6 +1536,121 @@ function renderOutputTypeFields(container, outKey) {
   });
 }
 
+/* Confirmed-dialogue text of an object-array Input value, '\n'-joined; null otherwise (#1340) */
+function dialogueJoinedText(v) {
+  var cfg = state.dialogueFields;
+  if (!Array.isArray(v) || !cfg || !cfg.text) return null;
+  var texts = v.filter(function(e) {
+    return e !== null && typeof e === 'object' && typeof e[cfg.text] === 'string';
+  }).map(function(e) { return e[cfg.text]; });
+  return texts.length > 0 ? texts.join('\n') : null;
+}
+
+/* A turn's id: the cfg.utt_id sub-field value (original type kept), else array position + 1 */
+function dialogueUttIdOf(turn, i, cfg) {
+  return cfg.utt_id && turn && turn[cfg.utt_id] !== undefined && turn[cfg.utt_id] !== null
+    ? turn[cfg.utt_id] : i + 1;
+}
+
+/* Valid reply target of turn i, or null (#1378 D1): cfg.reply_to must name a sub-field whose
+   value (non-empty string or number) equals, as a string, the id of ANOTHER turn. */
+function dialogueReplyTarget(turns, i, cfg) {
+  if (!cfg.reply_to) return null;
+  var turn = turns[i];
+  var v = turn ? turn[cfg.reply_to] : null;
+  if (!((typeof v === 'string' && v !== '') || typeof v === 'number')) return null;
+  for (var j = 0; j < turns.length; j++) {
+    if (j === i) continue;
+    var id = dialogueUttIdOf(turns[j], j, cfg);
+    if (String(id) === String(v)) return id;
+  }
+  return null;
+}
+
+/* Stable hue (0-359) from the speaker string, so one speaker always gets one color (#1378 D4) */
+function dialogueAvatarHue(speaker) {
+  var h = 0;
+  for (var k = 0; k < speaker.length; k++) h = (h * 31 + speaker.charCodeAt(k)) % 360;
+  return h;
+}
+
+/* Reusable dialogue thread renderer (task-new preview and the annotation workspace):
+   one row per turn. cfg = { text, speaker, utt_id }.
+   Default: first 20 turns then a "more" hint. opts (all optional, #1341):
+   noLimit (every turn), idPrefix (text before the turn id), fillText(txEl, text, uttId, i)
+   (replaces the plain text content, e.g. to draw highlights), rich (avatar + header + reply
+   marking, workspace only, #1378) */
+function renderDialogueThread(container, turns, cfg, opts) {
+  var MAX_TURNS = 20;
+  opts = opts || {};
+  (opts.noLimit ? turns : turns.slice(0, MAX_TURNS)).forEach(function(turn, i) {
+    var row = document.createElement('div');
+    row.setAttribute('data-testid', 'dialogue-thread-row');
+    row.className = 'dialogue-thread-row';
+    var uttId = dialogueUttIdOf(turn, i, cfg);
+    row.setAttribute('data-utt-id', String(uttId));
+    var idEl = document.createElement('span');
+    idEl.setAttribute('data-testid', 'dialogue-utt-id');
+    idEl.className = 'dialogue-utt-id';
+    idEl.textContent = (opts.idPrefix || '') + String(uttId);
+    var spEl = null;
+    var speakerStr = '';
+    if (cfg.speaker) {
+      spEl = document.createElement('span');
+      spEl.setAttribute('data-testid', 'dialogue-speaker');
+      spEl.className = 'dialogue-speaker';
+      speakerStr = turn && turn[cfg.speaker] !== undefined && turn[cfg.speaker] !== null ? String(turn[cfg.speaker]) : '';
+      spEl.textContent = speakerStr;
+    }
+    var txEl = document.createElement('span');
+    txEl.setAttribute('data-testid', 'dialogue-text');
+    txEl.className = 'dialogue-text';
+    var turnText = turn && typeof turn[cfg.text] === 'string' ? turn[cfg.text] : '';
+    if (opts.fillText) opts.fillText(txEl, turnText, uttId, i);
+    else txEl.textContent = turnText;
+    if (!opts.rich) {
+      row.appendChild(idEl);
+      if (spEl) row.appendChild(spEl);
+      row.appendChild(txEl);
+    } else {
+      if (speakerStr) {
+        var avatar = document.createElement('span');
+        avatar.setAttribute('data-testid', 'dialogue-avatar');
+        avatar.className = 'dialogue-avatar';
+        avatar.style.setProperty('--avatar-hue', String(dialogueAvatarHue(speakerStr)));
+        avatar.textContent = Array.from(speakerStr)[0];
+        row.appendChild(avatar);
+      }
+      var body = document.createElement('div');
+      body.className = 'dialogue-body';
+      var head = document.createElement('div');
+      head.className = 'dialogue-head';
+      if (spEl) head.appendChild(spEl);
+      head.appendChild(idEl);
+      var replyId = dialogueReplyTarget(turns, i, cfg);
+      if (replyId !== null) {
+        row.setAttribute('data-reply-to', String(replyId));
+        row.classList.add('dialogue-thread-row-reply');
+        var tag = document.createElement('span');
+        tag.setAttribute('data-testid', 'dialogue-reply-tag');
+        tag.className = 'dialogue-reply-tag';
+        tag.textContent = t('dialogueReplyTag').replace('{n}', String(replyId));
+        head.appendChild(tag);
+      }
+      body.appendChild(head);
+      body.appendChild(txEl);
+      row.appendChild(body);
+    }
+    container.appendChild(row);
+  });
+  if (!opts.noLimit && turns.length > MAX_TURNS) {
+    var more = document.createElement('div');
+    more.className = 'dialogue-thread-more';
+    more.textContent = t('dialogueMoreTurns').replace('{n}', turns.length - MAX_TURNS);
+    container.appendChild(more);
+  }
+}
+
 /* ── Dataset-aware preview text helper ── */
 function getDatasetPreviewText() {
   var raw = state.datasetRawFirstRow;
@@ -1549,22 +1664,18 @@ function getDatasetPreviewText() {
     var vals = inputCols.map(function(col) {
       var v = raw[col];
       if (v === undefined || v === null) return null;
-      return (typeof v === 'string') ? v : String(v);
+      if (typeof v === 'string') return v;
+      /* Objects never stringify to "[object Object]"; only a confirmed dialogue yields text (#1340) */
+      if (typeof v === 'object') {
+        var primitiveArray = Array.isArray(v) && v.every(function(e) { return e === null || typeof e !== 'object'; });
+        return primitiveArray ? String(v) : dialogueJoinedText(v);
+      }
+      return String(v);
     }).filter(function(v) { return v !== null && v !== ''; });
     if (vals.length > 0) return vals.join('\n');
     return null;
   }
-  var bestCol = null;
-  var bestLen = 0;
-  for (var i = 0; i < state.datasetParsedColumns.length; i++) {
-    var col = state.datasetParsedColumns[i];
-    var v = raw[col];
-    if (typeof v === 'string' && v.length > bestLen) {
-      bestCol = col;
-      bestLen = v.length;
-    }
-  }
-  if (bestCol && bestLen > 5) return raw[bestCol];
+  /* No Input column: no non-Input column may be a text source (Data Fairness) */
   return null;
 }
 
@@ -1764,7 +1875,7 @@ function renderMultiDimPreview(container, config, outKey) {
   var dims = Array.isArray(config.dimensions) ? config.dimensions : (Array.isArray(config.va_dimensions) ? config.va_dimensions : []);
   if (dims.length === 0) {
     var empty = document.createElement('div');
-    empty.className = 'annotation-preview-empty';
+    empty.className = 'empty-state empty-state-compact';
     empty.textContent = state.lang === 'zh' ? '請先新增維度' : 'Add dimensions first';
     container.appendChild(empty);
     return;
@@ -1812,6 +1923,15 @@ function renderMultiDimPreview(container, config, outKey) {
 }
 
 /* ── Interactive unified preview (Entity Recognition + Relation Identification) ── */
+/* #1430: value of the dataset column declared in state.prefillFields[kind] ('entities' | 'triples'), or undefined.
+   Role gate (#1413): the declared column needs a known non-Output role; Output or unknown role => no prefill (fail-closed). */
+function getPrefillColumnValue(kind) {
+  var col = state.prefillFields && state.prefillFields[kind];
+  var role = (typeof col === 'string' && col !== '') ? state.fieldRoleMap[col] : '';
+  if (typeof role !== 'string' || role === '' || role === 'output') return undefined;
+  return (state.datasetRawFirstRow || {})[col];
+}
+
 function initPreviewState() {
   var rawRow = state.datasetRawFirstRow || {};
   var spanCfg = state.outputConfigs['entity_recognition'] || {};
@@ -1823,8 +1943,11 @@ function initPreviewState() {
   var outputParsed = null;
   if (outputVal) { try { outputParsed = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
 
-  var dataEnts = Array.isArray(rawRow.entities) ? rawRow.entities : [];
-  if (dataEnts.length === 0 && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].text) {
+  /* #1430: prefill entities come only from the column declared in prefill_fields.entities (#1413 role gate, fail-closed) */
+  var declaredEnts = getPrefillColumnValue('entities');
+  var dataEnts = Array.isArray(declaredEnts) ? declaredEnts : [];
+  /* #1371 Data Fairness: object-array (dialogue) Input never prefills entities from the Output column */
+  if (dataEnts.length === 0 && !getObjectArrayInput() && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].text) {
     dataEnts = outputParsed;
   }
   if (dataEnts.length > 0) {
@@ -1843,7 +1966,7 @@ function initPreviewState() {
     return null;
   }
   var trips = [], tripShape = null;
-  [rawRow.triples, rawRow.gold_triplets, rawRow.gold_triples, outputParsed].some(function(cand) {
+  [getPrefillColumnValue('triples'), outputParsed].some(function(cand) {
     var shape = tripleShapeOf(cand);
     if (shape) { trips = cand; tripShape = shape; return true; }
     return false;
@@ -1854,7 +1977,9 @@ function initPreviewState() {
   var sampleRel1 = relationTypes[0] || 'has_aspect';
   var sampleRel2 = relationTypes[1] || 'has_opinion';
 
-  if (tripShape === 'ner') {
+  /* Object-array (dialogue) Input never prefills triples from an Output column: 'ner' and
+     'gold' shapes carry no utt_id, so they cannot anchor to a turn (#1358). */
+  if (tripShape === 'ner' && !getObjectArrayInput()) {
     state.previewTriples = trips.map(function(trip) {
       var e1 = trip.entity1 || {}, rel = trip.relation || {}, e2 = trip.entity2 || {};
       function fmt(o) { var s = o.text || '?'; if (o.start != null && o.end != null) s += ' (' + o.start + ',' + o.end + ')'; return s; }
@@ -1864,14 +1989,17 @@ function initPreviewState() {
         objStart: e2.start != null ? e2.start : null, objEnd: e2.end != null ? e2.end : null
       };
     });
-  } else if (tripShape === 'gold') {
+  } else if (tripShape === 'gold' && !getObjectArrayInput()) {
     state.previewTriples = trips.map(function(trip) {
       return {
         subj: trip.subj || '?', rel: trip.rel || '?', obj: trip.obj || '?', relType: trip.relation_type || null,
         subjStart: null, subjEnd: null, objStart: null, objEnd: null
       };
     });
-  } else if (tripShape === 'absa') {
+  } else if (tripShape === 'absa' && !getObjectArrayInput()) {
+    /* Flat-string ABSA rows carry no utt_id, so on a dialogue (object-array) Input they
+       cannot anchor to a turn and would surface the output column's text (#1341 AC-2.35);
+       'ner' and 'gold' follow the same guard (#1358). */
     state.previewTriples = [];
     trips.forEach(function(trip) {
       var tgt = trip.target_text || '?', asp = trip.aspect_text || '', opn = trip.opinion_text || '';
@@ -1885,6 +2013,7 @@ function initPreviewState() {
   state.relDraft = { e1: null, rel: null, e2: null };
   state.relSel = null;
   state.relMsg = '';
+  state.dialogueMsg = '';
   if (state.previewState.entity_recognition) state.previewState.entity_recognition.pendingSelection = null;
   state.previewInited = true;
 }
@@ -1898,12 +2027,26 @@ function getPreviewTypeColorMap() {
   return { map: map, order: order };
 }
 
-/* Format a span slot ({text,start,end}) as "詞 (start,end)" for display and triple storage. */
+/* Format a span slot ({text,start,end[,utt_id]}) as "詞 (start,end)", or "詞 (#utt_id:start,end)"
+   when the span lives inside a dialogue turn, for display and triple storage. */
 function fmtRelSpan(slot) {
   if (!slot) return '';
   var s = slot.text || '?';
-  if (slot.start != null && slot.end != null) s += ' (' + slot.start + ',' + slot.end + ')';
+  if (slot.start != null && slot.end != null) {
+    s += ' (' + (slot.utt_id != null ? '#' + slot.utt_id + ':' : '') + slot.start + ',' + slot.end + ')';
+  }
   return s;
+}
+
+/* Copy of a span ({text,start,end[,utt_id]}) that carries utt_id only when the source has one */
+function spanSlot(src) {
+  var slot = { text: src.text, start: src.start, end: src.end };
+  if (src.utt_id != null) slot.utt_id = src.utt_id;
+  return slot;
+}
+
+function sameUttId(a, b) {
+  return String(a.utt_id == null ? '' : a.utt_id) === String(b.utt_id == null ? '' : b.utt_id);
 }
 
 /* Sequential relation builder: E1/Arg1 → Relation → E2/Arg2 → Undo → Add.
@@ -1952,9 +2095,10 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
        position when available) — mirrors the reference system's entity check. */
     if (!state.relSel) return null;
     var sel = state.relSel;
-    var byPos = state.previewEntities.filter(function(e) { return e.text === sel.text && e.start === sel.start; });
-    var m = byPos.length ? byPos[0] : state.previewEntities.filter(function(e) { return e.text === sel.text; })[0];
-    return m ? { text: m.text, start: m.start, end: m.end } : null;
+    var sameUtt = state.previewEntities.filter(function(e) { return sameUttId(e, sel); });
+    var byPos = sameUtt.filter(function(e) { return e.text === sel.text && e.start === sel.start; });
+    var m = byPos.length ? byPos[0] : sameUtt.filter(function(e) { return e.text === sel.text; })[0];
+    return m ? spanSlot(m) : null;
   }
   function stepBtn(label, enabled, onClick) {
     var b = document.createElement('button');
@@ -1980,7 +2124,7 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
   }));
   rbRow.appendChild(stepBtn('Relation', !!d.e1 && !d.rel, function() {
     if (!state.relSel) { state.relMsg = msgWord; refresh(); return; }
-    d.rel = { text: state.relSel.text, start: state.relSel.start, end: state.relSel.end };
+    d.rel = spanSlot(state.relSel);
     state.relSel = null; state.relMsg = ''; refresh();
   }));
   rbRow.appendChild(stepBtn('E2/Arg2', !!d.rel && !d.e2, function() {
@@ -1994,11 +2138,14 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
     state.relMsg = ''; refresh();
   }));
   rbRow.appendChild(stepBtn(state.lang === 'zh' ? '新增' : 'Add', !!(d.e1 && d.rel && d.e2), function() {
-    state.previewTriples.push({
+    var newTriple = {
       subj: fmtRelSpan(d.e1), rel: fmtRelSpan(d.rel), obj: fmtRelSpan(d.e2), relType: null,
       subjStart: d.e1.start != null ? d.e1.start : null, subjEnd: d.e1.end != null ? d.e1.end : null,
       objStart: d.e2.start != null ? d.e2.start : null, objEnd: d.e2.end != null ? d.e2.end : null
-    });
+    };
+    if (d.e1.utt_id != null) newTriple.subjUttId = d.e1.utt_id;
+    if (d.e2.utt_id != null) newTriple.objUttId = d.e2.utt_id;
+    state.previewTriples.push(newTriple);
     state.relDraft = { e1: null, rel: null, e2: null };
     state.relSel = null; state.relMsg = ''; refresh();
   }));
@@ -2044,7 +2191,7 @@ function buildEntityListRow(ent, color, opts) {
   if (ent.start != null && ent.end != null) {
     var posEl = document.createElement('span');
     posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
-    posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
+    posEl.textContent = '(' + (ent.utt_id != null ? '#' + ent.utt_id + ': ' : '') + ent.start + ', ' + ent.end + ')';
     row.appendChild(posEl);
   }
   if (opts && opts.onDelete) {
@@ -2163,6 +2310,169 @@ function resolveSelectionOffset(sel, selText, containerEl, realText) {
   return -1;
 }
 
+function isObjectArrayValue(v) {
+  return Array.isArray(v) && v.length > 0 && v.every(function(e) {
+    return e !== null && typeof e === 'object' && !Array.isArray(e);
+  });
+}
+
+/* First Input-role column's first-row value when it is an object array, else null (#1341 D2) */
+function getObjectArrayInput() {
+  var raw = state.datasetRawFirstRow;
+  var cols = raw ? getFieldsByRole('input') : [];
+  return cols.length > 0 && isObjectArrayValue(raw[cols[0]]) ? raw[cols[0]] : null;
+}
+
+/* Which placed entities of one utterance are drawn vs skipped for overlapping an earlier
+   one; storage is untouched. Single source for drawing and the overlap count (#1358). */
+function dialogueLayout(uttId) {
+  var pos = 0, drawn = [], skipped = [];
+  state.previewEntities.filter(function(e) {
+    return e.start != null && e.utt_id != null && sameUttId(e, { utt_id: uttId });
+  }).sort(function(a, b) { return a.start - b.start; }).forEach(function(ent) {
+    if (ent.start < pos) { skipped.push(ent); return; }
+    drawn.push(ent);
+    pos = ent.end;
+  });
+  return { drawn: drawn, skipped: skipped };
+}
+
+/* Draw one utterance, wrapping marked entities and the pending relation selection.
+   Spans are half-open [start,end) inside the utterance (#1341 D3). */
+function fillDialogueUtterance(txEl, text, uttId) {
+  var colorMap = getPreviewTypeColorMap().map;
+  var rs = state.relSel && state.relSel.utt_id != null && sameUttId(state.relSel, { utt_id: uttId }) ? state.relSel : null;
+  function appendPlain(from, to) {
+    if (to <= from) return;
+    if (!rs || rs.end <= from || rs.start >= to) { txEl.appendChild(document.createTextNode(text.substring(from, to))); return; }
+    var ss = Math.max(rs.start, from), se = Math.min(rs.end, to);
+    if (ss > from) txEl.appendChild(document.createTextNode(text.substring(from, ss)));
+    var hl = document.createElement('span'); hl.className = 'rel-sel-highlight';
+    hl.textContent = text.substring(ss, se); txEl.appendChild(hl);
+    if (se < to) txEl.appendChild(document.createTextNode(text.substring(se, to)));
+  }
+  var pos = 0;
+  dialogueLayout(uttId).drawn.forEach(function(ent) {
+    appendPlain(pos, ent.start);
+    var span = document.createElement('span');
+    span.className = 'absa-span-highlight';
+    if (rs && rs.start <= ent.start && rs.end >= ent.end) span.classList.add('rel-sel-highlight');
+    var c = colorMap[ent.type] || '#6366F1';
+    span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+    span.title = ent.type + ' (#' + ent.utt_id + ':' + ent.start + ',' + ent.end + ')';
+    span.appendChild(document.createTextNode(text.substring(ent.start, ent.end)));
+    txEl.appendChild(span);
+    pos = ent.end;
+  });
+  appendPlain(pos, text.length);
+}
+
+/* Integrated-preview body for an object-array Input (#1341 D2): a dialogue thread when
+   dialogue_fields names a text sub-field, else the Input value as collapsible raw JSON.
+   Selection is per utterance; a selection that is not wholly inside one utterance's text
+   is rejected with a hint (D4). */
+function renderDialogueInput(textEl, turns, allowEntityEditing, refresh) {
+  var cfg = state.dialogueFields;
+  if (!cfg || !cfg.text) {
+    var det = document.createElement('details');
+    det.open = true;
+    var sum = document.createElement('summary');
+    sum.textContent = t('previewRawJsonSummary');
+    det.appendChild(sum);
+    var pre = document.createElement('pre');
+    pre.style.cssText = 'margin:8px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:0.8rem;white-space:pre-wrap;word-break:break-word';
+    pre.textContent = JSON.stringify(turns, null, 2);
+    det.appendChild(pre);
+    textEl.appendChild(det);
+    return;
+  }
+  var viewBar = document.createElement('div');
+  viewBar.className = 'dialogue-view-toggle';
+  [['dialogue-view-entities', 'dialogueShowEntities', true], ['dialogue-view-plain', 'dialoguePlainText', false]].forEach(function(b) {
+    /* role=button on a span, not <button>: the workspace wrapper (annotation-workspace.config.js)
+       relabels every <button> in this region as an entity-list delete button */
+    var btn = document.createElement('span');
+    btn.setAttribute('role', 'button');
+    btn.tabIndex = 0;
+    btn.className = 'dialogue-view-btn';
+    btn.setAttribute('data-testid', b[0]);
+    btn.setAttribute('aria-pressed', String((state.dialogueShowEntities !== false) === b[2]));
+    btn.textContent = t(b[1]);
+    function choose() {
+      state.dialogueShowEntities = b[2];
+      refresh();
+      /* refresh() rebuilds the DOM, so hand focus back to the rebuilt toggle */
+      var again = document.querySelector('[data-testid="' + b[0] + '"]');
+      if (again) again.focus();
+    }
+    btn.addEventListener('click', choose);
+    btn.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); choose(); }
+    });
+    viewBar.appendChild(btn);
+  });
+  textEl.appendChild(viewBar);
+  renderDialogueThread(textEl, turns, cfg, {
+    noLimit: true,
+    idPrefix: '#',
+    rich: true,
+    fillText: function(txEl, text, uttId, i) {
+      txEl.setAttribute('data-turn-index', String(i));
+      txEl.classList.add('dialogue-text-prewrap');
+      if (state.dialogueShowEntities === false) txEl.textContent = text;
+      else fillDialogueUtterance(txEl, text, uttId);
+    }
+  });
+  textEl.addEventListener('mouseup', function() {
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+    var range = sel.getRangeAt(0);
+    if (!textEl.contains(range.startContainer) && !textEl.contains(range.endContainer)) return;
+    var raw = range.toString();
+    var selText = raw.trim();
+    if (!selText) return;
+    function turnTextOf(node) {
+      var el = node.nodeType === 1 ? node : node.parentElement;
+      return el ? el.closest('[data-testid="dialogue-text"]') : null;
+    }
+    var txEl = turnTextOf(range.startContainer);
+    if (!txEl || txEl !== turnTextOf(range.endContainer) || !textEl.contains(txEl)) {
+      state.dialogueMsg = t('dialogueCrossUttHint');
+      sel.removeAllRanges();
+      refresh();
+      return;
+    }
+    var i = Number(txEl.getAttribute('data-turn-index'));
+    var utterance = typeof turns[i][cfg.text] === 'string' ? turns[i][cfg.text] : '';
+    var pre = document.createRange();
+    pre.selectNodeContents(txEl);
+    pre.setEnd(range.startContainer, range.startOffset);
+    var start = pre.toString().length + (raw.length - raw.replace(/^\s+/, '').length);
+    if (utterance.substring(start, start + selText.length) !== selText) {
+      /* Fall back to a text search only when the match is unambiguous (#1358) */
+      var first = utterance.indexOf(selText);
+      if (first < 0 || utterance.indexOf(selText, first + 1) >= 0) {
+        state.dialogueMsg = t('dialogueSelectionAmbiguousHint');
+        sel.removeAllRanges();
+        refresh();
+        return;
+      }
+      start = first;
+    }
+    var slot = { text: selText, utt_id: dialogueUttIdOf(turns[i], i, cfg), start: start, end: start + selText.length };
+    state.dialogueMsg = '';
+    if (allowEntityEditing && state.activeEntityType) {
+      slot.type = state.activeEntityType;
+      state.previewEntities.push(slot);
+    } else {
+      state.relSel = slot;
+      state.relMsg = '';
+    }
+    sel.removeAllRanges();
+    refresh();
+  });
+}
+
 function renderAbsaUnifiedPreview(previewContainer) {
   /* allow_bypass turned off while bypassed: clear the flag AND re-init the
      preview BEFORE rendering, so this pass already shows the restored state */
@@ -2174,6 +2484,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   });
   if (!state.previewInited) initPreviewState();
   var realText = getDatasetPreviewText();
+  var objInput = getObjectArrayInput();
   var tc = getPreviewTypeColorMap();
   var typeColorMap = tc.map, typeOrder = tc.order;
   var relCfg = state.outputConfigs['relation_identification'] || {};
@@ -2209,7 +2520,9 @@ function renderAbsaUnifiedPreview(previewContainer) {
     hl.textContent = text.substring(ss, se); parent.appendChild(hl);
     if (se < text.length) parent.appendChild(document.createTextNode(text.substring(se)));
   }
-  if (realText && state.previewEntities.length > 0) {
+  if (objInput) {
+    renderDialogueInput(textEl, objInput, allowEntityEditing, function() { renderAbsaUnifiedPreview_refresh(previewContainer); });
+  } else if (realText && state.previewEntities.length > 0) {
     var sorted = state.previewEntities.slice().filter(function(e) { return e.start != null; }).sort(function(a, b) { return a.start - b.start; });
     var charPos = 0;
     sorted.forEach(function(ent) {
@@ -2235,6 +2548,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   /* Text selection handler: with an entity type armed → add entity;
      otherwise → capture the selection for the sequential relation flow */
   textEl.addEventListener('mouseup', function() {
+    if (objInput) return; /* dialogue / raw-JSON input selects per utterance (renderDialogueInput) */
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
     var selText = sel.toString().trim();
@@ -2255,6 +2569,34 @@ function renderAbsaUnifiedPreview(previewContainer) {
   });
   previewContainer.appendChild(textEl);
 
+  if (objInput && state.dialogueMsg) {
+    var uttHint = document.createElement('div');
+    uttHint.setAttribute('data-testid', 'dialogue-cross-utt-hint');
+    uttHint.setAttribute('role', 'alert');
+    uttHint.style.cssText = 'font-size:0.75rem;color:var(--color-error);margin-top:6px;';
+    uttHint.textContent = state.dialogueMsg;
+    previewContainer.appendChild(uttHint);
+  }
+
+  if (objInput) {
+    var seenUtt = {}, overlapN = 0;
+    state.previewEntities.forEach(function(e) {
+      if (e.start == null || e.utt_id == null || seenUtt[String(e.utt_id)]) return;
+      seenUtt[String(e.utt_id)] = true;
+      overlapN += dialogueLayout(e.utt_id).skipped.length;
+    });
+    var unplacedN = state.previewEntities.filter(function(e) { return e.start == null || e.utt_id == null; }).length;
+    [['dialogue-overlap-hint', 'dialogueOverlapHint', overlapN], ['dialogue-unplaced-hint', 'dialogueLocateFailHint', unplacedN]].forEach(function(h) {
+      if (!h[2]) return;
+      var hintEl = document.createElement('div');
+      hintEl.setAttribute('data-testid', h[0]);
+      hintEl.setAttribute('role', 'status');
+      hintEl.style.cssText = 'font-size:0.75rem;color:var(--color-error);margin-top:6px;';
+      hintEl.textContent = t(h[1]).replace('{n}', h[2]);
+      previewContainer.appendChild(hintEl);
+    });
+  }
+
   if (allowEntityEditing) {
     /* ── Entity Type selector (interactive) ── */
     var etTitle = document.createElement('div');
@@ -2273,12 +2615,9 @@ function renderAbsaUnifiedPreview(previewContainer) {
       chip.textContent = typeName;
       chip.addEventListener('click', function() {
         if (state.relSel) {
-          state.previewEntities.push({
-            text: state.relSel.text,
-            type: typeName,
-            start: state.relSel.start,
-            end: state.relSel.end
-          });
+          var chipEnt = spanSlot(state.relSel);
+          chipEnt.type = typeName;
+          state.previewEntities.push(chipEnt);
           state.relSel = null;
           state.relMsg = '';
           state.activeEntityType = typeName;
@@ -2764,7 +3103,7 @@ function renderMultiLabelPreview(container, outKey) {
     renderLevel(nodes, [], [], 1, previewTree);
     if (!rendered) {
       var empty = document.createElement('div');
-      empty.className = 'taxonomy-selector-empty';
+      empty.className = 'empty-state empty-state-compact';
       empty.textContent = state.lang === 'en' ? 'No matching labels.' : '找不到符合的標籤。';
       previewTree.appendChild(empty);
     }
@@ -3347,7 +3686,7 @@ function renderOutputPreview(container, outKey) {
     case 'free_text': renderFreeTextPreview(container, outKey); break;
     default:
       var placeholder = document.createElement('div');
-      placeholder.className = 'annotation-preview-empty';
+      placeholder.className = 'empty-state empty-state-compact';
       placeholder.textContent = state.lang === 'zh' ? '（設定後顯示預覽）' : '(Preview updates after config)';
       container.appendChild(placeholder);
   }
@@ -3469,7 +3808,7 @@ function renderSchemaFields() {
   var _relCfg = state.outputConfigs['relation_identification'];
   if (_relCfg && !_relCfg._autoPopulated) {
     var _rawRow = state.datasetRawFirstRow || {};
-    var _tripCands = [_rawRow.triples, _rawRow.gold_triplets, _rawRow.gold_triples];
+    var _tripCands = [getPrefillColumnValue('triples')];
     if (_outCols.length > 0) _tripCands.unshift(_rawRow[_outCols[0]]);
     var _trips = null;
     _tripCands.some(function(cand) {
@@ -3991,7 +4330,7 @@ function renderSentencePairsPreview(preview, config) {
     var labels = Array.isArray(config.label_options) ? config.label_options.filter(function(l) { return l && l.trim(); }) : [];
     if (labels.length === 0) {
       var empty = document.createElement('div');
-      empty.className = 'annotation-preview-empty';
+      empty.className = 'empty-state empty-state-compact';
       empty.textContent = t('previewEmpty');
       preview.appendChild(empty);
     } else {
@@ -4397,7 +4736,10 @@ function updateAnnotationPreview() {
     } else if (!hasOutputOwnedInputPreview) {
       var inputCols = getFieldsByRole('input');
       var _rawInputVal = (inputCols.length > 0 && state.datasetRawFirstRow) ? state.datasetRawFirstRow[inputCols[0]] : undefined;
-      var sampleText = (_rawInputVal !== undefined && _rawInputVal !== null) ? String(_rawInputVal) : (getDatasetPreviewText() || t('previewSampleSentence'));
+      var _isObjInput = _rawInputVal !== null && typeof _rawInputVal === 'object';
+      var _dialogueTurns = (_isObjInput && Array.isArray(_rawInputVal) && state.dialogueFields) ? _rawInputVal : null;
+      var sampleText = _isObjInput ? (_dialogueTurns ? '' : JSON.stringify(_rawInputVal))
+        : (_rawInputVal !== undefined && _rawInputVal !== null) ? String(_rawInputVal) : (getDatasetPreviewText() || t('previewSampleSentence'));
       var _inputLabel = document.createElement('div');
       _inputLabel.className = 'annotation-preview-task-title';
       _inputLabel.style.marginBottom = '6px';
@@ -4406,10 +4748,15 @@ function updateAnnotationPreview() {
 
       var _sample = document.createElement('div');
       _sample.className = 'annotation-preview-sample';
-      if (hasEvidencePreviewOutput) {
-        _sample.setAttribute('data-testid', 'generation-input-preview');
+      if (_dialogueTurns) {
+        _sample.setAttribute('data-testid', 'dialogue-thread-preview');
+        renderDialogueThread(_sample, _dialogueTurns, state.dialogueFields);
+      } else {
+        if (hasEvidencePreviewOutput) {
+          _sample.setAttribute('data-testid', 'generation-input-preview');
+        }
+        _sample.textContent = sampleText.length > 300 ? sampleText.substring(0, 300) + '…' : sampleText;
       }
-      _sample.textContent = sampleText.length > 300 ? sampleText.substring(0, 300) + '…' : sampleText;
       preview.appendChild(_sample);
       var _sampleDiv = document.createElement('div');
       _sampleDiv.className = 'annotation-preview-divider';
@@ -4573,7 +4920,7 @@ function updateAnnotationPreview() {
 
     if (!options.length) {
       var emptyVa = document.createElement('div');
-      emptyVa.className = 'annotation-preview-empty';
+      emptyVa.className = 'empty-state empty-state-compact';
       emptyVa.textContent = t('previewEmpty');
       optionsWrap.appendChild(emptyVa);
     } else {
@@ -4590,7 +4937,7 @@ function updateAnnotationPreview() {
     var arousalOptions = buildScoreOptionsFromDimension(config.arousal);
     if (!arousalOptions.length) {
       var emptyArousal = document.createElement('div');
-      emptyArousal.className = 'annotation-preview-empty';
+      emptyArousal.className = 'empty-state empty-state-compact';
       emptyArousal.textContent = t('previewEmpty');
       arousalOptionsWrap.appendChild(emptyArousal);
     } else {
@@ -4598,7 +4945,7 @@ function updateAnnotationPreview() {
     }
   } else if (!options.length) {
     var empty = document.createElement('div');
-    empty.className = 'annotation-preview-empty';
+    empty.className = 'empty-state empty-state-compact';
     empty.textContent = t('previewEmpty');
     optionsWrap.appendChild(empty);
   } else {
@@ -4984,8 +5331,8 @@ function analyzeDataset() {
   var fp = buildFieldProfile(allRecords);
   state.datasetParsedColumns = fp.columns;
   state.datasetFieldProfile = fp.profile;
-  state.datasetPreviewRawRows = allRecords.slice(0, 2);
-  state.datasetParsedRows = state.datasetPreviewRawRows.map(function(row) {
+  state.datasetPreviewRawRows = allRecords.slice(0, 3);
+  state.datasetParsedRows = state.datasetPreviewRawRows.slice(0, 2).map(function(row) {
     return fp.columns.map(function(col) { return previewCellValue(row[col]); });
   });
   state.datasetRawFirstRow = allRecords[0] || {};
@@ -5341,6 +5688,292 @@ function makeFieldNote(col) {
   return note;
 }
 
+/* ── List title field (#1338): which field titles each item in the labeling list ──
+   Options = auto + Input/Evidence fields + id (never Output, Data Fairness).
+   undefined (hosts that do not seed the key yet) is treated as null = auto. */
+function isObjectArrayField(col) {
+  return state.datasetPreviewRawRows.some(function(r) {
+    var v = r[col];
+    return Array.isArray(v) && v.length > 0 && v[0] !== null && typeof v[0] === 'object';
+  });
+}
+
+function listTitleCandidates() {
+  return state.datasetParsedColumns.filter(function(col) {
+    var role = state.fieldRoleMap[col] || '';
+    return role === 'input' || role === 'evidence' || (col === 'id' && role !== 'output');
+  });
+}
+
+function listTitleText(rawRow, idx) {
+  if (!state.listTitleField) {
+    var summary = window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
+      rawRow, state.fieldRoleMap, null, state.lang, state.dialogueFields);
+    return summary || String(idx + 1);
+  }
+  var v = rawRow[state.listTitleField];
+  if (Array.isArray(v) && v.length > 0 && v[0] !== null && typeof v[0] === 'object') {
+    var first = v[0];
+    v = typeof first.text === 'string' ? first.text : Object.keys(first).map(function(k) { return first[k]; })
+      .filter(function(x) { return typeof x === 'string'; })[0];
+  }
+  if (v === undefined || v === null || v === '') {
+    return state.lang === 'en' ? '(empty)' : '（空白）';
+  }
+  var str = String(v);
+  return str.length > 40 ? str.slice(0, 40) + '…' : str;
+}
+
+function renderListTitleBlock() {
+  var bar = el('inlinePreviewSourceBar');
+  if (!bar) return;
+  var block = el('inlineListTitleBlock');
+  if (!block) {
+    block = document.createElement('div');
+    block.id = 'inlineListTitleBlock';
+    block.className = 'inline-list-title-block';
+    bar.appendChild(block);
+  }
+  /* The bar is the "資料列來源" frame: keep it visible even with no candidate arrays */
+  bar.classList.remove('hidden');
+  while (block.firstChild) block.removeChild(block.firstChild);
+
+  var cands = listTitleCandidates();
+  if (state.listTitleField && cands.indexOf(state.listTitleField) === -1) {
+    state.listTitleField = null;
+    state.listTitleReverted = true;
+    markDirty();
+  }
+
+  var lbl = document.createElement('label');
+  lbl.className = 'inline-preview-source-label';
+  lbl.textContent = t('listTitleLabel');
+  var sel = document.createElement('select');
+  sel.className = 'inline-list-title-select';
+  sel.setAttribute('data-testid', 'list-title-field-select');
+  var autoOpt = document.createElement('option');
+  autoOpt.value = '';
+  autoOpt.textContent = t('listTitleAutoOption');
+  sel.appendChild(autoOpt);
+  cands.forEach(function(col) {
+    var opt = document.createElement('option');
+    opt.value = col;
+    opt.textContent = isObjectArrayField(col) ? col + t('listTitleObjectArraySuffix') : col;
+    if (col === state.listTitleField) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', function() {
+    state.listTitleField = sel.value || null;
+    state.listTitleReverted = false;
+    renderInlineDatasetPreview();
+    markDirty();
+  });
+  lbl.appendChild(sel);
+  block.appendChild(lbl);
+
+  if (state.listTitleReverted) {
+    var notice = document.createElement('p');
+    notice.setAttribute('data-testid', 'list-title-revert-notice');
+    notice.className = 'inline-list-title-notice';
+    notice.setAttribute('role', 'status');
+    notice.textContent = t('listTitleRevertNotice');
+    block.appendChild(notice);
+  }
+
+  var preview = document.createElement('div');
+  preview.setAttribute('data-testid', 'list-title-preview');
+  preview.className = 'inline-list-title-preview';
+  var heading = document.createElement('div');
+  heading.className = 'inline-preview-source-label';
+  heading.textContent = t('listTitlePreviewHeading');
+  preview.appendChild(heading);
+  state.datasetPreviewRawRows.slice(0, 3).forEach(function(rawRow, i) {
+    var item = document.createElement('div');
+    item.setAttribute('data-testid', 'list-title-preview-item');
+    item.textContent = listTitleText(rawRow, i);
+    preview.appendChild(item);
+  });
+  block.appendChild(preview);
+}
+
+/* ── Dialogue fields (#1340): detect an Input object-array column, prefill and confirm ──
+   Enabled only on hosts that seed state.dialogueFields (task-new; task-detail seeds it from the
+   task's stored dialogue_fields); undefined = off. */
+var DIALOGUE_FIELD_NAME_HINTS = {
+  text: ['text', 'utterance', 'content', 'message', 'sentence'],
+  speaker: ['speaker', 'role', 'author', 'user', 'name'],
+  uttId: ['utt_id', 'utterance_id', 'turn_id', 'id', 'idx', 'index']
+};
+
+function detectDialogueColumn() {
+  if (((state.taskInputTypes && state.taskInputTypes[0]) || 'single_item') !== 'single_item') return null;
+  var cols = state.datasetParsedColumns.filter(function(col) { return state.fieldRoleMap[col] === 'input'; });
+  for (var c = 0; c < cols.length; c++) {
+    var vals = state.datasetPreviewRawRows.map(function(r) { return r[cols[c]]; })
+      .filter(function(v) { return v !== undefined && v !== null; });
+    var valid = vals.length > 0 && vals.every(function(v) {
+      return Array.isArray(v) && v.length > 0 && v.every(function(e) {
+        return e !== null && typeof e === 'object' && !Array.isArray(e);
+      });
+    });
+    if (!valid) continue;
+    var elems = [];
+    vals.forEach(function(v) { elems = elems.concat(v); });
+    var keys = [];
+    elems.forEach(function(e) { Object.keys(e).forEach(function(k) { if (keys.indexOf(k) === -1) keys.push(k); }); });
+    var strKeys = keys.filter(function(k) { return elems.every(function(e) { return typeof e[k] === 'string'; }); });
+    if (strKeys.length === 0) continue;
+    var idKeys = keys.filter(function(k) {
+      return elems.every(function(e) { return typeof e[k] === 'string' || typeof e[k] === 'number'; });
+    });
+    /* #1378: reply_to candidates = string/number/null/missing values with >= 1 non-empty */
+    var replyKeys = keys.filter(function(k) {
+      var scalar = elems.every(function(e) {
+        var x = e[k];
+        return x === undefined || x === null || typeof x === 'string' || typeof x === 'number';
+      });
+      return scalar && elems.some(function(e) { return e[k] !== undefined && e[k] !== null && e[k] !== ''; });
+    });
+    return { col: cols[c], strKeys: strKeys, idKeys: idKeys, replyKeys: replyKeys };
+  }
+  return null;
+}
+
+function dialogueNameHit(key, hints, exact) {
+  var k = key.toLowerCase();
+  return hints.some(function(h) { return exact ? k === h : k.indexOf(h) !== -1; });
+}
+
+function prefillDialogueFields(det) {
+  var hits = det.strKeys.filter(function(k) { return dialogueNameHit(k, DIALOGUE_FIELD_NAME_HINTS.text, false); });
+  var text = hits.length ? hits[0] : det.strKeys[0];
+  var speakers = det.strKeys.filter(function(k) {
+    return k !== text && dialogueNameHit(k, DIALOGUE_FIELD_NAME_HINTS.speaker, false);
+  });
+  var ids = det.idKeys.filter(function(k) {
+    return k !== text && dialogueNameHit(k, DIALOGUE_FIELD_NAME_HINTS.uttId, true);
+  });
+  return { text: text, speaker: speakers.length ? speakers[0] : null, utt_id: ids.length ? ids[0] : null, reply_to: null };
+}
+
+function dialogueFieldsValid(cfg, det) {
+  return !!cfg && det.strKeys.indexOf(cfg.text) !== -1 &&
+    (cfg.speaker === null || (cfg.speaker !== cfg.text && det.strKeys.indexOf(cfg.speaker) !== -1)) &&
+    (cfg.utt_id === null || (cfg.utt_id !== cfg.text && det.idKeys.indexOf(cfg.utt_id) !== -1));
+}
+
+/* #1378: reply_to never counts toward validity; a stale one is cleared on its own */
+function dialogueReplyKeys(cfg, det) {
+  return det.replyKeys.filter(function(k) { return k !== cfg.text; });
+}
+
+function renderDialogueBlock() {
+  if (state.dialogueFields === undefined) return;
+  var old = el('inlineDialogueBlock');
+  if (old) old.parentNode.removeChild(old);
+  var det = detectDialogueColumn();
+  if (!det) {
+    state.dialogueFields = null;
+    state.dialogueDeclined = false;
+    return;
+  }
+  if (state.dialogueDeclined) state.dialogueFields = null;
+  else if (!dialogueFieldsValid(state.dialogueFields, det)) state.dialogueFields = prefillDialogueFields(det);
+  if (state.dialogueFields) {
+    var rk = dialogueReplyKeys(state.dialogueFields, det);
+    var curReply = state.dialogueFields.reply_to;
+    if (curReply === undefined || (curReply !== null && rk.indexOf(curReply) === -1)) {
+      state.dialogueFields = {
+        text: state.dialogueFields.text, speaker: state.dialogueFields.speaker,
+        utt_id: state.dialogueFields.utt_id, reply_to: null
+      };
+    }
+  }
+  var cfg = state.dialogueFields || prefillDialogueFields(det);
+  var on = !!state.dialogueFields;
+
+  var bar = el('inlinePreviewSourceBar');
+  if (!bar) return;
+  var block = document.createElement('div');
+  block.id = 'inlineDialogueBlock';
+  block.className = 'inline-list-title-block';
+  block.setAttribute('data-testid', 'dialogue-fields-block');
+  bar.appendChild(block);
+  bar.classList.remove('hidden');
+
+  var heading = document.createElement('div');
+  heading.className = 'inline-preview-source-label';
+  heading.textContent = t('dialogueBlockTitle') + ' (' + det.col + ')';
+  block.appendChild(heading);
+
+  var tgl = document.createElement('label');
+  var chk = document.createElement('input');
+  chk.type = 'checkbox';
+  chk.checked = on;
+  chk.setAttribute('data-testid', 'dialogue-fields-toggle');
+  tgl.appendChild(chk);
+  tgl.appendChild(document.createTextNode(' ' + t('dialogueToggleLabel')));
+  block.appendChild(tgl);
+
+  function addSelect(labelKey, testid, keys, current, noneKey) {
+    var lbl = document.createElement('label');
+    lbl.className = 'inline-preview-source-label';
+    lbl.textContent = t(labelKey) + ' ';
+    var sel = document.createElement('select');
+    sel.className = 'inline-list-title-select';
+    sel.setAttribute('data-testid', testid);
+    sel.disabled = !on;
+    if (noneKey) {
+      var none = document.createElement('option');
+      none.value = '';
+      none.textContent = t(noneKey);
+      sel.appendChild(none);
+    }
+    keys.forEach(function(k) {
+      var opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = k;
+      sel.appendChild(opt);
+    });
+    sel.value = current === null ? '' : current;
+    lbl.appendChild(sel);
+    block.appendChild(lbl);
+    return sel;
+  }
+  var textSel = addSelect('dialogueTextLabel', 'dialogue-field-text', det.strKeys, cfg.text, null);
+  var spkSel = addSelect('dialogueSpeakerLabel', 'dialogue-field-speaker',
+    det.strKeys.filter(function(k) { return k !== cfg.text; }), cfg.speaker, 'dialogueNoneOption');
+  var idSel = addSelect('dialogueUttIdLabel', 'dialogue-field-utt-id',
+    det.idKeys.filter(function(k) { return k !== cfg.text; }), cfg.utt_id, 'dialogueArrayIndexOption');
+  var replyKeys = dialogueReplyKeys(cfg, det);
+  var replySel = replyKeys.length
+    ? addSelect('dialogueReplyToLabel', 'dialogue-field-reply-to', replyKeys, cfg.reply_to, 'dialogueReplyToNoneOption')
+    : null;
+
+  chk.addEventListener('change', function() {
+    if (chk.checked) {
+      state.dialogueDeclined = false;
+      state.dialogueFields = prefillDialogueFields(det);
+    } else {
+      state.dialogueDeclined = true;
+      state.dialogueFields = null;
+    }
+    renderInlineDatasetPreview();
+    markDirty();
+  });
+  function onSelectChange() {
+    state.dialogueFields = {
+      text: textSel.value,
+      speaker: spkSel.value && spkSel.value !== textSel.value ? spkSel.value : null,
+      utt_id: idSel.value && idSel.value !== textSel.value ? idSel.value : null,
+      reply_to: replySel && replySel.value && replySel.value !== textSel.value ? replySel.value : null
+    };
+    renderInlineDatasetPreview();
+    markDirty();
+  }
+  [textSel, spkSel, idSel, replySel].filter(Boolean).forEach(function(s) { s.addEventListener('change', onSelectChange); });
+}
+
 function renderInlineDatasetPreview() {
   var container = el('inlineDatasetPreview');
   if (!container) return;
@@ -5437,7 +6070,7 @@ function renderInlineDatasetPreview() {
   table.appendChild(thead);
 
   var tbody = document.createElement('tbody');
-  state.datasetPreviewRawRows.forEach(function(rawRow) {
+  state.datasetPreviewRawRows.slice(0, 2).forEach(function(rawRow) {
     var tr = document.createElement('tr');
     cols.forEach(function(col) {
       var td = document.createElement('td');
@@ -5455,10 +6088,15 @@ function renderInlineDatasetPreview() {
   });
   table.appendChild(tbody);
   wrap.appendChild(table);
+  renderListTitleBlock();
+  renderDialogueBlock();
 }
 
 function resetInlinePreviewSelection() {
   state.fieldRoleMap = {};
+  state.listTitleField = null;
+  state.listTitleReverted = false;
+  if (state.dialogueFields !== undefined) { state.dialogueFields = null; state.dialogueDeclined = false; }
   state.datasetParsedColumns = [];
   state.datasetParsedRows = [];
   state.datasetRawFirstRow = {};

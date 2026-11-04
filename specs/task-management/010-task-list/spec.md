@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.3.0
+版本: 2.3.4
 狀態: In Progress
 ---
 
@@ -173,7 +173,7 @@ sequenceDiagram
 - `刪除` 操作必須為軟刪除（`TASK_DELETE_MODE`），不得物理刪除資料。
 - `刪除` 操作僅允許 `project_leader` 與 `super_admin` 執行；其他角色不得看到可用刪除操作，若直接呼叫刪除動作需收到無權限提示且不得變更任務。
 - `刪除` 操作僅允許套用於 `status = draft` 的任務；非 `draft` 任務不得顯示可用刪除操作，若直接觸發刪除需被拒絕且不得變更任務。
-- `刪除` 操作需先經刪除確認彈窗；彈窗樣式需沿用 task-management 既有共用 modal（`modal-backdrop` / `modal` / `modal-actions`）。
+- `刪除` 操作需先經刪除確認彈窗；彈窗樣式需沿用 task-management 共用 modal 骨架 `design/prototype/pages/shared/modal.css`（`modal-overlay` / `modal` / `modal-actions`）。
 - 軟刪除後任務不應出現在預設任務列表；資料保留供審計與復原。
 - 輸出類型欄必須依 `outputs[]` 順序，為每個 `output.type` 各呈現一個唯讀 tag；複合任務不得合併成自訂的固定類型 badge。
 - 輸出類型 tag 的 zh/en 文案必須來自 `OUTPUT_TYPE_REGISTRY`；顏色只能作為輔助，tag 必須保留可見文字，且 tag 群組需具有可存取名稱，使螢幕閱讀器可讀出完整輸出類型清單。
@@ -260,7 +260,7 @@ sequenceDiagram
 - **FR-010b**：點擊 `刪除` 時，系統必須執行軟刪除（設定 `deleted_at` 與刪除操作者），且不得物理刪除資料。
 - **FR-010c**：軟刪除任務不得出現在預設 `/task-list` 結果中。
 - **FR-010d**：刪除確認流程必須使用 task-management 共用 modal 樣式，不得使用瀏覽器原生 `confirm`。
-- **FR-010e**：刪除任務僅允許該任務 active `project_leader` 或當前 `super_admin`，且仍受 draft 狀態與原有資源限制；其他角色不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示無權限提示。V1 矩陣尚無 `task.delete` 專用鍵，實作不得借用 `task.detail.edit` 或 `task.members.manage`，亦不得宣稱 42 列 V1 種子已覆蓋刪除；轉換此命令的矩陣授權前需依 ADR-037 核准增鍵、完整種子與安全測試。
+- **FR-010e**：刪除任務僅允許該任務 active `project_leader` 或當前 `super_admin`，且仍受 draft 狀態與原有資源限制；其他角色不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示無權限提示。V1 矩陣尚無 `task.delete` 專用鍵，實作不得借用 `task.detail.edit` 或 `task.members.manage`，亦不得宣稱 42 列 V1 種子已覆蓋刪除；轉換此命令的矩陣授權前需依 ADR-037 核准增鍵、完整種子與安全測試。（v2.3.1 釐清，issue #1270）`task.delete` 已依 admin-007 v1.3.0 登錄為任務層鍵（種子 PL ✅／RV ❌／AN ❌），狀態為「已登錄、待啟用」：啟用前以它做的授權判斷依未知鍵拒絕，刪除仍依上述 active `project_leader`、draft 狀態與資源限制判斷；`super_admin` 的刪除路徑不經任務層格，依平台硬邊界判斷。上文「42 列 V1 種子」自 admin-007 v1.3.0 起改讀為 56 列。
 - **FR-010f**：刪除任務僅允許 `status = draft`；非 `draft` 任務不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示狀態不允許刪除的提示。
 - **FR-011**：任務列表必須將每筆任務的 `outputs[].type` 逐項呈現為唯讀 tag；複合任務顯示多個 tag，且不得硬編固定組合名稱或渲染分支。
 - **FR-011a**：輸出類型 tag 必須依 `OUTPUT_TYPE_REGISTRY` 顯示 zh/en 文案，並以可見文字與可存取名稱傳達類型，不得只依賴顏色。
@@ -334,9 +334,11 @@ flowchart LR
 
 | Artifact | Responsibility | Covered FR/SC | Verification | Status |
 |----------|----------------|---------------|--------------|--------|
-| [design/prototype/pages/task-management/task-list.html](../../../design/prototype/pages/task-management/task-list.html) | Task-list page shell, filters, sorting, pagination, delete-confirm flow, observable interaction, and RWD only; the spec remains authoritative for membership, filtering, and data contracts. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active |
-| [design/prototype/pages/task-management/task-list.data.js](../../../design/prototype/pages/task-management/task-list.data.js) | Synthetic safe prototype fixtures and list-derivation helpers only; fixtures are prototype acceptance baselines, never an API, membership, or output-combination whitelist. | All FR/SC in this spec | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active; page-owned data |
+| [design/prototype/pages/task-management/task-list.html](../../../design/prototype/pages/task-management/task-list.html) | Task-list page shell, filters, sorting, pagination, delete-confirm flow, observable interaction, and RWD only; the spec remains authoritative for membership, filtering, and data contracts. | FR-004e, FR-008c, FR-010e～FR-011c, SC-010～SC-013 | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active |
+| [design/prototype/pages/task-management/task-list.data.js](../../../design/prototype/pages/task-management/task-list.data.js) | Synthetic safe prototype fixtures and list-derivation helpers only; fixtures are prototype acceptance baselines, never an API, membership, or output-combination whitelist. | FR-004e, FR-008c, FR-010e～FR-011c, SC-010～SC-013 | [design/prototype/tests/task-management/](../../../design/prototype/tests/task-management/) (`task-list-*.spec.ts`, 3 files) | Active; page-owned data |
 | [design/system/pages/task-list.md](../../../design/system/pages/task-list.md) | Page-scoped design reference only; does not define runtime behavior, APIs, data, or product contracts. | No additional FR/SC | N/A (design reference) | Active; no wireframe (frozen baseline predates this page) |
+
+> `Covered FR/SC` 欄的 `A～B` 表示依本 spec 已定義 ID 排序的連續範圍；清單僅取自 `design/prototype/tests/**` 檔頭 Traceability 標註的 FR/SC（issue #1316）。未列出的 FR 代表尚無原型測試標註，不代表已覆蓋。
 
 ---
 
@@ -350,7 +352,7 @@ flowchart LR
 | 008 | Shared Sidebar Navbar | L0 導覽、active 狀態與 RWD 導覽規範 |
 | 012 | Dashboard | 從 dashboard 進入 task-management 的入口語意 |
 | 013 | New Task | `OUTPUT_TYPE_REGISTRY`、8 個 `OUTPUT_TYPE_KEYS` 與 `outputs[]` producer contract |
-| admin-007／ADR-037 | Permission Matrix Authorization | `task.list.view` 與未涵蓋的 task.delete 增鍵程序 |
+| admin-007／ADR-037 | Permission Matrix Authorization | `task.list.view` 與 `task.delete`（v1.3.0 已登錄、待啟用）的啟用程序 |
 
 ### 下游（依賴本規格的規格）
 
@@ -362,7 +364,7 @@ flowchart LR
 | 016 | Dataset Analysis List | `outputs[].type` 多 tag、8 類 membership 篩選、13 筆 prototype 基線與 `limit`／`offset` |
 | 017 | Dataset Quality | 任務清單入口與 task context 導入 |
 
-> **v2.0.1 下游同步界線**：016 Dataset Analysis List 已同步 `outputs[].type` 的展示、搜尋、篩選與分頁契約；014 Task Detail、015 Annotation Workspace 與 017 Dataset Analysis Detail 仍有舊固定任務類型或未完成的 consumer contract，依既有產品決策延後同步。本版不得將 016 列表相容性延伸解讀為這些 detail／workspace consumer 已相容所有 `outputs[]` 組合。
+> **v2.0.1 下游同步界線**：016 Dataset Analysis List 已同步 `outputs[].type` 的展示、搜尋、篩選與分頁契約；014 Task Detail（v2.0.0）、015 Annotation Workspace（v2.0.0）與 017 Dataset Analysis Detail（v2.0.0）其後已各自完成 `outputs[]` 遷移，原先「仍有舊固定任務類型或未完成的 consumer contract」之延後不再適用；僅階層 `multi_label` 的 014 設定檢視與 017 統計／IAA 仍待 #1412。
 
 ---
 
@@ -421,6 +423,10 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.4 | 2026-10-14 | Issue #1424（Lightweight，PATCH）：刪除確認彈窗樣式條文的共用 class 名稱由 `modal-backdrop` 更正為 `modal-overlay`，並指向 #1390 已落地的共用骨架 `pages/shared/modal.css`；條文未增減，無 FR／AC 變動，無 API 契約變更。 |
+| 2.3.3 | 2026-10-14 | Issue #1384 第 1 段（Lightweight，PATCH）：「v2.0.1 下游同步界線」blockquote 的 014／015／017 consumer 延後敘述改寫為現況——三者已各自完成 `outputs[]` 遷移（014 v2.0.0、015 v2.0.0、017 v2.0.0），僅階層 `multi_label` 的 014 設定檢視與 017 統計／IAA 延後至 #1412；條文未增減，無 API 契約變更，Changelog 列逐字不動。 |
+| 2.3.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
+| 2.3.1 | 2026-10-13 | Issue #1270：FR-010e 補釐清句——`task.delete` 已於 admin-007 v1.3.0 登錄（已登錄、待啟用），啟用前依未知鍵拒絕，刪除既有閘門與 `super_admin` 路徑不變；「42 列」改讀為 56 列；依賴表同步。條文未增減，純 PATCH。 |
 | 2.3.0 | 2026-10-06 | Issue #1160 D-9：依 ADR-037 加入 `task.list.view` 矩陣條件，保留 membership／全平台資料範圍；明列任務刪除尚無 V1 專用鍵，不能借用其他鍵，新增 SC-016。規劃契約尚未實作 runtime。 |
 | 2.2.0 | 2026-09-18 | Issue #815（OpenSpec change `retire-stale-review-demo-fixtures`，上游 015 v6.6.0 之下游同步）：平手示範任務 T017 之種子形狀只能由已廢止之多數決規則產生，其 fixture `review-flow-official-tie.json` 已自 `docs/product/example-data/` 與 prototype 移除。示例基線表移除該列，基線筆數 17 → 16（功能目標、SC-010、SC-015 同步），`single_label` 命中數 6 → 5，其餘輸出類型命中數不變；審核流程示範 seed 範圍改為 T014–T016。未新增或移除 FR／AC；v2.1.0 列所述「擴充至 17 筆」為當時沿革，不改寫。**分級理由**：驗收基線之筆數與命中數改變——MINOR（對齊 v2.1.0 擴充基線之分級先例）。 |
 | 2.1.2 | 2026-09-08 | Issue #721：釐清 FR-005a 涵蓋範圍——無權限提示的觸發時機不限於 `/task-list` 內點擊任務列的攔截，亦涵蓋 `/task-detail` 因角色檢查導回 `/task-list` 的情境（原本 `?unauthorized=` 導頁參數從未被讀取，使用者無從得知返回原因）；未新增或移除 FR/AC，僅釐清既有 FR-005a 的適用範圍。 |

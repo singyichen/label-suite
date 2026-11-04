@@ -61,7 +61,7 @@ test.describe('Review-flow demo seeds (T014-T016)', () => {
     }
   });
 
-  test('resolves the T014 task-detail profile with 5 records and single_label outputs', async ({
+  test('resolves the T014 task-detail profile with dataset total 6 and single_label outputs', async ({
     page,
   }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T014`);
@@ -72,7 +72,7 @@ test.describe('Review-flow demo seeds (T014-T016)', () => {
     });
     await expect(page.locator('#bcCurrent')).toHaveText('T014');
     await expect(page.locator('#valueTaskType')).toHaveText('單一標籤');
-    await expect(page.locator('#valueDatasetSummary')).toHaveText('5 筆');
+    await expect(page.locator('#valueDatasetSummary')).toHaveText('6 筆');
     await expect(page.locator('#settingsConfigView')).toContainText(
       'positive, neutral, negative',
     );

@@ -1,7 +1,7 @@
 # task-management/013-task-new Specification
 
 ## Purpose
-New Task（新增任務精靈與設定建構器，Project Leader）的 derived view。正典為 `specs/task-management/013-task-new/spec.md`（v7.0.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `2026-09-04-seq-tagging-span-config`（issue #581）之 FR-003d-1／FR-003d-3（修訂）。本檔於該 change archive 前以正典 v6.9.6 的兩條原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
+New Task（新增任務精靈與設定建構器，Project Leader）的 derived view。正典為 `specs/task-management/013-task-new/spec.md`（v8.7.0）；本文件僅收錄經 OpenSpec change 落地之需求，每條皆引用正典 FR/AC ID，不改動其正典措辭。目前收錄：change `2026-09-04-seq-tagging-span-config`（issue #581）之 FR-003d-1／FR-003d-3（修訂）、change `2026-10-13-task-new-list-title-field`（issue #1338）之 FR-002c-9（新增）、change `2026-10-13-task-new-dialogue-fields`（issue #1340）之 FR-002c-10（新增）、change `2026-10-14-task-new-dialogue-reply-to`（issue #1378）之 FR-002c-10（修訂，新增 `reply_to`）、change `2026-10-20-task-new-prefill-fields`（issue #1430）之 FR-002c-11（新增）。本檔於該 change archive 前以正典 v6.9.6 的兩條原文建立基線，使 MODIFIED 有可比對的前值，archive 後基線內容已被完整取代。
 
 ## Requirements
 
@@ -194,3 +194,107 @@ Step 2 預覽 MUST 在 `sequence_tagging` 下對相交落點給出即時可見�
 - **Given** Step 4 留空且其餘建立設定通過驗證
 - **When** 任務建立交易成功
 - **Then** 建立同任務不可變的指引內容版本 1，`force_guideline` 留在 task 顯示政策中（TaskGuidelineConfig；AC-4.3）
+
+### Requirement: FR-002c-9 Step 1 清單標題欄位與標記清單預覽
+
+嵌入式資料預覽於資料列來源列下方，系統 MUST 提供「清單標題」下拉（任務設定鍵 `list_title_field`，型別 `string | null`，`null` 代表「自動」，預設為「自動」）。選項 MUST 由下列規則推導，且 MUST NOT 列出角色為 Output 的欄位：「自動（依資料形狀）」；目前所選資料列來源中角色為 Input 或 Evidence 的欄位；欄位名稱為 `id` 且角色不是 Output 的欄位。型別為物件陣列的欄位 MUST 以 `<欄位名>（取第 1 則的文字）` 標示。
+
+表格下方 MUST 顯示「標記清單預覽」，列出所選資料列來源前 3 筆紀錄的標題；所選為「自動」時的標題摘要規則不在本條範圍。預覽 MUST 於下拉選擇、欄位角色指定與資料列來源切換後即時更新，不需使用者點擊其他按鈕。
+
+非 `id` 欄位於角色改為「不使用」或 Output 時，或任何所選欄位不在新資料列來源的欄位中時，視為不再屬於選項集合；`id` 欄位例外，僅在角色改為 Output 或不在新資料列來源時才視為不再屬於選項集合（角色為「不使用」時仍可選）。所選欄位不再屬於選項集合時，系統 MUST 將 `list_title_field` 回退為 `null`（自動），並顯示說明原因的提示。建立任務 payload MUST 帶 `list_title_field`（自動時為 `null`）。task-detail 設定›基本資料編輯模式依 FR-014k（specs/task-management/014-task-detail/spec.md） 與本條同構。
+
+#### Scenario: AC-1.8 下拉選項不含 Output 欄位且預覽即時更新
+
+- **GIVEN** 已上傳資料集，其中一欄指定為 Input、一欄指定為 Output
+- **WHEN** 使用者開啟「清單標題」下拉並選擇 Input 欄位
+- **THEN** 選項只含「自動（依資料形狀）」、Input／Evidence 欄位與 `id`，不含 Output 欄位
+- **AND** 「標記清單預覽」立即顯示前 3 筆該欄位的值
+
+#### Scenario: AC-1.9 所選欄位失效時回退自動並提示
+
+- **GIVEN** 「清單標題」已選擇某 Input 欄位
+- **WHEN** 使用者將該欄位角色改為「不使用」或 Output（若所選為 `id`，僅改為 Output 才適用；`id` 改為「不使用」時維持原選擇）
+- **THEN** 「清單標題」回到「自動（依資料形狀）」並顯示說明原因的提示
+- **AND** 預覽改以「自動」呈現
+
+#### Scenario: SC-002i 清單標題隨建立任務 payload 帶出
+
+- **GIVEN** Step 1 已選定某 Input 欄位為「清單標題」
+- **WHEN** 使用者完成精靈並建立任務
+- **THEN** 建立任務 payload 的 `list_title_field` 為該欄位名稱
+- **AND** 重新載入精靈草稿後下拉仍為該選項
+
+### Requirement: FR-002c-10 Step 1 對話串欄位偵測與確認，Step 2 預覽以對話串呈現
+
+Input 角色欄位在資料列來源的前幾筆紀錄中為非空的物件陣列，且存在至少一個在所有元素中皆為字串的子欄位時，系統 MUST 於欄位預覽下方提議以「對話串」呈現並顯示確認區：**文字欄位**（必選）、**發言者欄位**（可選）、**發言編號欄位**（可選，未選時用陣列序號，自 1 起算）、**回覆對象欄位**（可選，預設留空）。候選由偵測結果預填，建立者 MUST 能更改任一對應，或取消提議；偵測不到時系統 MUST NOT 提議，Step 2 預覽退回原始 JSON 呈現。子欄位名稱線索只決定預填值，不決定是否提議，且僅作用於角色已是 Input 的欄位。任一已確認的子欄位於欄位角色變更、資料列來源切換或重新上傳後不再合法時，系統 MUST 重新偵測；建立者取消提議後不得自動再預填。確認結果存為任務設定鍵 `dialogue_fields`（`{ text, speaker, utt_id, reply_to }`，後三者可為 `null`；未採用對話串時整體為 `null`），建立任務 payload MUST 帶此鍵。本條僅適用 `single_item` 輸入類型。
+
+**回覆對象欄位（`reply_to`）**：指向物件陣列元素內、存放「被回覆發言的發言編號」的子欄位。候選為所有元素中值皆為字串、數字、`null` 或缺漏，且至少一個元素非空的子欄位，不含已選為文字欄位者；沒有候選時系統 MUST NOT 顯示該下拉。系統 MUST NOT 預填 `reply_to`（不依欄位名稱、不從內文 `@名字` 或實體推測），建立者未選擇時為 `null`。已確認的 `reply_to` 不再合法時，系統 MUST 只將 `reply_to` 清為 `null`，其餘仍合法的對應保留。既有任務或種子的 `dialogue_fields` 缺少 `reply_to` 時 MUST 視同 `null`。`reply_to` 為 `null` 時，下游顯示不得縮排也不得標示回應關係（顯示規則見 annotation/015-annotation-workspace）。
+
+Step 2 標記預覽 MUST 在 Input 為物件陣列且已確認 `dialogue_fields` 時，以對話串呈現，每則一列，含發言編號、發言者（若有）與文字。Input 文字來源 MUST NOT 對物件取字串（不得出現 `[object Object]`）；字串 Input 的文字內容 MUST 與既有行為逐字相同；無 Input 欄位時 MUST NOT 退回任何非 Input 欄位作為文字來源（預覽文字來源為空，沿用既有占位文字）。
+
+#### Scenario: AC-1.10 偵測到物件陣列 Input 時提議對話串並預填
+
+- **GIVEN** 已上傳資料集，其中 `utterances` 欄為每則含字串 `speaker`、字串 `text` 與編號 `utt_id` 的物件陣列，且該欄角色為 Input
+- **WHEN** 嵌入式資料預覽完成初始化
+- **THEN** 欄位預覽下方出現對話串確認區，文字欄位預填 `text`、發言者欄位預填 `speaker`、發言編號欄位預填 `utt_id`
+- **AND** 建立者可更改任一對應或取消提議
+
+#### Scenario: AC-1.11 偵測不到時不提議
+
+- **GIVEN** 已上傳資料集，Input 欄位為字串，或為元素非物件、元素缺少字串子欄位的陣列
+- **WHEN** 嵌入式資料預覽完成初始化
+- **THEN** 不顯示對話串確認區，且 `dialogue_fields` 為 `null`
+
+#### Scenario: AC-1.12 Step 2 預覽以對話串呈現且文字來源不外洩
+
+- **GIVEN** Input 為已確認對話串對應的物件陣列欄位，另有一個角色為 Output 的字串欄位
+- **WHEN** 使用者進入 Step 2
+- **THEN** 標記預覽以每則一列呈現發言編號、發言者與文字，不出現 `[object Object]`
+- **AND** 預覽文字來源不含 Output 欄位內容，且無 Input 欄位時不退回任何非 Input 欄位；未確認對話串時 Input 物件以 JSON 呈現
+
+#### Scenario: AC-1.13 回覆對象欄位可選擇、可清除，預設留空
+
+- **GIVEN** 已上傳資料集，`utterances` 每則含字串 `speaker`、字串 `text`、`utt_id`，以及 `reply_to`（根發言為 `null`、其餘為被回覆發言的 `utt_id`），且該欄角色為 Input
+- **WHEN** 嵌入式資料預覽完成初始化
+- **THEN** 確認區出現「回覆對象欄位」下拉，預設為「不使用」，候選含 `reply_to`、不含文字欄位
+- **AND** 建立者選擇 `reply_to` 後 `dialogue_fields.reply_to` 為該子欄位名稱，再選回「不使用」則為 `null`
+- **AND** 沒有任何符合候選條件的子欄位時，不顯示該下拉，`dialogue_fields.reply_to` 為 `null`
+
+#### Scenario: AC-1.14 reply_to 失效時只清除該對應
+
+- **GIVEN** 建立者已確認 `dialogue_fields` 且 `reply_to` 指向某子欄位
+- **WHEN** 資料列來源切換或重新上傳後，該子欄位不再是合法候選，而文字、發言者、發言編號對應仍合法
+- **THEN** `dialogue_fields.reply_to` 變為 `null`，文字、發言者、發言編號對應保持不變
+- **AND** 缺少 `reply_to` 的既有 `dialogue_fields` 讀入後視同 `null`
+
+#### Scenario: SC-002j 對話串設定隨建立任務 payload 帶出
+
+- **GIVEN** Step 1 已確認對話串的文字、發言者、發言編號與回覆對象欄位對應
+- **WHEN** 使用者完成精靈並建立任務
+- **THEN** 建立任務 payload 的 `dialogue_fields` 為該對應（含 `reply_to`，未選為 `null`），未採用對話串時為 `null`
+- **AND** 重新載入精靈草稿後確認區仍為該對應
+
+### Requirement: FR-002c-11 任務設定鍵 prefill_fields 宣告預填來源欄位
+
+任務設定 MUST 支援選填鍵 `prefill_fields`（`{ entities, triples }`，兩者皆為資料列紀錄中的欄位名稱字串或 `null`；整個鍵可為 `null`），用以宣告整合預覽預填實體與預填三元組的來源欄位。整個鍵預設為 `null`；缺少 `entities` 或 `triples` 子鍵時 MUST 視同 `null`；既有任務或種子缺少此鍵時 MUST 視同 `null`。建立任務 payload MUST 帶 `prefill_fields`；Step 1 目前不提供設定此鍵的介面，故由精靈建立的任務其值為 `null`。任務詳情載入與儲存設定時 MUST 原樣保留此鍵。預填來源宣告不改變欄位角色，下游讀取時仍須通過欄位角色守門（specs/annotation/015-annotation-workspace/spec.md FR-107），角色為 Output 或未知的宣告欄位不得預填。
+
+#### Scenario: AC-1.15 預設為 null，缺鍵與缺子鍵視同 null
+
+- **GIVEN** 使用者以精靈建立任務（Step 1 無設定預填來源的介面），或讀入缺少 `prefill_fields` 的既有任務、或 `prefill_fields` 只含 `entities` 子鍵的任務
+- **WHEN** 建立任務，或載入任務設定
+- **THEN** 精靈建立任務的 `prefill_fields` 為 `null`
+- **AND** 缺少 `prefill_fields` 的既有任務視同 `null`，只含 `entities` 子鍵的任務其 `triples` 視同 `null`
+
+#### Scenario: AC-1.16 種子宣告的預填來源欄位帶入任務詳情設定
+
+- **GIVEN** 種子任務 T008 宣告 `prefill_fields` 為 `{ entities: 'entities', triples: null }`
+- **WHEN** 開啟 T008 任務詳情並載入其設定
+- **THEN** 任務資料與設定狀態的 `prefill_fields` 為該宣告
+- **AND** 儲存設定後 `prefill_fields` 仍為該宣告，未宣告的任務（含 T010、T013）仍為 `null`
+
+#### Scenario: SC-002k 預填來源設定隨建立任務 payload 帶出
+
+- **GIVEN** 使用者完成精靈
+- **WHEN** 建立任務
+- **THEN** 建立任務 payload 含 `prefill_fields` 鍵，精靈建立的任務值為 `null`
+- **AND** 既有 payload 的其他鍵（含 `dialogue_fields`）不受影響

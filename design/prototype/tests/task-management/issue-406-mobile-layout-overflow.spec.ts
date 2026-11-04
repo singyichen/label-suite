@@ -15,7 +15,7 @@ const PANEL_LOAD_TIMEOUT = 15000;
 test.use({ viewport: { width: 375, height: 812 } });
 
 test.describe('Task detail at 375px width (issue #406)', () => {
-  test('every tab label is fully inside the viewport with no page-level horizontal overflow', async ({ page }) => {
+  test('content tabs scroll inside .admin-tabs, every tab is reachable, and the page has no horizontal overflow', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await page.locator('#loadingSkeleton').waitFor({ state: 'hidden', timeout: PANEL_LOAD_TIMEOUT });
@@ -23,13 +23,23 @@ test.describe('Task detail at 375px width (issue #406)', () => {
     const tabs = page.locator('.admin-tab');
     const tabCount = await tabs.count();
     expect(tabCount).toBeGreaterThan(0);
+
+    // Issue #1393: the tab strip is a single row that scrolls on its own
+    // (overflow-x: auto) instead of wrapping or widening the page.
+    const strip = page.locator('.admin-tabs').first();
+    expect(await strip.evaluate((el) => getComputedStyle(el).overflowX)).toBe('auto');
+
+    // Every tab must be reachable: after scrolling it into view, its full
+    // box lies inside the .admin-tabs container's visible bounds.
     for (let i = 0; i < tabCount; i += 1) {
-      const box = await tabs.nth(i).boundingBox();
+      const tab = tabs.nth(i);
+      await tab.scrollIntoViewIfNeeded();
+      const box = await tab.boundingBox();
+      const stripBox = await strip.boundingBox();
       expect(box).not.toBeNull();
-      // A tab must be reachable without horizontal scrolling: its full box
-      // (including its trailing character) lies inside the 375px viewport.
-      expect(box!.x).toBeGreaterThanOrEqual(0);
-      expect(box!.x + box!.width).toBeLessThanOrEqual(375);
+      expect(stripBox).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(stripBox!.x - 1);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(stripBox!.x + stripBox!.width + 1);
     }
 
     const overflow = await page.evaluate(

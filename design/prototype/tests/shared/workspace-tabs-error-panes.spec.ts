@@ -40,7 +40,7 @@
  * access control beyond the simulated `sim_403=1` flag -- per task brief).
  */
 import { test, expect } from '../fixtures';
-import { workspaceTabs, closeButton, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
+import { workspaceTabs, closeTab, readWorkspaceTabState, setDesktopViewport } from './_workspace-tabs-helpers';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 // An id that does not resolve against task-list.data.js / task-detail.data.js
@@ -78,7 +78,7 @@ test.describe('Workspace tabs — AC-7.2 404 (deleted task) pane does not affect
 
     // User can still close the 404 tab via the existing close mechanism --
     // no new close logic expected (Q14).
-    await closeButton(tabs.nth(1)).click();
+    await closeTab(tabs.nth(1));
     await expect(tabs).toHaveCount(1);
     const stateAfterClose = (await readWorkspaceTabState(page)) as WorkspaceTabStateShape | null;
     expect(stateAfterClose?.tabs).toHaveLength(1);
@@ -107,7 +107,7 @@ test.describe('Workspace tabs — AC-7.1 403 (permission revoked) pane', () => {
     const stateBeforeClose = (await readWorkspaceTabState(page)) as WorkspaceTabStateShape | null;
     expect(stateBeforeClose?.tabs).toHaveLength(2);
 
-    await closeButton(tabs.nth(1)).click();
+    await closeTab(tabs.nth(1));
     await expect(tabs).toHaveCount(1);
     const stateAfterClose = (await readWorkspaceTabState(page)) as WorkspaceTabStateShape | null;
     expect(stateAfterClose?.tabs).toHaveLength(1);

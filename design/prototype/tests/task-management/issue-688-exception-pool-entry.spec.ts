@@ -128,7 +128,7 @@ test.describe('Final exception pool entry + completion gate (issue #688)', () =>
 
   // FR-008b point 4: a non-empty official_run final exception pool blocks
   // "標記完成". Since issue #1120 G3 the block is the natively disabled button
-  // plus a visible reason list in #publishActionRow (not a click-time toast), so
+  // plus a visible unmet exception-pool row in #nextStepCard (not a click-time toast), so
   // the SC-043 "例外池尚有 N 項待處置" reason is asserted there.
   test('blocks 標記完成 and names the exception-pool reason when official_run pool is non-empty', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL + '?task_role=project_leader&task_id=T016&status=official_run_in_progress');
@@ -138,8 +138,8 @@ test.describe('Final exception pool entry + completion gate (issue #688)', () =>
     await expect(page.locator('#overviewPanel')).not.toHaveClass(/hidden/);
 
     await expect(page.locator('#publishCompleteBtn')).toBeDisabled();
-    await expect(page.locator('#publishActionRow li', { hasText: '例外池' })).toBeVisible();
-    await expect(page.locator('#publishActionRow li', { hasText: '例外池' })).toContainText(/(^|\D)1(\D|$)/);
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="exception-pool"][data-status="unmet"]')).toBeVisible();
+    await expect(page.locator('#nextStepCard li.next-step-cond[data-cond="exception-pool"][data-status="unmet"]')).toContainText(/(^|\D)1(\D|$)/);
     await expect(page.locator('#statusBadge')).not.toHaveText('已完成');
   });
 });

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 2.3.1
+版本: 2.3.2
 狀態: Clarified
 ---
 
@@ -489,8 +489,10 @@ flowchart LR
 
 | Artifact | Responsibility | Covered FR/SC | Verification | Status |
 |----------|----------------|---------------|--------------|--------|
-| [design/prototype/pages/shared/sidebar.js](../../../design/prototype/pages/shared/sidebar.js)<br>[design/prototype/pages/shared/sidebar.css](../../../design/prototype/pages/shared/sidebar.css) | Shared sidebar/navbar component: navigation, role-based menu, language toggle, notification dropdown, keyboard shortcuts overview, and RWD only; not exclusive to any single page — reused as-is (`<script src="../shared/sidebar.js">`) by every module's shell page. Consumed by 14 pages across account (5), admin (2), annotation (2), dashboard (1), dataset (2), task-management (3). | All FR/SC in this spec | [design/prototype/tests/shared/](../../../design/prototype/tests/shared/) (`sidebar-*.spec.ts`, `mobile-top-actions.spec.ts`) | Active; shared component |
+| [design/prototype/pages/shared/sidebar.js](../../../design/prototype/pages/shared/sidebar.js)<br>[design/prototype/pages/shared/sidebar.css](../../../design/prototype/pages/shared/sidebar.css) | Shared sidebar/navbar component: navigation, role-based menu, language toggle, notification dropdown, keyboard shortcuts overview, and RWD only; not exclusive to any single page — reused as-is (`<script src="../shared/sidebar.js">`) by every module's shell page. Consumed by 14 pages across account (5), admin (2), annotation (2), dashboard (1), dataset (2), task-management (3). | FR-009～FR-009B, FR-011A, FR-013A, FR-020～FR-021, SC-005A～SC-006A, SC-009D, SC-013～SC-014 | [design/prototype/tests/shared/](../../../design/prototype/tests/shared/) (`sidebar-*.spec.ts`, `mobile-top-actions.spec.ts`) | Active; shared component |
 | [design/prototype/components-showcase.html](../../../design/prototype/components-showcase.html) | Living styleguide reference for shared component visual states; not a functional consumer page. | No additional FR/SC | [design/prototype/tests/shared/](../../../design/prototype/tests/shared/) (`components-showcase*.spec.ts`) | Active; reference only |
+
+> `Covered FR/SC` 欄的 `A～B` 表示依本 spec 已定義 ID 排序的連續範圍；清單僅取自 `design/prototype/tests/**` 檔頭 Traceability 標註的 FR/SC（issue #1316）。未列出的 FR 代表尚無原型測試標註，不代表已覆蓋。
 
 ---
 
@@ -606,6 +608,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.2 | 2026-10-13 | Issue #1316（Lightweight，PATCH）：Prototype Traceability 表『Covered FR/SC』欄由 `All FR/SC in this spec` 改列實際 FR/SC 範圍，來源僅取 `design/prototype/tests/**` 檔頭 Traceability 標註的 ID，並於表後補範圍記法說明；條文未增減，純追溯表精度修正，未新增或移除任何 FR／AC。 |
 | 2.3.1 | 2026-10-12 | Issue #1269（Lightweight，PATCH）：FR-003 補述操作 → 權限鍵對應——`系統管理` 依伺服器判定的當前 system role 渲染，不取自 `localStorage`；落地頁與次選單對應 `admin.user_management.view`／`admin.role_settings.view`，其餘 L0 落地頁對應 `dashboard.view`、`task.list.view`、`account.profile.view`。只對應鍵，不改 L0 項目、順序與數量。 |
 | 2.3.0 | 2026-10-05 | Issue #1099（OpenSpec change `1099-workspace-tabs-overview-menu`，MINOR，最終堆疊 PR 群組回寫）：`FR-016H` 快捷鍵總覽「頁籤」section 由兩列擴為三列，新增 `Alt+Shift+T`（重開剛關閉的頁籤），獨立成列、獨立 keycap、緊湊密度，觸發行為由 `specs/shared/019-workspace-tabs/spec.md` 之 FR-024A、AC-024A.1、AC-024A.2 定義，本條僅規範顯示內容（對應 019 之 FR-024B、AC-024B.1）；既有 `Alt+1…8`／`Alt+W` 兩列逐字不動，未推翻任何既有 FR/AC（MINOR 邊界）。OpenSpec 衍生檢視 `FR-016H` 已 MODIFIED。 |
 | 2.2.0 | 2026-10-02 | Issue #1075（OpenSpec change `1075-workspace-tabs-shared-008`，MINOR，G3——issue #1075 的第 10 個、最終堆疊 PR 群組）：新增使用者故事 10、FR-022、FR-016H。`specs/shared/019-workspace-tabs/spec.md`（workspace tabs，v1.0.0，9 個使用者故事、FR-001～022、SC-001～016）已於 G1～G2g 共 9 個先行 PR 群組實作工作頁籤列完整行為，其中 FR-009／Q7 明文將「關閉作用中頁籤後的焦點移動規則」委由本規格定義——**FR-022** 正式承接此規則（優先移至右鄰、若為最右側則移至左鄰），規則本身逐字對應該規格之 AC-1.5，行為已於原型 G2a-2（PR #1080）落地為 `closeWorkspaceTab()` 之既有邏輯，本次純為規格補述，未異動任何程式碼。**FR-016H** 為既有 FR-016 群（快捷鍵總覽）新增之頁籤 section（比照既有 FR-016G 之加列慣例），列出 `Alt+1…8`（切換頁籤）與 `Alt+W`（關閉作用中頁籤）兩列；此二快捷鍵之實際觸發與抑制行為仍由 `specs/shared/019-workspace-tabs/spec.md` FR-013、AC-5.1 至 AC-5.4 擁有，本條不重複定義，僅規範總覽顯示內容與格式——此項已依 TDD（Red→Green）於 `design/prototype/pages/shared/sidebar.js` 新增對應 section markup（手寫 production 18 行）。既有 FR-001～FR-021 群（含 FR-016～FR-016G）、SC-001～SC-014 逐字不動，未推翻任何既有 FR/AC（MINOR 邊界）。OpenSpec 衍生檢視 `openspec/specs/shared/008-sidebar-navbar-shared/` 已合併本次 2 個新增 Requirement（`added: 2, modified: 0, removed: 0`）。 |

@@ -27,8 +27,10 @@ test.describe('Task detail review settings', () => {
       .locator('input')
       .uncheck();
 
-    page.on('dialog', (dialog) => dialog.accept());
     await page.locator('#reviewCancelBtn').click();
+    // FR-026 (2): the discard confirmation is the in-page modal, not window.confirm.
+    await expect(page.locator('#settingsLeaveModal')).toBeVisible();
+    await page.locator('#settingsLeaveConfirmBtn').click();
 
     await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
     await expect(page.locator('#valueReviewerIdsControl')).toHaveText('已勾選 4 人');

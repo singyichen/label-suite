@@ -109,6 +109,9 @@ function seedDatasetFromProfile(profile) {
   /* Apply the profile's known field-role mapping after analysis, since
      analyzeDataset() only prunes stale roles — it never assigns new ones. */
   state.fieldRoleMap = Object.assign({}, profile.fieldRoleMap || {});
+  /* issue #1338: the engine's own render-time revert rule validates this. */
+  state.listTitleField = profile.list_title_field ?? null;
+  state.listTitleReverted = false;
   state.datasetFiles.push({
     name: profile.datasetFileName || 'dataset.json',
     size: JSON.stringify(records).length,
@@ -159,6 +162,12 @@ function ensureTaskConfigSeeded() {
   (TASK_DATA.outputs || []).forEach(function(out) {
     state.outputConfigs[out.type] = normalizeOutputConfig(out.type, out.config || {}, state.lang);
   });
+  /* Load the task's stored dialogue_fields into the shared state (same field
+     task-new uses) so the auto list title / dialogue preview resolve the
+     first turn instead of the count text (#1386). */
+  state.dialogueFields = TASK_DATA.dialogue_fields ? Object.assign({}, TASK_DATA.dialogue_fields) : null;
+  state.prefillFields = TASK_DATA.prefill_fields ? Object.assign({}, TASK_DATA.prefill_fields) : null;
+  state.dialogueDeclined = false;
   state.itemPairLabels = Array.isArray(TASK_DATA.itemPairLabels) ? TASK_DATA.itemPairLabels.slice() : null;
   /* seedDatasetFromProfile() below bumps _datasetVersion, so the next
      renderSchemaFields() runs its auto-population reset; the pending copy
@@ -168,6 +177,7 @@ function ensureTaskConfigSeeded() {
     datasetRecords: TASK_DATA.datasetRecords,
     datasetFileName: TASK_DATA.datasetFileName,
     fieldRoleMap: TASK_DATA.fieldRoleMap,
+    list_title_field: TASK_DATA.list_title_field,
   });
   state._configSeededForTaskId = TASK_DATA.taskId;
 }
@@ -198,12 +208,18 @@ function getOutputTypeDisplayLabel(outKey) {
   return state.lang === 'en' ? found.en : found.zh;
 }
 
+/* Flat taxonomy-tree values (no node has children) keep the comma-joined text. */
+function isHierarchicalTaxonomyField(config, field) {
+  return field.type === 'taxonomy-tree' &&
+    collectTaxonomyEntries(getOutputConfigFieldValue(config, field)).some(function(entry) { return entry.depth > 1; });
+}
+
 function summarizeOutputConfigForDisplay(outKey, config) {
   var outReg = OUTPUT_TYPE_REGISTRY[outKey];
   if (!outReg || !Array.isArray(outReg.fields)) return '';
   var parts = [];
   outReg.fields.forEach(function(field) {
-    if (field.key === 'allow_bypass') return;
+    if (field.key === 'allow_bypass' || isHierarchicalTaxonomyField(config, field)) return;
     var value = getOutputConfigFieldValue(config, field);
     if (value === undefined || value === null || value === '') return;
     if (Array.isArray(value)) {
@@ -219,6 +235,21 @@ function summarizeOutputConfigForDisplay(outKey, config) {
     }
   });
   return parts.join(' · ');
+}
+
+/* Hierarchical (registry type 'taxonomy-tree') fields are shown as a read-only
+   node list instead of text (FR-014i-1): depth-first pre-order, every node. */
+function summarizeOutputTaxonomyNodes(outKey, config) {
+  var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+  if (!outReg || !Array.isArray(outReg.fields)) return [];
+  var nodes = [];
+  outReg.fields.forEach(function(field) {
+    if (!isHierarchicalTaxonomyField(config, field)) return;
+    collectTaxonomyEntries(getOutputConfigFieldValue(config, field)).forEach(function(entry) {
+      nodes.push({ name: entry.namePath[entry.namePath.length - 1], depth: entry.depth, path: entry.namePath });
+    });
+  });
+  return nodes;
 }
 
 /* ── Event bindings for the Step 1 / Step 2 parity surfaces ────

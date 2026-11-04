@@ -1,12 +1,12 @@
 <!--
-Sync Impact Report — constitution v1.33.0
-Generated: 2026-08-26
+Sync Impact Report — constitution v1.34.0
+Generated: 2026-10-29
 
-Version change: v1.32.1 → v1.33.0
-Bump type: MINOR — Principle X gains an explicit exclusion list for PR size arithmetic; no principle is removed or redefined and the 5 files / 300 lines thresholds are unchanged
+Version change: v1.33.0 → v1.34.0
+Bump type: MINOR — new Principle XXIII (Shared-Host Operation Safety, NON-NEGOTIABLE); no principle is removed or redefined
 
 Changed principles:
-- X. Change Scope Discipline — the file-count and line-count thresholds now both measure hand-written production changes only, excluding tests, lockfiles, generated files, tool/project configuration files, empty or re-export-only `__init__.py`/`index.ts`, and `specs/**`/`openspec/**` artifacts; excluded files stay in the PR and remain bound by the single-purpose rule
+- XXIII. Shared-Host Operation Safety — new: no Docker prune on any host; teardown only on label-suite resources and label-suite compose projects; unreadable teardown targets refused; binds every operator, with the agent hook as a proxy only (issue #1487). Unrelated to the pre-1.31.0 Principle XXIII that moved into the domain constitutions
 
 Changed governance gates: none
 
@@ -14,12 +14,14 @@ New sections: none
 Removed sections: none
 
 Templates sync status:
-- .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure
-- .claude/rules/git-workflow.md: Updated — Size guardrails restatement
-- CLAUDE.md: Updated — Escalation gates restatement
-- docs/sdd-workflow.md: Updated — PR scope restatement
-- openspec/config.yaml: Updated — task granularity rule restatement
-- .specify/templates/tasks-template.md: Updated — PR boundary checklist plus the PR-FOUND-BRUNO derivation that assumed exactly 5 counted files
+- .specify/memory/constitution.md: Updated — full content sync per Amendment Procedure (also collapses a duplicated BEGIN CACHE header line)
+- CLAUDE.md: Updated — two Prohibitions entries
+- AGENTS.md: Updated — Hard Rule 10, so agents outside Claude Code's hook read the ban
+- docs/deployment/deployment.md: Updated — §9 shared-host operating rules and the hook's limits
+- docs/development.md: Updated — the compose teardown example names its project
+- docker-compose.yml: Updated — declares `name: label-suite`
+- .claude/hooks/pre-tool-use.sh: Updated — machine enforcement for Claude Code Bash calls
+- .specify/templates/*: No change — no template enumerates principles
 
 Deferred TODOs: none
 -->
@@ -263,6 +265,17 @@ Data assets must be classified, retained, and deleted according to defined polic
 - Users must not receive deleted or expired data through caches, exports, or API responses
 - Soft-delete patterns require a hard-delete or anonymization path for sensitive data
 
+### XXIII. Shared-Host Operation Safety (NON-NEGOTIABLE)
+
+A host shared with other teams must never lose a resource this project did not create. The deploy host runs other labs' public services, and Docker access there is equivalent to root, so a single mistaken command is irreversible and harms third parties.
+
+- No `docker ... prune` variant (`system`, `image`, `volume`, `container`, `network`, `builder`, `buildx`) may run on any host, local or remote, through the CLI or the Docker socket; there is no exception and no override
+- Teardown commands — `rm`, `stop`, `kill`, `restart`, `rmi`, and `container`/`image`/`volume`/`network` `rm` — may only target resources named with the `label-suite` prefix
+- `docker compose` teardowns (`down`, `stop`, `rm`, `kill`, `restart`) must name a `label-suite*` project explicitly through `-p`, `--project-name`, or `COMPOSE_PROJECT_NAME`; every compose file in this repository declares `name:` so the project name never depends on the checkout directory
+- A teardown target that cannot be read before the command runs — a command or variable substitution, a glob, stdin fed through `xargs` or `find -exec`, a container ID — is not permitted
+- These rules bind every operator: humans, Claude Code, and any other agent. `.claude/hooks/pre-tool-use.sh` enforces them for Claude Code Bash calls only, and it reads the command string rather than resource ownership, so passing the hook is never proof that a command is allowed
+- Operating procedure and the hook's known limits live in `docs/deployment/deployment.md` §9
+
 ## Domain Constitutions
 
 The main constitution is intentionally limited to project-wide rules. Domain constitutions are mandatory when their scope applies:
@@ -324,12 +337,13 @@ Proposed ADRs do not supersede current rules. `specs/STATUS.md` is the delivery-
 - code/test gates = affected implementation verification
 - Source-Verify + write-back = archive-time canonical ID/version/Changelog integrity
 
-**Version**: 1.33.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-08-26
+**Version**: 1.34.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-10-29
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.34.0 | 2026-10-29 | Add Principle XXIII (Shared-Host Operation Safety — NON-NEGOTIABLE, issue #1487): no Docker prune on any host through the CLI or the socket; teardown only on `label-suite`-prefixed resources and explicitly named `label-suite*` compose projects; unreadable teardown targets (substitutions, globs, stdin feeders, IDs) refused; the rules bind every operator, and the Claude Code hook is a proxy that enforces them only for agent Bash calls. Motivated by the shared deploy host dell-7820, which runs 19 containers of other labs and where Docker group access equals root. Unrelated to the pre-1.31.0 Principle XXIII (Frontend-Backend Contract Governance), which moved into the domain constitutions. MINOR: a new principle, no principle removed or redefined |
 | 1.33.0 | 2026-08-26 | Principle X: define how PR size is measured (issue #424). Both the 5-file and the 300-line thresholds now count hand-written production changes only and share one exclusion list — tests, lockfiles, generated files, tool/project configuration files, empty or re-export-only `__init__.py`/`index.ts`, and `specs/**`/`openspec/**` artifacts. Threshold values are unchanged. Motivated by the foundation-core pilot (issue #356 finding 4), where all 10 PRs breached the literal rule purely on lockfiles, config files, and generated output while the hand-written logic stayed well inside both limits. Excluded files still ship in the PR that needs them and remain bound by the single-purpose rule. MINOR rather than PATCH: the measurement basis is new coverage, not a rewording; not MAJOR because no principle is removed or redefined |
 | 1.32.1 | 2026-08-25 | Clarify the SDD governance authority order: Proposed ADRs remain non-binding, `specs/STATUS.md` is the delivery-state source, and derived/cache files defer to upstream authority; separate OpenSpec schema validation, project SDD lint, affected code/test verification, and archive-time Source-Verify/write-back integrity |
 | 1.32.0 | 2026-08-25 | Extend Principle VI (English-First) to cover collaboration artifacts (issue #380): GitHub issues and pull requests opened by an AI agent are now written in Traditional Chinese — body plus the descriptive part of the title — while titles keep an English structural head and technical terms stay in English. Commit messages are explicitly excluded and remain English-only, which is safe because `main` integrates via merge commits and a PR title never becomes a commit subject. MINOR rather than PATCH: Principle VI previously said nothing about issues or PRs, so this adds coverage rather than rewording existing coverage; it is not MAJOR because no principle is removed or redefined |

@@ -150,7 +150,14 @@ test.describe('FR-098 §1, §2(a) — interactive relation builder carries offse
 });
 
 test.describe('FR-098 §1, §2(b) — object-shape dataset import carries offsets (T008)', () => {
-  test('every output-role-prefilled triple carries integer offsets copied from entity1/entity2', async ({ page }) => {
+  test('every declared-column prefilled triple carries integer offsets copied from entity1/entity2', async ({ page }) => {
+    // issue #1430: triples prefill only from the column declared in prefill_fields; the seed
+    // `triples` column is Output-role (never declared), so declare an Evidence-role copy here.
+    await patchDataFile(page, 'task-detail.data.js', `
+      var p = window.LabelSuiteTaskDetailData.profiles.T008;
+      p.fieldRoleMap.triples = 'evidence';
+      p.prefill_fields = { entities: 'entities', triples: 'triples' };
+    `);
     await page.goto(buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001' }));
     await dismissGuidelineModal(page);
     await expect(page.getByTestId('ws-ri-triple-item')).toHaveCount(4);
@@ -243,8 +250,18 @@ test.describe('FR-098 §3, §7(a) — gold plain-string shape stays null (task-n
   });
 });
 
-test.describe('FR-098 §3, §7(b) — built-in demo string-concatenation shape stays null (T013/absa-001)', () => {
-  test('the ABSA demo triples leave every offset field null', async ({ page }) => {
+test.describe('FR-098 §3, §7(b) — T013 flat-text seed string-concatenation shape stays null (T013/absa-001)', () => {
+  test('the ABSA triples of the T013 flat-text seed leave every offset field null', async ({ page }) => {
+    /* issue #1341: T013 now seeds a dialogue Input (utterances) and the dialogue panel does
+     * not seed flat-string ABSA triples from the output column. This test pins that flat
+     * shape's serialization, so run it on the pre-#1341 flat-text seed. */
+    await patchDataFile(
+      page,
+      'task-detail.data.js',
+      `var p = window.LabelSuiteTaskDetailData.profiles.T013;
+       p.fieldRoleMap.utterances = 'unused';
+       p.fieldRoleMap.text = 'input';`,
+    );
     await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001' }));
     await dismissGuidelineModal(page);
 

@@ -16,8 +16,12 @@ const EXPECTED_PERMISSION_KEYS = [
   'task.detail.view',
   'task.detail.edit',
   'task.members.manage',
+  'task.lifecycle.manage',
+  'task.delete',
   'annotation.workspace.annotate',
   'annotation.workspace.review',
+  'annotation.exception.resolve',
+  'annotation.dispute.adjudicate',
   'dataset.stats.view',
   'dataset.quality.view',
   'dataset.export',
@@ -25,6 +29,7 @@ const EXPECTED_PERMISSION_KEYS = [
   'admin.user_management.manage',
   'admin.role_settings.view',
   'admin.role_settings.manage',
+  'admin.platform_overview.view',
 ];
 
 test.describe('Admin role settings mobile sidebar layout', () => {
@@ -281,18 +286,18 @@ const ADMIN_KEYS = EXPECTED_PERMISSION_KEYS.filter((k) => k.startsWith('admin.')
 const cell = (page: import('@playwright/test').Page, key: string, role: string) =>
   page.locator(`.matrix-checkbox[data-key="${key}"][data-role="${role}"]`);
 
-test.describe('Admin role settings 17-key matrix sync (#1264)', () => {
+test.describe('Admin role settings 22-key matrix sync (#1264, #1270)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(ROLE_SETTINGS_URL);
   });
 
-  test('splits keys into 9 system and 8 task keys (layer sanity)', () => {
-    expect(SYSTEM_KEYS).toHaveLength(9);
-    expect(TASK_KEYS).toHaveLength(8);
+  test('splits keys into 10 system and 12 task keys (layer sanity)', () => {
+    expect(SYSTEM_KEYS).toHaveLength(10);
+    expect(TASK_KEYS).toHaveLength(12);
   });
 
-  test('renders exactly 42 applicable cells with no layer-mismatched checkbox (FR-008a)', async ({ page }) => {
-    await expect(page.locator('.matrix-checkbox')).toHaveCount(42);
+  test('renders exactly 56 applicable cells with no layer-mismatched checkbox (FR-008a)', async ({ page }) => {
+    await expect(page.locator('.matrix-checkbox')).toHaveCount(56);
     for (const key of SYSTEM_KEYS) {
       for (const role of ['user', 'super_admin']) await expect(cell(page, key, role)).toHaveCount(1);
       for (const role of ['project_leader', 'reviewer', 'annotator']) await expect(cell(page, key, role)).toHaveCount(0);
@@ -303,8 +308,8 @@ test.describe('Admin role settings 17-key matrix sync (#1264)', () => {
     }
   });
 
-  test('marks exactly 10 fixed cells that stay disabled in edit mode (FR-008a)', async ({ page }) => {
-    await expect(page.locator('.matrix-checkbox[data-fixed="true"]')).toHaveCount(10);
+  test('marks exactly 12 fixed cells that stay disabled in edit mode (FR-008a)', async ({ page }) => {
+    await expect(page.locator('.matrix-checkbox[data-fixed="true"]')).toHaveCount(12);
 
     const fixed: Array<[string, string, boolean]> = [
       ['dashboard.view', 'user', true],
@@ -322,10 +327,10 @@ test.describe('Admin role settings 17-key matrix sync (#1264)', () => {
     }
   });
 
-  test('enables the other 32 cells in edit mode and disables all 42 in view mode', async ({ page }) => {
+  test('enables the other 44 cells in edit mode and disables all 56 in view mode', async ({ page }) => {
     await expect(page.locator('.matrix-checkbox:enabled')).toHaveCount(0);
     await page.locator('#editBtn').click();
-    await expect(page.locator('.matrix-checkbox:enabled')).toHaveCount(32);
+    await expect(page.locator('.matrix-checkbox:enabled')).toHaveCount(44);
     await expect(page.locator('.matrix-checkbox[data-fixed="true"]:enabled')).toHaveCount(0);
   });
 
@@ -343,6 +348,20 @@ test.describe('Admin role settings 17-key matrix sync (#1264)', () => {
     await expect(cell(page, 'task.detail.edit', 'reviewer')).not.toBeChecked();
     await expect(cell(page, 'task.detail.edit', 'annotator')).not.toBeChecked();
     await expect(cell(page, 'task.detail.view', 'reviewer')).toBeChecked();
+  });
+
+  test('five #1270 keys carry the canonical defaults', async ({ page }) => {
+    for (const key of ['task.lifecycle.manage', 'task.delete', 'annotation.exception.resolve', 'annotation.dispute.adjudicate']) {
+      await expect(cell(page, key, 'project_leader')).toBeChecked();
+      await expect(cell(page, key, 'reviewer')).not.toBeChecked();
+      await expect(cell(page, key, 'annotator')).not.toBeChecked();
+      for (const role of ['user', 'super_admin']) await expect(cell(page, key, role)).toHaveCount(0);
+    }
+    const platform = 'admin.platform_overview.view';
+    await expect(cell(page, platform, 'super_admin')).toBeChecked();
+    await expect(cell(page, platform, 'super_admin')).toHaveAttribute('data-fixed', 'true');
+    await expect(cell(page, platform, 'user')).not.toBeChecked();
+    await expect(cell(page, platform, 'user')).toHaveAttribute('data-fixed', 'true');
   });
 
   test('no-op save keeps version and audit log unchanged (FR-010)', async ({ page }) => {

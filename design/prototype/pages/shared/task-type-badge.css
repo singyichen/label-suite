@@ -1,0 +1,18 @@
+/* Task-type badge palette — single source (issue #1448 PR-C).
+   Link AFTER the page's inline <style>: the page `.badge` base rule uses the
+   `border: 1px solid transparent` shorthand, which would reset border-color
+   at equal specificity if this file loaded first.
+   Dark rules are flat selectors (not CSS-nested) to keep specificity (0,2,1). */
+.badge-task-type-single   { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
+.badge-task-type-sequence { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
+.badge-task-type-relation { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
+.badge-task-type-pairs    { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
+.badge-task-type-scoring  { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
+.badge-task-type-default  { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
+
+html[data-theme="dark"] .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+html[data-theme="dark"] .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
+html[data-theme="dark"] .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+html[data-theme="dark"] .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
+html[data-theme="dark"] .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
+html[data-theme="dark"] .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }

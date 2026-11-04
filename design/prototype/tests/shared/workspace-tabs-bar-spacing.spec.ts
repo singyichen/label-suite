@@ -10,8 +10,8 @@
  *
  * Geometry/computed-style only. The divider color is compared with the
  * RESOLVED `--color-border` of the current theme (read through a probe
- * element), never a hardcoded color. Guards (top 0, square corners, 180px
- * tab width, overview trigger placement/clickability, 375px) already hold
+ * element), never a hardcoded color. Guards (top 0, square corners, tab width
+ * range (issue #1280 replaced the fixed 180px), overview trigger placement/clickability, 375px) already hold
  * today and must stay green.
  */
 import { test, expect } from '../fixtures';
@@ -136,7 +136,7 @@ test.describe('Workspace tabs bar spacing (#1143) — guards that already hold',
   });
 
   for (const sidebar of ['expanded', 'collapsed'] as const) {
-    test(`sidebar ${sidebar}: bar top 0, square corners, and every tab is 180px wide`, async ({ page }) => {
+    test(`sidebar ${sidebar}: bar top 0, square corners, and every tab width is within the 104-220px range (issue #1280)`, async ({ page }) => {
       await openThreeTabs(page, sidebar);
       const top = await tabBar(page).evaluate((bar) => bar.getBoundingClientRect().top);
       expect(Math.abs(top)).toBeLessThanOrEqual(TOLERANCE_PX);
@@ -149,7 +149,8 @@ test.describe('Workspace tabs bar spacing (#1143) — guards that already hold',
           await expect(tabs.nth(i)).toHaveCSS(prop, '0px');
         }
         const w = await tabs.nth(i).evaluate((el) => el.getBoundingClientRect().width);
-        expect(Math.abs(w - 180)).toBeLessThanOrEqual(TOLERANCE_PX);
+        expect(w).toBeGreaterThanOrEqual(104 - TOLERANCE_PX);
+        expect(w).toBeLessThanOrEqual(220 + TOLERANCE_PX);
       }
     });
   }
@@ -157,7 +158,12 @@ test.describe('Workspace tabs bar spacing (#1143) — guards that already hold',
   for (const scenario of ['three tabs', 'seven tabs overflowing the bar'] as const) {
     test(`overview trigger stays at the bar right end and is clickable — ${scenario}`, async ({ page }) => {
       if (scenario === 'three tabs') await openThreeTabs(page, 'expanded');
-      else await openSevenTabs(page);
+      else {
+        // Issue #1280: tabs shrink to a 104px minimum, so seven tabs no longer
+        // overflow a 1280px viewport; narrow it so the bar still overflows.
+        await page.setViewportSize({ width: 800, height: 900 });
+        await openSevenTabs(page);
+      }
       const bar = tabBar(page);
       if (scenario !== 'three tabs') {
         const overflow = await bar.evaluate((el) => el.scrollWidth - el.clientWidth);

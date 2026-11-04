@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Spec: specs/annotation/015-annotation-workspace/spec.md -->
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -6,6 +7,9 @@
   <title>Label Suite — 標記清單</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/list-page.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
@@ -13,6 +17,8 @@
       --navbar-mobile-top-height: 64px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Shared list chrome lives in ../shared/list-page.css (#1448); keep UA cursors instead of the shared pointer. */
+    :where(button, input, select) { cursor: revert; }
     body {
       font-family: var(--font-sans);
       background: var(--color-surface);
@@ -115,23 +121,17 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
       padding: 10px 20px;
       border-radius: var(--radius-md);
       border: 1px solid transparent;
       font-weight: 600;
       font-size: 14px;
-      white-space: nowrap;
-      cursor: pointer;
       transition: opacity var(--dur-fast), transform var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
-    }
-    .btn-primary {
-      color: var(--color-white);
-      background: var(--color-cta);
-      border-color: var(--color-cta);
-    }
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
     }
     .btn-primary.slim {
       padding: 10px 18px;
@@ -173,12 +173,6 @@
       background: #EDE9FE;
       border-color: #DDD6FE;
     }
-    .badge-task-type-single      { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
-    .badge-task-type-sequence    { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
-    .badge-task-type-relation    { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
-    .badge-task-type-pairs       { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
-    .badge-task-type-scoring     { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
-    .badge-task-type-default     { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     .progress {
       height: 6px;
       border-radius: var(--radius-full);
@@ -192,81 +186,7 @@
       background: var(--color-cta);
       transition: width 300ms ease;
     }
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-lg);
-    }
-    .toolbar-left {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      flex: 1;
-      flex-wrap: wrap;
-    }
-    .search-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      min-width: 220px;
-      width: 280px;
-      flex: 0 1 auto;
-      max-width: 280px;
-    }
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 15px;
-      height: 15px;
-      color: var(--color-ink-muted);
-      pointer-events: none;
-    }
-    .search-input {
-      width: 100%;
-      padding: 9px 12px 9px 36px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      color: var(--color-ink);
-      background: var(--color-white);
-      transition: border-color var(--dur-fast);
-      outline: none;
-    }
-    .search-input::placeholder { color: var(--color-ink-muted); }
-    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .filter-select {
-      padding: 9px 32px 9px 12px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
-      outline: none;
-      min-width: 180px;
-      appearance: none;
-      -webkit-appearance: none;
-      transition: border-color var(--dur-fast);
-    }
-    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .clear-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 12px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink-muted);
-      font-size: 13px;
-      font-weight: 500;
-      transition: color var(--dur-fast), border-color var(--dur-fast);
-    }
-    .clear-btn:hover { color: var(--color-ink); border-color: var(--color-primary); }
-    .clear-btn.hide-clear { visibility: hidden; pointer-events: none; }
+    .filter-select { min-width: 180px; }
     .table-container {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
@@ -276,32 +196,7 @@
       display: flex;
       flex-direction: column;
     }
-    .task-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .task-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      min-width: 640px;
-      white-space: nowrap;
-      text-align: left;
-    }
-    .task-table th {
-      text-align: left;
-      padding: 12px 20px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--color-ink-muted);
-      border-bottom: 1px solid var(--color-border);
-      white-space: nowrap;
-      background: var(--color-slate-50);
-    }
-    .task-table td {
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--color-border-muted);
-      vertical-align: middle;
-    }
+    .task-table { min-width: 640px; }
     .task-table tbody tr:last-child td { border-bottom: none; }
     #sampleRows tr {
       cursor: pointer;
@@ -390,77 +285,39 @@
       color: var(--color-white);
     }
     .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
-    .empty {
-      padding: var(--space-xl);
-      text-align: center;
-      color: var(--color-ink-muted);
-      font-size: 14px;
-      border-top: 1px solid var(--color-border);
-    }
-    .empty .empty-msg { margin: 0; }
-    .empty .clear-btn { margin-top: 10px; }
-    .pagination {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-md);
-      flex-wrap: wrap;
-      padding: var(--space-md) var(--space-lg);
-      border-top: 1px solid var(--color-border);
-    }
-    .pagination-info { font-size: 13px; color: var(--color-text-soft); }
-    .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
-    .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
-    .page-btn {
-      width: 32px;
-      height: 32px;
-      padding: 0 8px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--color-ink);
-      background: var(--color-white);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--dur-fast);
-    }
-    .page-btn:hover:not(:disabled):not(.active) {
-      border-color: var(--color-primary);
-      background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
-    }
-    .page-btn.active {
-      background: var(--color-primary);
-      color: var(--color-white);
-      border-color: var(--color-primary);
-    }
-    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
-    .page-size-select {
-      padding: 5px 28px 5px 10px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
-      outline: none;
-      appearance: none;
-      -webkit-appearance: none;
-      cursor: pointer;
-    }
     /* === Reviewer list styles === */
     .reviewer-stats {
       font-size: 12px; color: var(--color-text-soft); font-family: monospace;
       display: block;
-      min-width: 240px;
+      min-width: 0;
       white-space: pre-line;
       line-height: 1.6;
     }
     .reviewer-stats-cell {
-      min-width: 280px;
-      width: 280px;
+      min-width: 160px;
+      width: 160px;
     }
+    /* Reviewer queue has 9 columns (the annotator list has 5): tighter cell
+       padding and a floor on 文本摘要 let it fit .task-table-wrap at 1440px
+       instead of squeezing the summary or pushing 操作 out of view (#1444). */
+    .task-table:has(.reviewer-stats-cell) th,
+    .task-table:has(.reviewer-stats-cell) td { padding-left: 8px; padding-right: 8px; }
+    .task-table:has(.reviewer-stats-cell) td.text-snippet { min-width: 160px; }
+    /* English copy is longer (record ids, "Finalized by arbitration adopting B",
+       "Finalized . locked"): let the ID, review status and answer cells wrap
+       inside a capped width so the table fits with margin in zh and en. */
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1),
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(3),
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(6) {
+      white-space: normal;
+    }
+    /* Only record ids are unbroken tokens; status and answer text break at spaces. */
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1) { overflow-wrap: anywhere; }
+    /* A label chip never breaks inside a word; the arbitration note still wraps. */
+    .task-table:has(.reviewer-stats-cell) td:nth-child(6) .annotator-result-tag { white-space: nowrap; }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(1) { min-width: 100px; max-width: 120px; }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(3) { min-width: 96px; max-width: 110px; }
+    .task-table:has(.reviewer-stats-cell) :is(th, td):nth-child(6) { min-width: 100px; max-width: 140px; }
     .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
     /* FR-091 processing summary: three stacked lines rather than one run-on
        string, so a reader can find the same field at the same height on
@@ -565,20 +422,13 @@
       .badge-dry-run  { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
       .badge-official { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
 
-      /* Task-type badges */
-      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
-      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
-      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
-      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
-
       /* Result tags with !important — need matching specificity */
       .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
       .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
       .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
     }
   </style>
+  <link rel="stylesheet" href="../shared/task-type-badge.css" />
 </head>
 <body>
 <div id="sharedSidebarMount"></div>
@@ -643,11 +493,11 @@
        static markup lives here. -->
   <section class="list hidden" id="dryRunFeedbackCard" aria-label="試標歷史回饋" data-testid="ws-dry-run-feedback-card"></section>
 
-  <section class="empty hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
+  <section class="empty-state empty-state-panel hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
 
   <!-- Issue #449: shown when the reviewer arrived from the quick-review CTA
        and no review unit on this task is actionable for them. -->
-  <section class="empty hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
+  <section class="empty-state empty-state-panel hidden" id="noActionableNotice" role="status" data-testid="list-no-actionable-notice"></section>
 
   <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選" id="listToolbar">
     <div class="toolbar-left">
@@ -684,7 +534,7 @@
         <tbody id="sampleRows"></tbody>
       </table>
     </div>
-    <div class="empty hidden" id="emptyState"></div>
+    <div class="empty-state empty-state-page hidden" id="emptyState"></div>
     <div class="pagination hidden" id="paginationBar">
       <div class="pagination-left">
         <span class="pagination-info" id="paginationInfo"></span>
@@ -924,6 +774,8 @@
       status: listEntry.status,
       outputTypes: listEntry.outputTypes || [],
       fieldRoleMap: detailProfile.fieldRoleMap || {},
+      listTitleField: detailProfile.list_title_field ?? null,
+      dialogueFields: detailProfile.dialogue_fields ?? null,
       guidelineFiles: detailProfile.guidelineFiles || [],
       datasetRecords: detailProfile.datasetRecords || [],
       materializedRuns: detailProfile.materializedRuns || null
@@ -943,27 +795,18 @@
     return String(index);
   }
 
-  function stringifyFieldValue(value) {
-    if (value === undefined || value === null) return '';
-    if (typeof value === 'string') return value;
-    if (Array.isArray(value)) return value.map(stringifyFieldValue).join(', ');
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
+  /* FR-106: delegates to the helper shared with the workspace left rail. */
+  function getRecordSnippet(record, fieldRoleMap, listTitleField, dialogueFields) {
+    if (!record) return '-';
+    return window.LabelSuiteAnnotationWorkspaceData.getRecordSummaryText(
+      record, fieldRoleMap, listTitleField, CURRENT_LANG, dialogueFields
+    ) || '-';
   }
 
-  /*
-   * Data Fairness: only fieldRoleMap 'input' fields may appear in the list
-   * preview snippet. 'evidence' and 'output' fields are never read here.
-   */
-  function getRecordSnippet(record, fieldRoleMap) {
-    if (!record) return '-';
-    var inputKeys = Object.keys(fieldRoleMap || {}).filter(function (key) {
-      return fieldRoleMap[key] === 'input';
-    });
-    var parts = inputKeys
-      .map(function (key) { return stringifyFieldValue(record[key]); })
-      .filter(Boolean);
-    return parts.length > 0 ? parts.join(' ｜ ') : '-';
+  function getRecordSearchText(record, fieldRoleMap, dialogueFields) {
+    return window.LabelSuiteAnnotationWorkspaceData.getRecordSearchText(
+      record, fieldRoleMap, CURRENT_LANG, dialogueFields
+    );
   }
 
   function completionStateKey(role, taskId, runType) {
@@ -1349,7 +1192,8 @@
         item.statusLabel.toLowerCase().indexOf(query) !== -1 ||
         (item.annotator || '').toLowerCase().indexOf(query) !== -1 ||
         item.completedAt.toLowerCase().indexOf(query) !== -1 ||
-        item.text.toLowerCase().indexOf(query) !== -1
+        item.text.toLowerCase().indexOf(query) !== -1 ||
+        item.searchText.toLowerCase().indexOf(query) !== -1
       );
     });
   }
@@ -1777,7 +1621,8 @@
         status: status,
         statusLabel: statusText(status),
         completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
-        text: getRecordSnippet(record, profile.fieldRoleMap)
+        text: getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField, profile.dialogueFields),
+        searchText: getRecordSearchText(record, profile.fieldRoleMap, profile.dialogueFields)
       };
     });
   }
@@ -1799,7 +1644,8 @@
     profile.datasetRecords.forEach(function (record, index) {
       var recordId = getRecordId(record, index);
       var mockRows = getMockRows(context, recordId);
-      var text = getRecordSnippet(record, profile.fieldRoleMap);
+      var text = getRecordSnippet(record, profile.fieldRoleMap, profile.listTitleField, profile.dialogueFields);
+      var searchText = getRecordSearchText(record, profile.fieldRoleMap, profile.dialogueFields);
       mockRows.forEach(function (mockRow, rowIdx) {
         var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };
         var status = data.getReviewUnitStatus(
@@ -1822,6 +1668,7 @@
           statusLabel: reviewUnitStatusText(status),
           completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
           text: text,
+          searchText: searchText,
           overwrites: overwrites,
           finalizationSourceKeys: getFinalizationSourceKeys(
             profile, context, recordId, identity, overwrites)
@@ -2100,13 +1947,13 @@
   function renderEmptyState(emptyEl, hasAnyRows, context) {
     emptyEl.innerHTML = '';
     var msg = document.createElement('p');
-    msg.className = 'empty-msg';
+    msg.className = 'empty-state-desc';
     msg.textContent = t(hasAnyRows ? 'emptyNoResults' : 'emptyNoData');
     emptyEl.appendChild(msg);
     if (hasAnyRows) {
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'clear-btn';
+      btn.className = 'clear-btn empty-state-action';
       btn.setAttribute('data-testid', 'empty-clear-filters');
       btn.textContent = t('clearFiltersLabel');
       btn.addEventListener('click', function () {

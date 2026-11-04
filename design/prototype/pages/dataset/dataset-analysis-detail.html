@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Spec: specs/dataset/017-dataset-analysis-detail/spec.md -->
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -6,6 +7,10 @@
   <title>Label Suite — 資料集分析詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
+  <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/content-tabs.css" />
+  <link rel="stylesheet" href="../shared/metric.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,7 +28,7 @@
     body{font-family:var(--font-sans);background:var(--color-surface);color:var(--color-ink);line-height:1.8;min-height:100vh;display:flex;flex-direction:row}
     html[lang="en"] body{line-height:1.6}
     a{color:inherit;text-decoration:none}
-    button,input,select{font:inherit;cursor:pointer}
+    :where(button,input,select){font:inherit;cursor:pointer}
     .hidden{display:none !important}
 
     main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
@@ -39,12 +44,6 @@
     .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap}
     .page-main-title{font-family:var(--font-serif-display);font-size:28px;line-height:1.3;font-weight:700;color:var(--color-ink);margin:0 0 4px}
     .page-main-subtitle{font-size:14px;line-height:1.8;color:var(--color-text-soft);margin:0}
-
-    /* Tabs */
-    .admin-tabs{display:flex;border-bottom:2px solid var(--color-border);margin-bottom:var(--space-lg)}
-    .admin-tab{padding:10px 20px;font-size:14px;font-weight:500;color:var(--color-text-soft);border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;border-left:none;border-right:none;border-top:none;transition:color var(--dur-fast),border-color var(--dur-fast)}
-    .admin-tab:hover{color:var(--color-primary)}
-    .admin-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);font-weight:600}
 
     /* Panel */
     .panel{border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:var(--space-lg);margin-bottom:var(--space-md)}
@@ -125,7 +124,6 @@
     .anomaly-body{flex:1}
     .anomaly-title{font-weight:600}
     .anomaly-detail{color:var(--color-ink-muted);font-size:12px;margin-top:2px}
-    .anomaly-empty{border:1px dashed var(--color-border);border-radius:var(--radius-md);background:var(--color-slate-50);padding:14px;font-size:13px;color:var(--color-text-soft);text-align:center}
 
     /* Annotator table */
     .table-wrap{border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;background:var(--color-white)}
@@ -157,22 +155,16 @@
     .risk-action-btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
     .risk-readonly-note{font-size:11px;color:var(--color-text-soft);line-height:1.5;white-space:normal}
 
-    /* Quality empty state */
-    .quality-empty{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center}
-    .quality-empty-icon{width:40px;height:40px;margin:0 auto 14px;color:var(--color-ink-muted);opacity:.6}
-    .quality-empty-title{font-size:15px;font-weight:700;color:var(--color-ink);margin-bottom:8px}
-    .quality-empty-desc{font-size:13px;color:var(--color-text-soft);max-width:400px;margin:0 auto 18px;line-height:1.7}
-
     /* Stats placeholder */
     .stats-placeholder{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center;color:var(--color-text-soft);font-size:14px}
 
     /* Buttons */
-    .btn{display:inline-flex;position:relative;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--radius-md);border:1px solid transparent;font-size:14px;font-weight:600;transition:background var(--dur-fast),color var(--dur-fast),opacity var(--dur-fast),border-color var(--dur-fast),transform var(--dur-fast)}
+    .btn{display:inline-flex;position:relative;align-items:center;justify-content:center;gap:8px}
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn){padding:10px 16px;border-radius:var(--radius-md);border:1px solid transparent;font-size:14px;font-weight:600;transition:background var(--dur-fast),color var(--dur-fast),opacity var(--dur-fast),border-color var(--dur-fast),transform var(--dur-fast)}
     .btn:hover{transform:translateY(-1px)}
     /* issue #1252: hover-only rectangle (border box + 2px below) keeps the hit area stable under the -1px lift, incl. the rounded corners */
     .btn:hover::after{content:"";position:absolute;inset:-1px -1px -2px}
-    .btn-secondary{color:var(--color-ink);background:var(--color-white);border-color:var(--color-border)}
-    .btn-secondary:hover{border-color:var(--color-primary);color:var(--color-primary)}
     .btn-sm{padding:6px 12px;font-size:13px}
 
     /* Toast (top-center, UXC-07 / MASTER §Toast) */
@@ -192,14 +184,6 @@
 
     /* Stats tab */
     .stats-metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-    .stats-metric-card{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-slate-50)}
-    .stats-metric-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-ink-muted);margin-bottom:6px}
-    .stats-metric-value{font-size:32px;font-weight:700;line-height:1.1;font-family:var(--font-mono);color:var(--color-ink);margin-bottom:2px}
-    .stats-metric-desc{font-size:12px;color:var(--color-text-soft)}
-    .stats-empty{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center}
-    .stats-empty-icon{width:40px;height:40px;margin:0 auto 14px;color:var(--color-ink-muted);opacity:.6}
-    .stats-empty-title{font-size:15px;font-weight:700;color:var(--color-ink);margin-bottom:8px}
-    .stats-empty-desc{font-size:13px;color:var(--color-text-soft);max-width:400px;margin:0 auto 18px;line-height:1.7}
     .stats-hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg)}
     .stats-chart-label{font-size:11px;font-weight:600;color:var(--color-ink-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
     .stats-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)}
@@ -224,12 +208,10 @@
     .stats-comatrix-hi{background:var(--color-primary-soft-bg);color:var(--color-ink)}
     .stats-comatrix-mid{background:var(--color-slate-50);color:var(--color-text-soft)}
     .stats-comatrix-low{color:var(--color-ink-muted)}
-    .stats-inline-card{display:inline-flex;align-items:center;gap:var(--space-md);padding:16px 24px;background:var(--color-slate-50);border:1px solid var(--color-border);border-radius:var(--radius-md)}
 
     /* Responsive */
     @media(max-width:767px){
       .layout{padding:var(--space-md) var(--space-md) var(--space-xl)}
-      .admin-tabs{overflow-x:auto}
       .iaa-score-grid{grid-template-columns:1fr}
       .stats-metric-grid{grid-template-columns:1fr}
       .stats-hist-grid{grid-template-columns:1fr}
@@ -238,17 +220,6 @@
     }
     @media(prefers-reduced-motion:reduce){
       *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
-    }
-
-    /* ── Dark mode overrides ──────────────────────────────────── */
-    html[data-theme="dark"] {
-      /* Task-type badges */
-      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
-      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
-      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
-      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
     }
   </style>
 </head>
@@ -299,14 +270,14 @@
   <!-- ═══ Stats Tab ══════════════════════════════════════════════ -->
   <div id="statsPanel" role="tabpanel" aria-labelledby="tabStats">
     <!-- Empty state -->
-    <div id="statsEmpty" class="hidden stats-empty">
-      <div class="stats-empty-icon">
+    <div id="statsEmpty" class="hidden empty-state empty-state-panel">
+      <div class="empty-state-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/>
         </svg>
       </div>
-      <p class="stats-empty-title" id="statsEmptyTitle">尚無標記資料</p>
-      <p class="stats-empty-desc" id="statsEmptyDesc">標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。</p>
+      <p class="empty-state-title" id="statsEmptyTitle">尚無標記資料</p>
+      <p class="empty-state-desc" id="statsEmptyDesc">標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。</p>
       <a href="../task-management/task-detail.html?task_role=project_leader" class="btn btn-secondary btn-sm" id="statsEmptyBtn">前往任務詳情</a>
     </div>
     <!-- Ready state -->
@@ -315,31 +286,11 @@
       <section class="panel" aria-labelledby="statsSharedTitle">
         <h2 class="panel-title" id="statsSharedTitle">共用指標</h2>
         <div class="stats-metric-grid" style="margin-top:var(--space-md)">
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblSentence">句子數量</div>
-            <div class="stats-metric-value">1,248</div>
-            <div class="stats-metric-desc" id="statsDescSentence">分析母體</div>
-          </div>
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblToken">Token 數量</div>
-            <div class="stats-metric-value">42,816</div>
-            <div class="stats-metric-desc" id="statsDescToken">空格分詞</div>
-          </div>
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblCompletion">完成率</div>
-            <div class="stats-metric-value" style="color:var(--color-success)">87.5%</div>
-            <div class="stats-metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div>
-          </div>
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblSubmitted">已提交樣本</div>
-            <div class="stats-metric-value">1,092</div>
-            <div class="stats-metric-desc" id="statsDescSubmitted">至少 1 位已提交</div>
-          </div>
-          <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblAvgTime">平均標記時間</div>
-            <div class="stats-metric-value">48<span style="font-size:18px;font-weight:500">s</span></div>
-            <div class="stats-metric-desc" id="statsDescAvgTime">每句平均用時</div>
-          </div>
+          <div class="metric"><span id="statsLblSentence">句子數量</span><strong>1,248</strong><div class="metric-desc" id="statsDescSentence">分析母體</div></div>
+          <div class="metric"><span id="statsLblToken">Token 數量</span><strong>42,816</strong><div class="metric-desc" id="statsDescToken">空格分詞</div></div>
+          <div class="metric"><span id="statsLblCompletion">完成率</span><strong style="color:var(--color-success)">87.5%</strong><div class="metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div></div>
+          <div class="metric"><span id="statsLblSubmitted">已提交樣本</span><strong>1,092</strong><div class="metric-desc" id="statsDescSubmitted">至少 1 位已提交</div></div>
+          <div class="metric"><span id="statsLblAvgTime">平均標記時間</span><strong>48<small style="font-size:18px;font-weight:500">s</small></strong><div class="metric-desc" id="statsDescAvgTime">每句平均用時</div></div>
         </div>
       </section>
       <!-- Task-type specific stats (FR-009) -->
@@ -351,14 +302,14 @@
   <div id="qualityPanel" class="hidden" role="tabpanel" aria-labelledby="tabQuality">
 
     <!-- Empty state (shown when qualityState != ready) -->
-    <div id="qualityEmpty" class="hidden quality-empty">
-      <div class="quality-empty-icon">
+    <div id="qualityEmpty" class="hidden empty-state empty-state-panel">
+      <div class="empty-state-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/>
         </svg>
       </div>
-      <p class="quality-empty-title" id="emptyTitle">IAA 報告將在 Dry Run 完成後產生</p>
-      <p class="quality-empty-desc" id="emptyDesc">請先完成 Dry Run，系統將自動計算 IAA 並產生品質報告。</p>
+      <p class="empty-state-title" id="emptyTitle">IAA 報告將在 Dry Run 完成後產生</p>
+      <p class="empty-state-desc" id="emptyDesc">請先完成 Dry Run，系統將自動計算 IAA 並產生品質報告。</p>
       <div class="quality-pending-badge-row"><span class="badge iaa-summary-badge badge-neutral" id="qualityPendingBadge"></span></div>
       <a href="../task-management/task-detail.html?task_role=project_leader" class="btn btn-secondary btn-sm" id="emptyBtn">前往任務詳情</a>
     </div>
@@ -1338,6 +1289,34 @@ var TASK_META = {
 var DEFAULT_TASK_ID = 'T001';
 var S_ROUTE = { taskId: DEFAULT_TASK_ID };
 
+/* Shared single_label IAA derivation (#1451): the card and the header badge both read this,
+ * so they cannot disagree. Returns null when the shared data module is absent (callers fall
+ * back to the static iaaData). */
+function getSingleLabelIaaState() {
+  if (!window.LabelSuiteAnnotationWorkspaceData) return null;
+  var listTask = ((window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [])
+    .filter(function(task) { return task.id === S_ROUTE.taskId; })[0];
+  var runType = (listTask && listTask.runType === 'official_run') ? 'official_run' : 'dry_run';
+  var result = window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(S_ROUTE.taskId, runType, 'single_label');
+  var threshold = OUTPUT_TYPE_IAA_REGISTRY.single_label.defaultThreshold;
+  return {
+    computable: !!result.computable,
+    alpha: result.alpha,
+    threshold: threshold,
+    pass: !!result.computable && result.alpha >= threshold
+  };
+}
+
+/* Set card-<state> on every .iaa-score-card from its own .iaa-card-value state class (#1451). */
+function syncIaaCardStates(scope) {
+  Array.prototype.forEach.call(scope.querySelectorAll('.iaa-score-card'), function(card) {
+    var valueEl = card.querySelector('.iaa-card-value');
+    var match = valueEl && /\b(pass|warn|fail)\b/.exec(valueEl.className);
+    card.classList.remove('card-pass', 'card-warn', 'card-fail');
+    if (match) card.classList.add('card-' + match[1]);
+  });
+}
+
 /* ── Composite IAA badge (FR-024A/B/C, SC-021/022/023) ────────────── */
 function computeCompositeBadge(taskMeta) {
   var outputs = (taskMeta && taskMeta.outputs) || [];
@@ -1623,7 +1602,16 @@ function updateSummaryBadge() {
   // SC-006B: entity_recognition's partial-overlap F1 display toggle (S.seqMode) is
   // display-only and must never change the composite gate state — strict Span F1 is
   // the only metric that gates pass/fail (iaaData.pass is fixed regardless of S.seqMode).
-  var result = computeCompositeBadge(taskMeta);
+  // #1451: computeCompositeBadge stays pure; the page feeds it the card's computed single_label
+  // state (uncomputable => not in x, still in y) so the badge and the card share one computation.
+  var effective = Object.assign({}, taskMeta);
+  var computed = getSingleLabelIaaState();
+  if (computed && taskMeta.iaaData && taskMeta.iaaData.single_label) {
+    effective.iaaData = Object.assign({}, taskMeta.iaaData, {
+      single_label: Object.assign({}, taskMeta.iaaData.single_label, { pass: computed.pass })
+    });
+  }
+  var result = computeCompositeBadge(effective);
   var cssState = (result.state === 'pending' || result.state === 'not_applicable') ? 'neutral' : result.state;
   badge.className = 'badge iaa-summary-badge badge-' + cssState;
   badge.textContent = compositeBadgeText(result);
@@ -1683,13 +1671,10 @@ function applySingleLabelIaaCard() {
   var thrTextEl = scope.querySelector('.iaa-threshold-item span:last-child');
   if (!valueEl || !barEl || !dotEl || !thrTextEl) return;
 
-  var listTask = ((window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [])
-    .filter(function(task) { return task.id === S_ROUTE.taskId; })[0];
-  var runType = (listTask && listTask.runType === 'official_run') ? 'official_run' : 'dry_run';
-  var result = window.LabelSuiteAnnotationWorkspaceData.computeIaaAlpha(S_ROUTE.taskId, runType, 'single_label');
-  var threshold = OUTPUT_TYPE_IAA_REGISTRY.single_label.defaultThreshold;
+  var result = getSingleLabelIaaState();
+  var threshold = result.threshold;
 
-  var state = !result.computable ? 'warn' : (result.alpha >= threshold ? 'pass' : 'fail');
+  var state = !result.computable ? 'warn' : (result.pass ? 'pass' : 'fail');
   valueEl.className = 'iaa-card-value ' + state;
   valueEl.textContent = result.computable ? result.alpha.toFixed(2) : t('iaaNotComputable');
   barEl.className = 'iaa-bar-fill ' + state;
@@ -1985,6 +1970,7 @@ function loadQualityPanel() {
     updateSummaryBadge();
     applySmallSampleBadge();
     applySingleLabelIaaCard();
+    syncIaaCardStates(mount);
     applyAnnotatorModificationRates();
     syncRoleUi();
     wireQualityPanelInteractions();

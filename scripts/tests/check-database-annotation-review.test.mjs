@@ -185,7 +185,7 @@ test('annotation/review parser rejects a Mermaid datatype that contradicts the d
 test('NoteCraft projection matches every source table, column, type, nullability, PK and FK', () => {
   const source = mergedSource();
   const data = erData();
-  assert.deepEqual(countProjection(data), { tables: 40, columns: 351, fks: 34 });
+  assert.deepEqual(countProjection(data), { tables: 40, columns: 352, fks: 34 });
   assert.deepEqual(checker.validateErData(source, data), []);
   const projected = data.tables.filter((table) => annotationNames.includes(table.name));
   assert.deepEqual(projected.map((table) => table.name), annotationNames);
@@ -222,11 +222,11 @@ test('projection checker rejects annotation column, type, nullability, PK and FK
 test('schema summary checker rejects stale metadata and inventory counts after annotation projection', () => {
   const data = erData();
   const markdown = inventory();
-  assert.deepEqual(countProjection(data), { tables: 40, columns: 351, fks: 34 });
+  assert.deepEqual(countProjection(data), { tables: 40, columns: 352, fks: 34 });
   assert.deepEqual(checker.validateSchemaSummary(data, markdown), []);
   const summary = markdown.split('\n').find((line) => line.startsWith('**NoteCraft 規劃檢視**'));
   assert.ok(summary, 'Expected a NoteCraft inventory summary');
-  for (const [count, unit] of [[40, '張候選表'], [351, '欄'], [34, '個候選單欄 FK']]) {
+  for (const [count, unit] of [[40, '張候選表'], [352, '欄'], [34, '個候選單欄 FK']]) {
     const staleData = structuredClone(data);
     staleData.meta.description = incrementCount(staleData.meta.description, count, unit);
     assert.notDeepEqual(checker.validateSchemaSummary(staleData, markdown), [],
@@ -546,4 +546,11 @@ test('every annotation/review note states that composite keys are not drawn and 
     assert.match(erTable(name).description, compositeSentence,
       `${name} note needs the "複合鍵與複合 FK 未畫在圖上，見各實體字典 §4" sentence`);
   }
+});
+
+test('V-03 derives the FR-023 leader-fallback source from the immutable membership role', () => {
+  const row = annotationRow('V-03');
+  assert.match(row, /FR-023 \(3\)/, 'Leader rulings must stay distinguishable from arbiter rulings');
+  assert.match(row, /task_role/);
+  assert.match(row, /M-02/, 'The derivation relies on task_role being immutable after creation');
 });

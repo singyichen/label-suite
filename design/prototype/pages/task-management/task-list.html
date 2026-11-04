@@ -1,12 +1,16 @@
 <!DOCTYPE html>
+<!-- Spec: specs/task-management/010-task-list/spec.md -->
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 任務列表</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/modal.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="../shared/button.css" />
   <link rel="stylesheet" href="../shared/empty-state.css" />
+  <link rel="stylesheet" href="../shared/list-page.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -27,7 +31,6 @@
     }
     html[lang="en"] body { line-height: 1.6; }
     a { color: inherit; text-decoration: none; }
-    button, input, select { font: inherit; cursor: pointer; }
     .hidden { display: none !important; }
 
     /* ── Layout ──────────────────────────────────────────────── */
@@ -46,57 +49,21 @@
     .page-header-actions { display: none; }
 
     /* ── Toolbar ─────────────────────────────────────────────── */
-    .toolbar {
-      display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm);
-      margin-bottom: var(--space-lg);
-    }
-    .toolbar-left { display: flex; align-items: center; gap: var(--space-sm); flex: 1; flex-wrap: wrap; }
+    /* Shared list chrome lives in ../shared/list-page.css (#1448). */
     .toolbar-right { display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; margin-left: auto; }
-    .search-wrap {
-      position: relative; display: flex; align-items: center;
-      min-width: 220px; width: 280px; flex: 0 1 auto; max-width: 280px;
-    }
-    .search-icon {
-      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-      width: 15px; height: 15px; color: var(--color-ink-muted); pointer-events: none;
-    }
-    .search-input {
-      width: 100%; padding: 9px 12px 9px 36px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      font-size: 14px; color: var(--color-ink); background: var(--color-white);
-      transition: border-color var(--dur-fast); outline: none;
-    }
-    .search-input::placeholder { color: var(--color-ink-muted); }
-    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .filter-select {
-      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      font-size: 14px; color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
-      outline: none; min-width: 140px;
-      appearance: none; -webkit-appearance: none;
-      transition: border-color var(--dur-fast);
-    }
-    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .clear-btn {
-      display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      background: var(--color-white); color: var(--color-ink-muted);
-      font-size: 13px; font-weight: 500; transition: color var(--dur-fast), border-color var(--dur-fast);
-    }
-    .clear-btn:hover { color: var(--color-ink); border-color: var(--color-primary); }
-    .clear-btn.hide-clear { visibility: hidden; pointer-events: none; }
+    .filter-select { min-width: 140px; }
     /* ── Buttons ─────────────────────────────────────────────── */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 10px 20px; border-radius: var(--radius-md);
-      border: 1px solid transparent; font-weight: 600; font-size: 14px; white-space: nowrap;
+      gap: 8px; white-space: nowrap;
+    }
+    /* Zero specificity so pages/shared/button.css wins for the standard buttons */
+    :where(.btn) {
+      padding: 10px 20px; border-radius: var(--radius-md);
+      border: 1px solid transparent; font-weight: 600; font-size: 14px;
       transition: opacity var(--dur-fast), transform var(--dur-fast),
                   border-color var(--dur-fast), background var(--dur-fast);
     }
-    .btn-primary { color: var(--color-on-cta); background: var(--color-cta); border-color: var(--color-cta); }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-secondary { color: var(--color-ink); background: var(--color-white); border-color: var(--color-border); }
-    .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-1px); }
     .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.18), 0 0 0 4px white; }
     .btn-icon { width: 16px; height: 16px; flex-shrink: 0; }
 
@@ -109,15 +76,7 @@
     }
 
     /* ── Task Table ──────────────────────────────────────────── */
-    .task-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .task-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; white-space: nowrap; text-align: left; }
-    .task-table th {
-      text-align: left; padding: 12px 20px; font-size: 11px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted);
-      border-bottom: 1px solid var(--color-border); white-space: nowrap;
-      background: var(--color-slate-50);
-    }
-    .task-table td { padding: 14px 20px; border-bottom: 1px solid var(--color-border-muted); vertical-align: middle; }
+    .task-table { min-width: 640px; }
     .task-table tbody tr { cursor: pointer; transition: background var(--dur-fast); }
     .task-table tbody tr:hover { background: var(--color-slate-50); }
     .task-table tbody tr:last-child td { border-bottom: none; }
@@ -154,45 +113,6 @@
       color: var(--color-error);
     }
     .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      z-index: 300;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-    .modal-backdrop.show { display: flex; }
-    .modal {
-      width: min(520px, 100%);
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-lg);
-      padding: var(--space-lg);
-    }
-    .modal h2 {
-      font-size: 20px;
-      margin: 0 0 8px;
-      color: var(--color-ink);
-      line-height: 1.3;
-    }
-    .modal p {
-      font-size: 14px;
-      color: var(--color-text-soft);
-      margin: 0 0 14px;
-      line-height: 1.7;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
     /* ── Badges ──────────────────────────────────────────────── */
     .badge {
       display: inline-flex; align-items: center; padding: 2px 8px;
@@ -204,12 +124,6 @@
     .badge-iaa             { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-in-progress     { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
     .badge-completed       { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
-    .badge-task-type-single      { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
-    .badge-task-type-sequence    { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
-    .badge-task-type-relation    { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
-    .badge-task-type-pairs       { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
-    .badge-task-type-scoring     { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
-    .badge-task-type-default     { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     .badge-dry-run         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
     .badge-official        { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
     .badge-run-unmaterialized { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
@@ -221,31 +135,7 @@
     .output-type-tag { max-width: 100%; }
 
     /* ── Pagination ──────────────────────────────────────────── */
-    .pagination {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: var(--space-md); flex-wrap: wrap;
-      padding: var(--space-md) var(--space-lg);
-      border-top: 1px solid var(--color-border);
-    }
-    .pagination-info { font-size: 13px; color: var(--color-text-soft); }
-    .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
-    .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
-    .page-btn {
-      width: 32px; height: 32px; padding: 0 8px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      font-size: 13px; font-weight: 500; color: var(--color-ink); background: var(--color-white);
-      display: inline-flex; align-items: center; justify-content: center;
-      transition: all var(--dur-fast);
-    }
-    .page-btn:hover:not(:disabled):not(.active) { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
-    .page-btn.active { background: var(--color-primary); color: var(--color-on-cta); border-color: var(--color-primary); }
-    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
-    .page-size-select {
-      padding: 5px 28px 5px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      font-size: 13px; color: var(--color-ink);
-      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
-      outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;
-    }
+    .page-btn.active { color: var(--color-on-cta); }
 
     /* ── Toast ───────────────────────────────────────────────── */
     .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 400; pointer-events: none; }
@@ -293,16 +183,9 @@
       .badge-dry-run        { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
       .badge-official       { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
       .badge-run-unmaterialized { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-
-      /* Output-type badges */
-      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
-      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
-      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
-      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
-      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
     }
   </style>
+  <link rel="stylesheet" href="../shared/task-type-badge.css" />
 </head>
 
 <body>
@@ -421,13 +304,13 @@
   </div>
 </main>
 
-<div class="modal-backdrop" id="deleteTaskModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="deleteTaskModalTitle">
+<div class="modal-overlay" id="deleteTaskModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="deleteTaskModalTitle">
   <div class="modal">
     <h2 id="deleteTaskModalTitle">確認刪除任務</h2>
     <p id="deleteTaskModalBody">確認將任務軟刪除？此操作可由管理端復原。</p>
     <div class="modal-actions">
       <button class="btn btn-secondary" type="button" id="deleteTaskCancelBtn">取消</button>
-      <button class="mini-btn mini-btn-danger" type="button" id="deleteTaskConfirmBtn">刪除</button>
+      <button class="btn btn-danger" type="button" id="deleteTaskConfirmBtn">刪除</button>
     </div>
   </div>
 </div>

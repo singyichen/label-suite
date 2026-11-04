@@ -13,7 +13,7 @@
  *     persistTrialRunState()) with a `done` + `passed` round 1 before load.
  *
  * Contract for Green (selectors/DOM this file pins down; wording is NOT pinned):
- *   - The pool-zero reason is visible text inside #publishActionRow that mentions
+ *   - The pool-zero reason is visible text in the next-step card's `pool` condition row that mentions
  *     「正式標記池」 and the count 0.
  *   - The disabled CTA references that reason through aria-describedby, so the
  *     reason is reachable by screen readers even though a disabled button is not
@@ -32,6 +32,7 @@ import type { Page } from '@playwright/test';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 const TRIAL_RUN_STATE_KEY = 'labelsuite.trialRunState';
 
+const POOL_ROW = '#nextStepCard #nextStepConditions li.next-step-cond[data-cond="pool"]';
 const POOL_REASON = /正式標記池.{0,20}0|0.{0,20}正式標記池/;
 const IAA_WORDING = /IAA 未達標|IAA 計算中|IAA 計算失敗/;
 
@@ -83,7 +84,7 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
     await expect(page.locator('#statusBadge')).toContainText('草稿');
     await expect(page.locator('#publishDryRunBtn')).toBeVisible();
 
-    await expect(page.locator('#publishActionRow')).toContainText(POOL_REASON);
+    await expect(page.locator(POOL_ROW)).toContainText(POOL_REASON);
     await expect(page.locator('#publishDryRunBtn')).toBeDisabled();
   });
 
@@ -96,7 +97,8 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
 
     const describedBy = await cta.getAttribute('aria-describedby');
     expect(describedBy, 'CTA must carry aria-describedby pointing at the pool reason').toBeTruthy();
-    const reason = page.locator(`[id="${describedBy}"]`);
+    expect((describedBy || '').split(/\s+/)).toContain('publishPoolReason');
+    const reason = page.locator('#publishPoolReason');
     await expect(reason).toBeVisible();
     await expect(reason).toContainText(POOL_REASON);
     await expect(reason).not.toHaveAttribute('aria-hidden', 'true');
@@ -110,7 +112,7 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
     await openT018DonePassed(page);
 
     await expect(page.locator('#publishOfficialRunBtn')).toBeDisabled();
-    await expect(page.locator('#publishActionRow')).toContainText(POOL_REASON);
+    await expect(page.locator(POOL_ROW)).toContainText(POOL_REASON);
   });
 
   test('done + IAA met + pool 0: bypassing the disabled button via a direct handler call keeps status and creates nothing (FR-022(1)(4))', async ({
@@ -151,14 +153,15 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
     await openT018DonePassed(page);
 
     // Reason must exist first, so the no-IAA-wording check below cannot pass vacuously.
-    await expect(page.locator('#publishActionRow')).toContainText(POOL_REASON);
-    await expect(page.locator('#publishActionRow')).not.toContainText(IAA_WORDING);
+    await expect(page.locator(POOL_ROW)).toContainText(POOL_REASON);
+    await expect(page.locator(POOL_ROW)).toHaveAttribute('data-status', 'unmet');
+    await expect(page.locator('#nextStepCard')).not.toContainText(IAA_WORDING);
 
     await page.evaluate(() => {
       (window as unknown as { publishOfficialRun: () => void }).publishOfficialRun();
     });
 
-    await expect(page.locator('#publishActionRow')).not.toContainText(IAA_WORDING);
+    await expect(page.locator('#nextStepCard')).not.toContainText(IAA_WORDING);
     const state = await persistedRound(page);
     expect(state.rounds[state.rounds.length - 1].iaaComputationStatus).toBe('done');
   });
@@ -192,7 +195,7 @@ test.describe('Official pool zero publish guard (FR-022, SC-049)', () => {
  * ("標記員還差 1 位"), so the pool block and a member gap apply together.
  *
  * Assertion choice (does not overfit markup): both reasons must be visible text
- * inside #publishActionRow, and the combined text of every element referenced by
+ * inside the next-step card (`pool` and `annotators` rows), and the combined text of every element referenced by
  * the disabled CTA's aria-describedby (space-separated id list) must contain both.
  * Neither element ids nor the number of spans are pinned.
  */
@@ -220,9 +223,9 @@ test.describe('Pool reason and member gap are shown independently (FR-022(3), SC
     const cta = page.locator('#publishDryRunBtn');
     await expect(cta).toBeDisabled();
     // Pool reason stays present (passes today) ...
-    await expect(page.locator('#publishActionRow')).toContainText(POOL_REASON);
+    await expect(page.locator(POOL_ROW)).toContainText(POOL_REASON);
     // ... and the member gap must be present at the same time (fails today).
-    await expect(page.locator('#publishActionRow')).toContainText(MEMBER_GAP);
+    await expect(page.locator('#nextStepCard #nextStepConditions li.next-step-cond[data-cond="annotators"]')).toContainText(MEMBER_GAP);
 
     const describedBy = ((await cta.getAttribute('aria-describedby')) || '').split(/\s+/).filter(Boolean);
     expect(describedBy.length, 'CTA must carry aria-describedby').toBeGreaterThan(0);
@@ -252,8 +255,8 @@ test.describe('Pool reason and member gap are shown independently (FR-022(3), SC
   test('control: pool 0 with no member gap shows no member-gap text (FR-022(3))', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_role=project_leader&task_id=T013`);
     await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
-    await expect(page.locator('#publishActionRow')).toContainText(POOL_REASON);
-    await expect(page.locator('#publishActionRow')).not.toContainText(/還差/);
+    await expect(page.locator(POOL_ROW)).toContainText(POOL_REASON);
+    await expect(page.locator('#nextStepCard #nextStepConditions')).not.toContainText(/還差/);
 
     await page.evaluate(() => {
       (window as unknown as { publishDryRun: () => void }).publishDryRun();

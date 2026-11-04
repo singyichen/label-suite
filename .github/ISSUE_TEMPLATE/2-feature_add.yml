@@ -43,3 +43,23 @@ body:
         - 相關連結：
     validations:
       required: false
+
+  - type: textarea
+    id: sketch_elements
+    attributes:
+      label: "🖼️ 草圖元素清單（選填；附 artifact 或 prototype 連結時必填）"
+      description: "逐項列出草圖元素（名稱、草圖位置），由維護者標註「做／不做／延後至 #N」；不得只寫「以草圖為準」"
+      placeholder: |
+        | 元素 | 草圖位置 | 處置 |
+        |---|---|---|
+        | 元素名稱 | artifact 區塊或 prototype 檔案:位置 | 做／不做／延後至 #N |
+    validations:
+      required: false
+
+  - type: textarea
+    id: inherited_deferrals
+    attributes:
+      label: "🔗 承接的延後條文（選填）"
+      description: "本單若是某條文指名的後續單，列出完成時要回頭更新的條文（spec 路徑＋FR/AC ID）"
+    validations:
+      required: false

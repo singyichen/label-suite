@@ -77,6 +77,7 @@ The latest `design-system.pen` defines the following variable set. Keep these na
 | State | `color-info` / `color-info-bg` / `color-info-border` | `#1D4ED8` / `#EFF6FF` / `#BFDBFE` |
 | Extended | `color-cta-hover` | `#065F46` |
 | Extended | `color-primary-soft-bg` | `#EEF2FF` |
+| Extended | `color-primary-strong` | `#4F46E5` |
 | Extended | `color-primary-border` | `#C7D2FE` |
 | Extended | `color-border-muted` | `#F1F5F9` |
 | Extended | `color-text-soft` | `#64748B` |
@@ -134,6 +135,8 @@ Used for status badges, error banners, alerts, and feedback messages.
 
 **Task Type Badge Mapping (light mode):**
 
+Defined once in `pages/shared/task-type-badge.css` (light and dark); pages link it after their page `<style>` and must not redefine these classes.
+
 | Type | CSS Class | Text | Background | Border |
 |------|-----------|------|------------|--------|
 | Single | `badge-task-type-single` | `#0E7490` (cyan-700) | `#ECFEFF` (cyan-50) | `#A5F3FC` (cyan-200) |
@@ -186,6 +189,7 @@ Activated via `<html data-theme="dark">`. All tokens in `design/prototype/assets
 | Card / sidebar bg | `#FFFFFF` | `#16161F` | `--color-white` |
 | Ink (primary text) | `#1E1B4B` | `#E2E8F0` (slate-200) | `--color-ink` |
 | Primary soft bg | `#EEF2FF` | `#1E1B4B` (indigo-950) | `--color-primary-soft-bg` |
+| Primary strong (text on soft bg) | `#4F46E5` (indigo-600) | `#A5B4FC` (indigo-300) | `--color-primary-strong` |
 | Primary border | `#C7D2FE` | `#3730A3` (indigo-800) | `--color-primary-border` |
 | Border | `#E2E8F0` | `#2A2A35` | `--color-border` |
 | Border muted | `#F1F5F9` | `#1F1F28` | `--color-border-muted` |
@@ -364,6 +368,7 @@ Pages in `account/` that do not import `tokens.css` (**login, register, forgot-p
 - ✅ `--color-surface` = page ground (light `#F5F3FF` / dark `#0B0B12`) — same meaning as tokens.css
 - ✅ `--color-card` = card background (light `#FFFFFF` / dark `#16161F`) — new canonical name for the auth card surface
 - ✅ `--color-ink` / `--color-ink-muted` for text (light muted: `#64748B`, dark muted: `#9CA3AF`)
+- ✅ `--color-cta` / `--color-cta-hover` for the primary CTA fill (light: `#047857` / `#065F46`, matching `tokens.css`, 5.48:1 against white text; dark CTA unchanged at `#34D399`)
 - ❌ `--color-background`, `--color-text`, `--color-text-muted` — deprecated parallel names (see Anti-Patterns)
 - ⚠️ Never redefine `--color-surface` as `#FFFFFF` (card white): it collides with the canonical meaning (page ground) and breaks any shared snippet pasted between pages
 
@@ -380,6 +385,7 @@ html[data-theme="dark"] {
   --color-link:          #818CF8;
   --color-primary:       #818CF8;
   --color-primary-soft-bg: #1E1B4B;
+  --color-primary-strong: #A5B4FC;
   --color-error:         #F87171;
   --color-error-bg:      #2A1414;
   --color-error-border:  #5B2222;
@@ -540,6 +546,8 @@ Direct read from `design-system.pen` (`reusable: true`, total `45`):
 - Profile/Other: `Card / Default`, `Modal / Default`, `Avatar / Small`, `Avatar / Large`, `Avatar / Uploadable`
 
 ### Buttons
+
+Shared definition: `pages/shared/button.css` (`.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-cta`; `.btn-danger` stays in `pages/shared/modal.css`). Adopted by `account/profile`, `admin/role-settings`, `annotation/annotation-list`, `annotation/annotation-workspace`, `dashboard/dashboard`, `dataset/dataset-analysis-detail`, `task-management/task-detail`, `task-management/task-list`, `task-management/task-new` and `admin/user-management`; the migration is complete for all in-scope pages, so no page carries a local copy of the four standard classes any more. `.btn-cta` is an alias of `.btn-primary` (same rule); font size comes from `--text-caption` (14px).
 
 ```css
 /* Primary Button */
@@ -722,19 +730,20 @@ For rows containing both caution and destructive actions, place destructive acti
 
 **Danger (solid) — destructive-modal confirm variant:**
 
-Solid destructive confirm button used only inside destructive-action modals (UXC-10 consumers in admin pages). Shipped CSS (from `role-settings.html`):
+Solid destructive confirm button used only inside destructive-action modals (UXC-10 consumers in admin and task pages). Single definition lives in `design/prototype/pages/shared/modal.css`; pages must link that stylesheet and must not redefine `.btn-danger`. Shipped CSS:
 
 ```css
 .btn-danger {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
-  border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms;
+  padding: 8px 20px; border-radius: var(--radius-md); border: none;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: var(--color-error); color: var(--color-on-cta); transition: opacity 150ms;
 }
-.btn-danger:hover { opacity: 0.9; }
+.btn-danger:hover { opacity: .9; }
 ```
 
 - Table-row destructive actions keep the outline Danger mapping above; the solid variant is reserved for the modal confirm position
-- Dark mode: `--color-error` flips to `#F87171` — verify 4.5:1 contrast against the text color per Implementation Rule 3
+- Dark mode: `--color-error` flips to `#F87171` and the text uses `--color-on-cta` (`#1E1B4B`). Verified contrast (WCAG): light `#FFFFFF` on `#B91C1C` = 6.47:1; dark `#1E1B4B` on `#F87171` = 5.78:1 (both pass AA 4.5:1)
 
 **Mini Buttons (dense row actions):**
 
@@ -793,6 +802,8 @@ Compact in-row action buttons used in dense tables and list rows (`annotation-li
 | Dashboard Summary Card | `border border-slate-200 rounded-xl p-6` + title + KPI + subtitle | KPI widgets on dashboard |
 
 ### Inputs
+
+Shared definition: `pages/shared/input.css` (`.input`, `.input-textarea`). Adopted by `annotation/annotation-workspace` (T009 free-text answer, reviewer reason, bypass reason); other pages still carry local input styles.
 
 ```css
 .input {
@@ -922,22 +933,31 @@ Compact in-row action buttons used in dense tables and list rows (`annotation-li
 
 ### Modals
 
+The modal skeleton (overlay, dialog, header, title, description, close button, footer) is defined once in `design/prototype/pages/shared/modal.css`. Pages link it after `tokens.css` and keep only page-specific styles (width overrides such as `.modal-xl`, previews, forms). Do not redefine the skeleton inline.
+
 ```css
-.modal-overlay {
+.modal-overlay {            /* hidden by default; toggle `.show` to display */
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  z-index: 300;
+  z-index: var(--z-modal);  /* 300 */
 }
 
 .modal {
-  background: white;
+  background: var(--color-white);
   border-radius: var(--radius-xl);
-  padding: 32px;
+  padding: var(--space-xl);
   box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
 }
 ```
+
+**Header and close** (`.modal-header` + `.modal-close`): the header is a flex row with the title block on the left and a single close button on the right. `.modal-close` is the only close-button class (32px bordered icon button, 16px icon); do not introduce per-page variants.
+
+**Footer rules** (`.modal-footer` / `.modal-actions`):
+
+- Actions are right-aligned (`justify-content: flex-end`)
+- Secondary action (Cancel) on the left, primary action on the right
+- Destructive confirmations use the solid Danger variant (`.btn-danger`, see Buttons) in the primary position
+- Gap between actions uses `--space-sm`
 
 **Modal Interaction Rules:**
 
@@ -1253,14 +1273,17 @@ Shell-level tab strip (頁籤) mounted above the main content area by `sidebar.j
 
 | Property | Value |
 |----------|-------|
-| Tab width | `var(--workspace-tab-width)` — `180px`, fixed, shared by both themes (not a color token) |
+| Tab width | `flex: 1 1 0` clamped by `min-width: var(--workspace-tab-min-width)` (`104px`) and `max-width: var(--workspace-tab-max-width)` (`220px`); both are non-color layout constants shared by both themes (replaces the former fixed `--workspace-tab-width: 180px`) |
+| Font size / padding / gap | `font-size: 12px; font-weight: 500`; `padding: 6px 10px`; `gap: 6px` |
+| Close-button visibility | `.workspace-tab-close` is 16×16 and `visibility: hidden` (not `display: none`, so tab width stays stable) unless the tab is `.active`, `:hover`, or `:focus-within` |
 | Label truncation | `.workspace-tab-label` — `overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0`; the full untruncated label is exposed via the tab element's `title` attribute |
-| Page-kind icon | One Lucide icon per `pageKind` (24×24, 2px stroke, `currentColor`, ADR-030), reused from the L0 sidebar nav icons (`workspaceTabIconFor()` in `sidebar.js`); renders as `<svg class="workspace-tab-icon">` sized to 16×16 |
+| Page-kind icon | One Lucide icon per `pageKind` (24×24, 2px stroke, `currentColor`, ADR-030), reused from the L0 sidebar nav icons (`workspaceTabIconFor()` in `sidebar.js`); renders as `<svg class="workspace-tab-icon">` sized to 14×14 |
 | Active background | `var(--color-tab-active-bg)` — light `#F8FAFC` / dark `#1F1F28` (both alias `--color-slate-50`); no border ring — `border: 1px solid transparent`, identical to the inactive state |
 | Hover background (inactive tabs only) | `var(--color-tab-hover-bg)` — light `#F1F5F9` (alias `--color-border-muted`) / dark `#2A2A35` (alias `--color-border`, chosen over `--color-border-muted` because the latter collides with `--color-slate-50`'s dark value) |
 | Focus-visible | Native browser `outline` — no dedicated token; `.workspace-tab.active` no longer overrides `border`, so the ring is never painted over |
 | Bar spacing | `.workspace-tab-bar` has `gap: 0` and `padding: 0` — the first tab starts at the bar's left edge and adjacent tabs touch; each tab keeps a 1px right divider `border-right-color: var(--color-border)` (neutral token, both themes, no hardcoded color) |
-| Stage badge | `[data-stage-badge="dry_run"\|"official_run"]` text color (`--color-warning` / `--color-primary`) — unchanged by this neutral-surface rework |
+| Kind chip | `<span class="workspace-tab-kind workspace-tab-kind--{tone}">` before `.workspace-tab-label`, only for kinds with a target (annotate / review / task-detail / dataset-analysis-detail); 10.5px / 600, `padding: 1px 5px`, `border-radius: var(--radius-sm)`. Chip text: 標記 / 審核 / 詳情 / 試標 RN / 正式 / 分析 (en: Annotate / Review / Detail / Dry Run RN / Official / Analysis). `title`, the close button `aria-label`, overview-menu rows and the mobile menu use the plain-text title "chip name" and never render the chip; `.workspace-tab-label` (the task name) keeps the ellipsis |
+| Stage badge | Applies to the kind chip, not the whole tab: dry run `--color-warning-bg` / `--color-warning`, official `--color-primary-soft-bg` / `--color-primary`, review `--color-info-bg` / `--color-info`, other kinds `--color-border-muted` / `--color-text-soft`. Tab body text stays `--color-ink-muted` (inactive) / `--color-ink` (active) regardless of stage; the `data-stage-badge` attribute stays on `.workspace-tab` as a hook only |
 
 Issue #1099 (G1): replaces the former `background: var(--color-surface)` (Violet 50) plus a full `border-color` ring on `.workspace-tab.active`, which the maintainer judged too visually jarring against the rest of the shell chrome.
 
@@ -1270,7 +1293,7 @@ Issue #1099 (G1): replaces the former `background: var(--color-surface)` (Violet
 
 **Terminology note (issue #1075):** this project uses two distinct terms that must not be conflated. "Workspace Tabs" (頁籤) is the shell-level tab strip rendered above the main content area by the Sidebar shell, holding one open application page per tab across the whole session (`specs/shared/019-workspace-tabs/spec.md`) — it is a navigation-history-free multiplexer, not a within-page section switcher. "Desktop Content Tabs" (分頁), specified below, is the in-page section switcher documented in this subsection (for example `admin/user-management`'s tabs, or `task-management/task-detail`'s tabs) — it lives entirely inside a single Workspace Tab's content and has no relationship to tab count, dedupe, or the `TAB_CAP` limit. A page can use Desktop Content Tabs internally while also being one entry in the outer Workspace Tabs strip; the two never nest the other way around.
 
-Desktop/top-of-content tab navigation for section switching within the same module (for example: `admin/user-management` and `task-management/task-detail`).
+Desktop/top-of-content tab navigation for section switching within the same module (for example: `admin/user-management` and `task-management/task-detail`). The `annotation/annotation-workspace` guideline panel tabs (指引 / 歷程) also consume it, adding the `.admin-tabs--panel` modifier (`margin-bottom: 0; padding: 0 var(--space-md); flex-shrink: 0`) so the strip sits flush atop the side panel.
 
 **Specs:**
 
@@ -1282,6 +1305,8 @@ Desktop/top-of-content tab navigation for section switching within the same modu
 | Active state | `color: var(--color-primary); border-bottom: 2px solid var(--color-primary); font-weight: 600` |
 | Inactive hover | `color: var(--color-primary)` |
 | Active alignment | `margin-bottom: -2px` (to align with container bottom border) |
+
+**Narrow viewport:** at `<=768px` the container stays a single row (`flex-wrap: nowrap`, never wraps) with `overflow-x: auto`; the scrollbar is hidden (`scrollbar-width: none`, `::-webkit-scrollbar { display: none }`) but the row remains scrollable. Tabs use `flex: 0 0 auto` and `white-space: nowrap`. The CSS lives only in `design/prototype/pages/shared/content-tabs.css`; pages must link it and not redefine `.admin-tabs` / `.admin-tab`.
 
 **CSS reference:**
 ```css
@@ -1306,6 +1331,7 @@ Desktop/top-of-content tab navigation for section switching within the same modu
   border-left: none;
   border-right: none;
   border-top: none;
+  white-space: nowrap;
 }
 
 .admin-tab:hover { color: var(--color-primary); }
@@ -1314,6 +1340,16 @@ Desktop/top-of-content tab navigation for section switching within the same modu
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
   font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin-tab { flex: 0 0 auto; }
 }
 ```
 
@@ -1703,7 +1739,7 @@ Use existing tokens only; do not introduce an Empty-State-specific colour.
 - ❌ A transient confirmation → Toast
 - ❌ Content still loading → Skeleton
 
-> **Current prototype state:** the prototype still ships roughly a dozen per-page empty-state class families (`.empty-state*`, `.empty-row-*`, `.stats-empty*`, `.quality-empty*`, `.ar-empty-*`, `.worklog-empty-*`, `.progress-empty-*`, `.anomaly-empty`, `.list-empty`, `.member-detail-empty`, `.notif-empty`, ...) whose values differ slightly from the table above. They are registered as `transitionalClasses` in the manifest scan gate and converge on this spec in issue #1189 — until then the table above, not any one page, is the canonical target.
+> **Current prototype state:** every prototype page renders empty states with the shared `pages/shared/empty-state.css` vocabulary (`.empty-state` plus the `-panel` / `-compact` / `-cell` / `-td` / `-row` / `-icon` / `-title` / `-desc` / `-action` modifiers). The per-page families (`.ar-empty-*`, `.worklog-empty-*`, `.progress-empty-*`, `.member-detail-empty`, ...) were converged in issue #1189 and the manifest scan gate's `transitionalClasses` list is now empty, so a new per-page empty-state class fails the gate.
 
 ---
 
@@ -2835,6 +2871,8 @@ Compact stat tile used in dashboard panels — the "Dashboard Summary Card" name
 
 - Grid wrapper: `repeat(auto-fit, minmax(100px, 1fr))` with `var(--space-md)` gap; use `minmax(150px, 1fr)` when labels are long
 - The dense 16px-padding scale above is the sanctioned KPI-tile spec; the Cards `p-6` rule applies to content cards, not KPI tiles
+- Shared definition lives in `pages/shared/metric.css`; pages link it and must not redefine `.metric`. Used by dashboard, task-detail and the dataset-analysis-detail stats tab (issue #1453)
+- Optional modifiers: `.metric-desc` (block description line under the value, 12px `--color-text-soft`, 2px top margin) and `.metric-lg` (hero size for a single standalone KPI, `strong` at `2.5rem`)
 
 ---
 
@@ -2972,3 +3010,21 @@ Before delivering any UI code, verify:
 | v1.25 | 2026-10-05 | **Workspace Tabs bar spacing flush (issue #1143)** — added a "Bar spacing" row to §Workspace Tabs: `.workspace-tab-bar` `gap: 0` / `padding: 0` (was `--space-xs` gap and `--space-md` side padding) and a 1px `var(--color-border)` right divider on every tab (previously transparent), NoteCraft style; tab width, active/hover backgrounds, and tokens unchanged |
 | v1.26 | 2026-10-07 | **Brand baseline finalized (issue #935, maintainer decision 2026-10-07)** — added §Brand Baseline under Global Rules: `#6366F1` primary, Inter UI font, the existing Lucide `tag` logo in `design/prototype/assets/logo/`, and the current radius/type scale are final and carry into the React Tailwind translation unchanged. Supersedes the 2026-09-26 "decide at React scaffolding" and 2026-09-28 "wait for #936" triggers; the v1.21 row's "still-undecided" wording is kept as history. |
 | v1.27 | 2026-10-12 | **Empty State component and Admin Submenu sub-spec (issue #1188)** — added §Empty State as a standalone component (table-cell / panel / full-page sizes, optional icon and action, `role="status"` only when it appears dynamically, "When NOT to use" versus State Panel, Alert Banner, Toast and Skeleton), registered as `empty-state` in `inventory-manifest.json`; the per-page empty-state class families are scan-gate `transitionalClasses` until issue #1189 converges them. Added `#### Admin Submenu` under §Sidebar documenting the shipped issue #725 markup, tokens, open/close interaction, mobile and collapsed fallback and keyboard behaviour (no arrow-key roving) against `specs/shared/008-sidebar-navbar-shared/spec.md` FR-019 to FR-019E. No token or shipped-CSS value changed. |
+| v1.28 | 2026-10-13 | **Workspace Tabs compact sizing (issue #1280)** — replaced the fixed `--workspace-tab-width` (180px) with `--workspace-tab-min-width` (104px) / `--workspace-tab-max-width` (220px) and `flex: 1 1 0`; tab font 13px to 12px, padding 8x16 to 6x10, gap 4px to 6px; page-kind icon 16px to 14px; close button 18px to 16px and shown only on active / hover / focus-within via `visibility`. Bar spacing, active/hover backgrounds and stage badge colors unchanged. |
+| v1.29 | 2026-10-13 | **Workspace Tabs kind chip (issue #1280)** — tab title is now a kind chip (`.workspace-tab-kind`: annotate / review / detail / dry run RN / official / analysis) plus the target name in `.workspace-tab-label`; the stage badge colour moved from the whole tab text to the chip using semantic token pairs (warning, primary, info, neutral) in both themes, and tab body text no longer changes with stage. Added a Kind chip row and rewrote the Stage badge row in §Workspace Tabs. No new token. |
+| v1.30 | 2026-10-13 | **Empty State convergence complete (issue #1189)** — §Empty State "Current prototype state" note updated: the last per-page families on task-detail (`ar-empty`, `ar-export-empty`, `member-detail-empty`, `member-search-empty`, `progress-empty`, `worklog-empty`) now use the shared `empty-state.css` vocabulary and `classScan.transitionalClasses` is empty; no component spec or token change |
+| v1.31 | 2026-10-14 | **Desktop Content Tabs narrow-viewport rule (issue #1393)** — added a "Narrow viewport" rule to §Desktop Content Tabs: at <=768px the tab container stays a single row (`flex-wrap: nowrap`) with `overflow-x: auto` and a hidden-but-scrollable scrollbar, tabs `flex: 0 0 auto` / `white-space: nowrap`. The `.admin-tabs` / `.admin-tab` CSS now lives only in `pages/shared/content-tabs.css` (task-detail and dataset-analysis-detail link it); desktop values unchanged. |
+| v1.32 | 2026-10-14 | **Shared modal skeleton (issue #1390)** — §Modals now points to `pages/shared/modal.css` as the single definition of the overlay / dialog / header / title / description / close / footer skeleton and adds the Footer rules list (right-aligned actions, secondary left of primary, solid Danger variant in the primary position for destructive confirmations, `--space-sm` gap). task-list, task-new and task-detail adopt it (task-list `.modal-backdrop` renamed `.modal-overlay`); no token value changed. |
+| v1.33 | 2026-10-14 | **Single solid Danger definition (issue #1435)** — §Buttons "Danger (solid)" now names `pages/shared/modal.css` as the single `.btn-danger` definition (pages must link it) and its shipped CSS example matches; the per-page copies in task-config, user-management and role-settings are removed. Text colour is `--color-on-cta` in both themes (light 6.47:1, dark 5.78:1 against `--color-error`), replacing the unresolved dark-mode "verify 4.5:1" note; no token value changed. |
+| v1.34 | 2026-10-15 | **Workspace guideline tabs use Desktop Content Tabs (issue #1445)** — `annotation/annotation-workspace` guideline panel tabs drop their page-level `.guideline-tab` style and use `.admin-tabs` / `.admin-tab` from `pages/shared/content-tabs.css`; a `.admin-tabs--panel` modifier (`margin-bottom: 0; padding: 0 var(--space-md); flex-shrink: 0`) keeps the flush panel layout; no token value changed. |
+| v1.35 | 2026-10-15 | **Single modal close class (issue #1446)** — §Modals documents `.modal-header` + `.modal-close` as the one close-button definition (32px bordered icon button); the borderless `.modal-close-btn` is retired and its three consumers (task-detail and task-new dataset preview, annotation-progress member detail) use `.modal-close`. No token value changed. |
+| v1.36 | 2026-10-15 | **Metric KPI Tile adopted by dataset-analysis-detail stats tab (issue #1453)** — the page-local `.stats-metric-card` / `-label` / `-value` / `-desc` and `.stats-inline-card` families are removed in favour of the shared `.metric`; `pages/shared/metric.css` gains `.metric-desc` and `.metric-lg strong` (defaults only, no new tokens); §Metric KPI Tile lists the adopting pages and documents both modifiers. |
+| v1.37 | 2026-10-15 | **Shared input.css (issue #1447)** — §Inputs now points to `pages/shared/input.css` (`.input` / `.input-textarea`: 12px 16px padding, 16px font, `--radius-md`, `--color-border`, primary focus ring); `annotation/annotation-workspace` converges its three text inputs (T009 free-text answer, reviewer reason, bypass reason) on it; no token value changed. |
+| v1.38 | 2026-10-15 | **Standalone auth pages light `--color-cta` WCAG AA fix (issue #1466)** — the four standalone auth pages (`login`/`register`/`forgot-password`/`reset-password`, none of which import `tokens.css`) still declared light `--color-cta: #10B981` (2.54:1 against the white CTA label), the same pre-#973 value `tokens.css` had already raised — the fix never reached these pages because they define their own local `:root` tokens. Light `--color-cta` raised to `#047857` and `--color-cta-hover` to `#065F46` to match `tokens.css` (5.48:1); dark values unchanged. Rule 9's ✅ list updated to record the light CTA values. |
+| v1.39 | 2026-10-15 | **Shared button.css (issue #1465)** — §Buttons now points to `pages/shared/button.css` (`.btn-primary` / `.btn-cta`: `--color-cta` fill, 10px 20px padding, 14px/600, `--radius-md`, hover lift; `.btn-secondary`: transparent with `--color-border` outline, 10px 20px; `.btn-ghost`: borderless `--color-primary` text, 8px 12px, hover underline); `account/profile` and `admin/role-settings` converge on it and their page-local duplicates are removed; visible change: profile primary/secondary padding 10px 22px -> 10px 20px, role-settings ghost (Edit / Cancel and the dirty-modal Continue-editing button) becomes the MASTER borderless text button, cta padding 8px 20px -> 10px 20px, cta disabled opacity 0.45 -> 0.4 and cta gains the hover lift. |
+| v1.40 | 2026-10-15 | **Shared button.css adopted by four more pages (issue #1465 PR-B)** — `annotation/annotation-list`, `annotation/annotation-workspace`, `dashboard/dashboard` and `dataset/dataset-analysis-detail` link `pages/shared/button.css` and drop their page-local `.btn-primary` / `.btn-secondary` / `.btn-ghost` / `.btn-cta` rules (each page's `.btn` sizing/chrome moves into zero-specificity `:where(.btn)` so the shared rules win; `.slim`, `.btn-sm`, `.btn-outline` and `.mini-btn*` stay page-local); visible changes: annotation-workspace `.btn-cta` padding 8px 14px -> 10px 20px, 13px -> 14px, hover background `--color-cta-hover` -> opacity 0.9 + lift, border removed; annotation-list and dashboard primary label colour `--color-white` -> `--color-on-cta`, border removed; dashboard and dataset-analysis-detail secondary becomes transparent with `--color-primary` text and hover soft background (was white fill, `--color-ink` text, hover primary border; dataset-analysis-detail padding 10px 16px -> 10px 20px, dashboard secondary no longer lifts on hover); the dashboard `.btn-ghost` rule is removed (no element on the page uses it); migrated buttons now transition `all 200ms ease`, and the primary label is dark ink in dark mode (`--color-on-cta`). The workspace keeps its #1247 `.btn:disabled` opacity 0.45 and its 8px 14px `.btn-outline` (Save); the action bar uses `align-items: stretch` so Save and Submit share one height. The pages' element reset `button, input, select { font: inherit; }` is wrapped in `:where()` (zero specificity) because at (0,0,1) it overrode the `:where(.btn)` font-size/weight of non-standard `.btn` variants. |
+| v1.41 | 2026-10-15 | **Shared button.css adopted by the last four pages (issue #1465 PR-C)** — `task-management/task-detail`, `task-management/task-list`, `task-management/task-new` and `admin/user-management` link `pages/shared/button.css` and drop their page-local `.btn-primary` / `.btn-secondary` / `.btn-ghost` / `.btn-cta` rules, which completes the migration for all in-scope pages (each page's `.btn` padding/radius/border/font/transition moves into zero-specificity `:where(.btn)`, layout props stay in `.btn`; `.btn-link`, `.btn-loading`, `.btn-icon`, `.btn:disabled`, `.mini-btn*` and the task-detail hover lift stay page-local). Visible changes: primary/cta on the three task-management pages loses its 1px `--color-cta` border (size -2px in both axes, e.g. task-list New task 122x47.2 -> 120x45.2 in zh; the inline-error-red `#leaveModalLeaveBtn` in task-new also loses its border); secondary on task-detail / task-list / task-new becomes transparent with `--color-primary` text (was white fill, `--color-ink` text) and hover changes to the soft background (was primary border + primary text; task-list secondary no longer lifts on hover; task-new hover keeps only the background); task-new `.btn-ghost` (Cancel) goes from `--color-text-soft` 10px 20px / 600 with slate hover to `--color-primary` 8px 12px / 500 with underline hover (zh Cancel 70x47.2 -> 52x41.2); user-management `.btn-ghost` goes from `--color-ink-muted` 8px 14px with ink/slate hover to `--color-primary` 8px 12px with underline hover (Cancel 56 -> 52 wide, Clear filters likewise), and its primary/ghost transitions become `all 200ms ease`; the YAML / JSON toggles in the task-detail settings panel and task-new carry `.btn-ghost` (inline 6px 12px / 12px), so on task-detail they stop rendering as unstyled UA grey buttons and on both pages become borderless `--color-primary` text (JSON initial weight 600 -> 500 until the toggle script sets 400/700). `.btn-danger` (modal.css) is unchanged: the three pages that combine it with `.btn` keep their 10px 20px + 1px transparent border via `.btn.btn-danger` so confirm buttons stay level with Cancel. The pages' element reset `button, input, select { font: inherit; }` (`textarea` too on task-new; `cursor: pointer` retained on task-list / user-management) is wrapped in `:where()` for the same reason as v1.40: at (0,0,1) it overrode the `:where(.btn)` font of non-standard `.btn` variants (`.btn-link`, `.btn-danger`). The task-new wizard action bar uses `align-items: stretch` so Back and Next share one height (the filled button no longer has a border, the outlined one does). `.btn-danger` confirm buttons keep their `.btn` geometry through a page-local `.btn.btn-danger` rule because `modal.css` `.btn-danger` (0,1,0) outranks `:where(.btn)`; their transition is now the modal.css `opacity 150ms`. |
+| v1.42 | 2026-10-15 | **Shared list-page.css (issue #1448 PR-A)** — new `pages/shared/list-page.css` holds the list-page chrome that `dataset-analysis-list`, `task-list` and `annotation-list` each duplicated: toolbar (`.toolbar`, `.toolbar-left`, `.search-wrap`, `.search-icon`, `.search-input`, `.filter-select`, `.clear-btn`), table (`.task-table-wrap`, `.task-table` and its `th` / `td`) and pagination (`.pagination*`, `.page-btn`, `.page-ellipsis`, `.page-size-select`), plus the element reset `:where(button, input, select) { font: inherit; cursor: pointer; }` at zero specificity. `dataset-analysis-list` links it before its page `<style>` and keeps only its own `.filter-select { min-width: 160px; }` and `.task-table { min-width: 760px; }`; `task-list` and `annotation-list` adopt it in PR-B. No visible change on `dataset-analysis-list` (computed styles verified identical in zh and en). `.btn.btn-danger { padding: 10px 20px; border: 1px solid transparent; }` is now single-sourced in `pages/shared/modal.css` (the three page-local patches in `task-detail`, `task-list` and `task-new` are removed); standalone `.btn-danger` keeps 8px 20px and no border. |
+| v1.43 | 2026-10-15 | **list-page.css adopted by task-list and annotation-list (issue #1448 PR-B)** — `task-management/task-list` and `annotation/annotation-list` link `pages/shared/list-page.css` after their other shared stylesheets and before their page `<style>`, and drop their page-local toolbar, table and pagination rules plus the `button, input, select` element reset, which now come from the shared file. Page-owned overrides stay: `.filter-select { min-width: 140px }` (task-list) / `180px` (annotation-list), `.task-table { min-width: 640px }`, task-list `.page-btn.active { color: var(--color-on-cta); }`, and annotation-list `:where(button, input, select) { cursor: revert; }` so its controls keep UA cursors as before; `.task-table th` no longer repeats `white-space: nowrap` (inherited from `.task-table`). No visible change: bounding rects and computed styles of 22 selectors (toolbar, search, filter, clear, table, th/td, pagination, page-btn incl. `.active`/`:disabled`, page-size-select, button/input/select) verified identical to main in zh and en for task-list, annotation-list (annotator) and annotation-list (reviewer), and full-page screenshots byte-identical. |
+| v1.44 | 2026-10-15 | **Task-type badge palette single-sourced (issue #1448 PR-C)** — the six `.badge-task-type-{single,sequence,relation,pairs,scoring,default}` classes, light and dark, now live only in `pages/shared/task-type-badge.css` (dark rules as flat `html[data-theme="dark"] .badge-task-type-*` selectors). `dashboard`, `task-management/task-list`, `annotation/annotation-list` and `dataset/dataset-analysis-list` link it after their page `<style>` (after `dashboard.components.css` for dashboard) so it loads after the page `.badge` base rule, whose `border: 1px solid transparent` shorthand would otherwise reset `border-color` at equal specificity. The copies are removed from `dashboard.layout.css`, `dashboard.components.css`, task-list, annotation-list and dataset-analysis-list, plus the dead dark-only rules in `dataset-analysis-detail` (no element there uses them). No visible change: computed colors pinned in zh/en and light/dark by `tests/shared/issue-1448-c-task-type-badge-palette.spec.ts`. |
+| v1.45 | 2026-10-19 | **Settings section nav active state moved to indigo soft background (issue #1483)** — added `--color-primary-strong` (`#4F46E5` indigo-600 light / `#A5B4FC` indigo-300 dark) because `--color-primary` text on `--color-primary-soft-bg` measures only ~4.0:1, under the 4.5:1 AA threshold, while `#4F46E5` measures ~5.6:1. task-detail's `.settings-nav-item[aria-selected="true"]` now uses `--color-primary-soft-bg` background with `--color-primary-strong` text (weight 600, text stays centered) and the nav item radius goes from 4px to 8px, so the third navigation layer shares the sidebar and tab indigo selection language. The section card stays white. Supersedes the 2026-10-08 white nav active state. |

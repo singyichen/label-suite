@@ -1,4 +1,4 @@
-<div id="overviewPanel" class="hidden" aria-live="polite">
+<div id="overviewPanel" class="hidden">
   <!-- FR-027: stepper, verdict box, four metric cards, sample split, stop conditions + CTA, trial-round table (top to bottom) -->
   <section class="panel" aria-labelledby="executionTitle">
     <div class="panel-head-row">
@@ -42,21 +42,21 @@
 
       <!-- Exactly four metrics -->
       <div class="exec-round-grid" data-testid="overview-metrics">
-        <div class="exec-round-item" data-testid="overview-metric">
-          <span class="exec-round-key" id="trialRoundLabel" data-testid="overview-metric-label">目前回合</span>
-          <strong class="exec-round-value" id="trialRoundValue">R2</strong>
+        <div class="metric" data-testid="overview-metric">
+          <span id="trialRoundLabel" data-testid="overview-metric-label">目前回合</span>
+          <strong id="trialRoundValue">R2</strong>
         </div>
-        <div class="exec-round-item" data-testid="overview-metric">
-          <span class="exec-round-key" id="currentAgreementLabel" data-testid="overview-metric-label">最新 IAA</span>
-          <strong class="exec-round-value" id="currentAgreementValue">0.81</strong>
+        <div class="metric" data-testid="overview-metric">
+          <span id="currentAgreementLabel" data-testid="overview-metric-label">最新 IAA</span>
+          <strong id="currentAgreementValue">0.81</strong>
         </div>
-        <div class="exec-round-item" data-testid="overview-metric">
-          <span class="exec-round-key" id="trialUsedLabel" data-testid="overview-metric-label">已用試標</span>
-          <strong class="exec-round-value" id="trialUsedValue">20 / 100</strong>
+        <div class="metric" data-testid="overview-metric">
+          <span id="trialUsedLabel" data-testid="overview-metric-label">已用試標</span>
+          <strong id="trialUsedValue">20 / 100</strong>
         </div>
-        <div class="exec-round-item" data-testid="overview-metric">
-          <span class="exec-round-key" id="officialPoolLabel" data-testid="overview-metric-label">正式標記池</span>
-          <strong class="exec-round-value" id="officialPoolValue">80</strong>
+        <div class="metric" data-testid="overview-metric">
+          <span id="officialPoolLabel" data-testid="overview-metric-label">正式標記池</span>
+          <strong id="officialPoolValue">80</strong>
         </div>
       </div>
 
@@ -68,19 +68,18 @@
         <div class="split-legend split-legend-dynamic" id="splitLegendDynamic"></div>
       </div>
 
-      <div class="exec-stop-row" id="execStopRow">
-        <div class="exec-stop-main">
-          <span class="status-hint" id="stopConditionTitle">達標條件</span>
-          <div class="exec-stop-pills" id="execStopPills">
-            <span class="stop-pill" id="stopAgreementPill">IAA ≥ 0.80</span>
-            <span class="stop-pill" id="stopStdPill">Std ≤ 0.10</span>
-            <span class="stop-pill" id="stopAnnotatorPill">至少 3 位標記者</span>
+      <section class="next-step-card" id="nextStepCard" data-testid="next-step-card" aria-labelledby="nextStepTitle">
+        <div class="next-step-head">
+          <div class="next-step-head-text">
+            <h3 class="next-step-title" id="nextStepTitle"></h3>
+            <p class="status-hint next-step-desc" id="nextStepDesc"></p>
+          </div>
+          <div class="next-step-actions">
+            <div class="action-row" id="publishActionRow" style="margin:0;"></div>
           </div>
         </div>
-        <div class="exec-stop-actions">
-          <div class="action-row" id="publishActionRow" style="margin:0;"></div>
-        </div>
-      </div>
+        <div class="next-step-conditions" id="nextStepConditions"></div>
+      </section>
 
       <div class="exec-control-row">
         <div class="exec-info">

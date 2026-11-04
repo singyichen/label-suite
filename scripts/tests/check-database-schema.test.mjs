@@ -181,7 +181,7 @@ test('requiresResolvedPasswordNullabilityAndCandidateTableLabels', () => {
   }
 });
 
-test('admin007Enumerates42ApplicableBooleanCellsAndFixedGrants', () => {
+test('admin007Enumerates56ApplicableBooleanCellsAndFixedGrants', () => {
   const spec = readFileSync(new URL('../../specs/admin/007-role-settings/spec.md', import.meta.url), 'utf8');
   const between = (start, end) => {
     const from = spec.indexOf(start);
@@ -198,7 +198,7 @@ test('admin007Enumerates42ApplicableBooleanCellsAndFixedGrants', () => {
   const system = new Map(matrixRows('#### 系統角色（平台層級）', '#### 任務角色（任務層級）'));
   const task = new Map(matrixRows('#### 任務角色（任務層級）', '#### 授權判斷規則'));
 
-  assert.equal(keys.length, 17, 'V1 has nine system keys and eight task keys');
+  assert.equal(keys.length, 22, 'V1 has ten system keys and twelve task keys');
   assert.deepEqual(new Set([...system.keys(), ...task.keys()]), new Set(keys));
   assert.deepEqual(task.get('task.detail.view'), ['✅', '✅', '❌']);
   assert.deepEqual(task.get('task.detail.edit'), ['✅', '❌', '❌']);
@@ -208,11 +208,11 @@ test('admin007Enumerates42ApplicableBooleanCellsAndFixedGrants', () => {
     if (task.has(key)) assert.ok(cells.every((cell) => cell.includes('⛔')), `${key} has no system-role rows`);
     if (key.startsWith('admin.')) assert.deepEqual(cells, ['❌', '✅'], `${key} is fixed`);
   }
-  assert.equal([...system.values()].flat().filter((cell) => !cell.includes('⛔')).length, 18);
-  assert.equal([...task.values()].flat().length, 24);
+  assert.equal([...system.values()].flat().filter((cell) => !cell.includes('⛔')).length, 20);
+  assert.equal([...task.values()].flat().length, 36);
   assert.equal([...system.values()].flat().filter((cell) => !cell.includes('⛔')).length
-    + [...task.values()].flat().length, 42);
-  assert.match(spec, /42\s*(?:列|格)/);
+    + [...task.values()].flat().length, 56);
+  assert.match(spec, /56\s*(?:列|格)/);
 });
 
 test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', () => {
@@ -223,7 +223,7 @@ test('dictionaryAndNoteCraftResolveD9ThroughD13WithoutChangingPhysicalCounts', (
   const rules = markdown.match(/### 4\.7 admin_role_permission[^\n]*\n([\s\S]*?)(?=\n### 4\.8)/)?.[1];
   assert.ok(matrix, 'Missing matrix dictionary');
   assert.ok(rules, 'Missing matrix constraints');
-  assert.match(matrix, /42\s*列/);
+  assert.match(matrix, /56\s*列/);
   assert.match(matrix, /`allowed`\s*\|\s*boolean/);
   assert.doesNotMatch(matrix, /boolean 表達不了|D-10.*(?:待|見 §5)/);
   assert.match(rules, /dashboard\.view/);
@@ -397,14 +397,14 @@ test('noteCraftProjectionTracksTheCanonicalAccountSessionDictionaryAndRejectsDri
   assert.match(validateWithTaskParents(source, detachedToken).join('\n'), /refresh_tokens\.session_id: FK/);
 });
 
-test('noteCraftProjectionKeepsThe40Table34FkShapeWith351Columns', () => {
+test('noteCraftProjectionKeepsThe40Table34FkShapeWith352Columns', () => {
   const data = JSON.parse(readFileSync(
     new URL('../../docs/diagrams/architecture/database-schema.er.json', import.meta.url), 'utf8'));
   assert.deepEqual({
     tables: data.tables.length,
     columns: data.tables.reduce((count, table) => count + table.columns.length, 0),
     fks: data.tables.reduce((count, table) => count + table.columns.filter((column) => column.fk).length, 0),
-  }, { tables: 40, columns: 351, fks: 34 });
+  }, { tables: 40, columns: 352, fks: 34 });
 });
 
 test('realAccountAndDatasetDictionariesMatchCompleteNoteCraftProjection', () => {
@@ -492,7 +492,7 @@ test('accountAdminDictionaryDocumentsIdempotencyUniqueRuleAndCitations', () => {
   assert.match(markdown, /request_digest/);
   const summary = markdown.split('\n').find((entry) => entry.startsWith('- **NoteCraft 規劃檢視**'));
   assert.match(summary, /10 張候選表（73 欄、8 個候選單欄 FK）/);
-  assert.match(summary, /40 張候選表／351 欄／34 個候選單欄 FK/);
+  assert.match(summary, /40 張候選表／352 欄／34 個候選單欄 FK/);
   assert.match(summary, /annotation\/review 字典\]\(\.\/annotation-review-db-schema\.md\)供應 8 張／91 欄／2 FK/);
 });
 

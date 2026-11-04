@@ -4,6 +4,8 @@
  *
  * Traceability: specs/account/005-profile-settings/spec.md
  *   FR-013B, SC-010
+ * Issue #1336 — dry_run_all_done event display name 「試標完成」 and trigger text
+ *   (014 FR-008a / AC-3.2: annotation + required review + required arbitration)
  */
 import { test, expect } from '../fixtures';
 
@@ -27,10 +29,24 @@ test.describe('Profile notification settings', () => {
     const section = page.locator('#notification-section');
 
     await expect(section.locator('#notifThEmail')).toHaveText('電子郵件');
-    await expect(section).toContainText('試標全員完成');
-    await expect(section).toContainText('所有參與者完成試標時通知我');
+    await expect(section.locator('#notifE3Name')).toHaveText('試標完成');
+    await expect(section).not.toContainText('試標全員完成');
+    await expect(section.locator('#ne3-inapp')).toHaveAttribute('aria-label', '試標完成 — 站內通知');
+    await expect(section.locator('#ne3-email')).toHaveAttribute('aria-label', '試標完成 — Email');
+    await expect(section.locator('#notifE3Trigger')).toHaveText('試標的標註、必要審核與必要仲裁皆完成時通知我');
+    await expect(section).not.toContainText('所有參與者完成試標時通知我');
     await expect(section).toContainText('正式標記全員完成');
     await expect(section).toContainText('所有參與者完成正式標記時通知我');
+  });
+
+  test('shows the English dry run event name after switching language (#1336)', async ({ page }) => {
+    await page.goto(PROFILE_URL);
+    await page.locator('#langToggle').click();
+
+    await expect(page.locator('#notifE3Name')).toHaveText('Dry run completed');
+    await expect(page.locator('#notifE3Trigger')).toHaveText(
+      'Notify me when dry run annotation, required review and required arbitration are all done',
+    );
   });
 
   test('uses user-facing event descriptions without receiver role labels', async ({ page }) => {

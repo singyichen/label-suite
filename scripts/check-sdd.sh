@@ -142,6 +142,15 @@ section_is_valid() {
     '
 }
 requires_page_traceability() { [ "$1" != foundation ] && strip_markdown_fences "$2" | grep -Eq 'Prototype|design/prototype|產品 UI|頁面'; }
+# Prototype Traceability rows must name real FR/SC coverage (issue #1316); a blanket
+# "All FR/SC" in the third (Covered FR/SC) column hides which requirement a page implements.
+verify_traceability_scope() {
+    if strip_markdown_fences "$1" | awk -F '|' '
+        /^## / { in_section = ($0 == "## Prototype Traceability"); next }
+        in_section && /^\|/ && $4 ~ /All FR\/SC/ { found = 1 }
+        END { exit !found }
+    '; then add_error TRACEABILITY_COARSE_SCOPE "$2" 'Prototype Traceability Covered FR/SC must list FR/SC ranges or an explicit reason, not "All FR/SC"'; fi
+}
 collect_declared_ids() {
     local change_dir="$1" target="$2" delta
     : >"$target"
@@ -227,6 +236,16 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     proposal="$change_dir/proposal.md"
     relative_proposal="${proposal#"$repo_root"/}"
     if [ ! -r "$proposal" ]; then add_error ACTIVE_CHANGE_SPEC "${change_dir#"$repo_root"/}" 'active change is missing a readable proposal.md'; continue; fi
+    # Issue #1379: a sketch artifact link needs the element table; deferral wording in ADDED/MODIFIED deltas needs `#N`.
+    if grep -Fq 'claude.ai/artifact/' "$proposal" && ! strip_markdown_fences "$proposal" | grep -Eq '^##[[:space:]]+草圖元素對照表[[:space:]]*\r?$'; then add_error PROPOSAL_SKETCH_TABLE "$relative_proposal" 'proposal links a claude.ai/artifact/ sketch but has no "## 草圖元素對照表" heading'; fi
+    while IFS= read -r delta_file; do
+        strip_markdown_fences "$delta_file" | awk '
+            { sub(/\r$/, "") }
+            /^##[[:space:]]/ { inside = ($0 ~ /^##[[:space:]]+(ADDED|MODIFIED)[[:space:]]+Requirements[[:space:]]*$/); next }
+            inside && /(不在本條範圍|另案|延後)/ && $0 !~ /#[0-9]+/ { found = 1 }
+            END { exit !found }
+        ' && add_error DEFERRAL_WITHOUT_ISSUE "${delta_file#"$repo_root"/}" 'ADDED/MODIFIED clause says 不在本條範圍/另案/延後 without a follow-up issue (#N)'
+    done < <(find "$change_dir/specs" -type f -name spec.md -print 2>/dev/null | LC_ALL=C sort)
     refs="$tmp_dir/refs.$(basename "$change_dir")"; grep -E '^對應 Spec:[[:space:]]*specs/[[:alnum:]-]+/[0-9][0-9][0-9]-[[:alnum:]_.-]+/spec\.md[[:space:]]*$' "$proposal" | sed 's/^對應 Spec:[[:space:]]*//; s/[[:space:]]*$//' >"$refs" || true
     declaration_count="$(grep -Ec '^對應 Spec:' "$proposal" || true)"; ref_count="$(wc -l <"$refs" | tr -d ' ')"
     if [ "$declaration_count" -ne 1 ] || [ "$ref_count" -ne 1 ]; then add_error ACTIVE_CHANGE_SPEC "$relative_proposal" 'proposal must reference exactly one canonical spec'; continue; fi
@@ -255,6 +274,7 @@ for change_dir in "$repo_root"/openspec/changes/*; do
     section_is_valid "$canonical" '## 規格相依性' dependency || add_error SPEC_REQUIRED_HEADING "$canonical_relative" 'required heading is missing, duplicated, or empty: ## 規格相依性'
     verify_required_ids "$canonical" "$canonical_relative"
     verify_no_duplicate_ids "$canonical" "$canonical_relative"
+    verify_traceability_scope "$canonical" "$canonical_relative"
     if requires_page_traceability "$module" "$canonical" && ! strip_markdown_fences "$canonical" | grep -Eq '^## Prototype Traceability|Frontend Ready Gate.*不適用|prototype.*不適用'; then add_error SPEC_REQUIRED_IDS "$canonical_relative" 'page traceability or an explicit non-page exception is required'; fi
     allowed_ids="$tmp_dir/allowed-ids"
     collect_declared_ids "$change_dir" "$tmp_dir/added-ids"
@@ -346,6 +366,7 @@ while IFS= read -r spec_file; do
     relative="${spec_file#"$repo_root"/}"
     grep -Fqx "$relative" "$active_specs" && continue
     verify_no_duplicate_ids "$spec_file" "$relative"
+    case "$relative" in specs/_archive/*) ;; *) verify_traceability_scope "$spec_file" "$relative" ;; esac
     unfenced_spec="$tmp_dir/spec-unfenced"
     strip_markdown_fences "$spec_file" >"$unfenced_spec"
     spec_dir="$(basename "$(dirname "$spec_file")")"; number="${spec_dir%%-*}"
